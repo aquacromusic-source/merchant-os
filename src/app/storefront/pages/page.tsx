@@ -18,7 +18,7 @@ export default function StorefrontPagesPage() {
   const list = (pages as any[]).filter(p => sel === 0 || p.status === 'Publié')
   const { selectedResources, allResourcesSelected, handleSelectionChange } = useIndexResourceState(list.map((_: any, i: number) => ({ id: String(i) })))
   return (
-    <Page title="Pages" primaryAction={{ content: 'Ajouter une page', icon: PlusIcon, variant: 'primary' }}>
+    <Page title="Pages" primaryAction={{ content: 'Ajouter une page', icon: PlusIcon }}>
       <Card padding="0">
         <Tabs tabs={tabs} selected={sel} onSelect={setSel}>
           <IndexTable

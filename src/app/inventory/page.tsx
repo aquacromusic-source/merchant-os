@@ -1,121 +1,66 @@
 'use client'
 import React, { useState } from 'react'
-import { I } from '@/lib/icons'
+import { Page, Card, BlockStack, Text, Badge, Button, ButtonGroup, IndexTable, useIndexResourceState, Tabs } from '@shopify/polaris'
+import { ExportIcon, PlusIcon, ImageIcon } from '@shopify/polaris-icons'
 import { products, locations } from '@/lib/data'
-import { money } from '@/lib/utils'
-import { PageHeader } from '@/components/ui/PageHeader'
-import { FilterBar } from '@/components/ui/FilterBar'
-import { Checkbox } from '@/components/ui/Checkbox'
-import { Pager } from '@/components/ui/Pager'
 
 const TABS_STOCK = [
-  { key: 'stock', label: 'Stock', count: products.length },
-  { key: 'alerts', label: 'Alertes', count: 4 },
-]
-const TABS_NAV = [
-  { key: 'stock', label: 'Stock' },
-  { key: 'locations', label: 'Emplacements' },
-  { key: 'transfers', label: 'Transferts' },
-  { key: 'po', label: 'Bons de commande' },
+  { id: 'stock', content: `Stock (${products.length})` },
+  { id: 'alerts', content: 'Alertes (4)' },
 ]
 
 export default function InventoryPage() {
-  const [tab, setTab] = useState('stock')
+  const [tab, setTab] = useState(0)
   const [view, setView] = useState('stock')
+  const { selectedResources, allResourcesSelected, handleSelectionChange } = useIndexResourceState(products.map(p => ({ id: p.id })))
 
   if (view === 'locations') {
     return (
-      <div className="page page-wide">
-        <PageHeader icon={<I.Location size={18} />} title="Emplacements" actions={<button className="btn btn-sm btn-primary"><I.Plus size={13} /> Ajouter un emplacement</button>} />
-        <div className="table-wrap">
-          <div style={{ overflowX: 'auto' }}>
-            <table className="table">
-              <thead><tr><th>Emplacement</th><th>Ville</th><th>Rôle</th><th>Articles</th><th>Commandes</th></tr></thead>
-              <tbody>
-                {locations.map(l => (
-                  <tr key={l.id} style={{ cursor: 'pointer' }}>
-                    <td className="td-strong">{l.name}</td>
-                    <td className="td-muted">{l.city}</td>
-                    <td><span className="badge muted"><span className="dot" />{l.role}</span></td>
-                    <td className="mono">{l.items}</td>
-                    <td><span className="badge ok"><span className="dot" />{l.orders}</span></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
+      <Page title="Emplacements" primaryAction={{ content: 'Ajouter un emplacement', icon: PlusIcon }}>
+        <Card padding="0">
+          <IndexTable resourceName={{ singular: 'emplacement', plural: 'emplacements' }} itemCount={locations.length} selectedItemsCount={0} onSelectionChange={() => {}} headings={[{ title: 'Emplacement' }, { title: 'Ville' }, { title: 'Rôle' }, { title: 'Articles', alignment: 'end' }, { title: 'Commandes' }]}>
+            {locations.map((l, index) => (
+              <IndexTable.Row id={l.id} key={l.id} position={index} selected={false}>
+                <IndexTable.Cell><Text as="span" fontWeight="semibold">{l.name}</Text></IndexTable.Cell>
+                <IndexTable.Cell><Text as="span" tone="subdued">{l.city}</Text></IndexTable.Cell>
+                <IndexTable.Cell><Badge>{l.role}</Badge></IndexTable.Cell>
+                <IndexTable.Cell><Text as="span" numeric>{l.items}</Text></IndexTable.Cell>
+                <IndexTable.Cell><Badge tone="success">{String(l.orders)}</Badge></IndexTable.Cell>
+              </IndexTable.Row>
+            ))}
+          </IndexTable>
+        </Card>
+      </Page>
     )
   }
 
   return (
-    <div className="page page-wide">
-      <PageHeader
-        icon={<I.Boxes size={18} />}
-        title="Stock"
-        actions={
-          <>
-            <button className="btn btn-sm"><I.Download size={13} /> Exporter</button>
-            <button className="btn btn-sm">Ajuster le stock</button>
-            <button className="btn btn-sm btn-primary"><I.Plus size={13} /> Créer un transfert</button>
-          </>
-        }
-      />
-
-      {/* Nav tabs */}
-      <div className="row" style={{ gap: 6, marginBottom: 16 }}>
-        {TABS_NAV.map(t => (
-          <button key={t.key} className={`btn btn-sm ${view === t.key ? 'btn-primary' : ''}`} onClick={() => setView(t.key)}>
-            {t.label}
-          </button>
-        ))}
-      </div>
-
-      <div className="table-wrap">
-        <FilterBar tabs={TABS_STOCK} active={tab} onTab={setTab} />
-        <div style={{ overflowX: 'auto' }}>
-          <table className="table">
-            <thead>
-              <tr>
-                <th className="col-checkbox" />
-                <th style={{ width: 44 }} />
-                <th>Produit</th>
-                <th>SKU</th>
-                <th>Catégorie</th>
-                <th style={{ textAlign: 'right' }}>Stock total</th>
-                <th>Statut</th>
-              </tr>
-            </thead>
-            <tbody>
-              {products.map(p => (
-                <tr key={p.id}>
-                  <td className="col-checkbox"><Checkbox /></td>
-                  <td><div className="thumb"><I.Image size={13} /></div></td>
-                  <td className="td-strong">{p.title}</td>
-                  <td className="td-muted mono">{p.sku}</td>
-                  <td className="td-muted">{p.category}</td>
-                  <td className="mono" style={{ textAlign: 'right' }}>
-                    {p.stock === 0
-                      ? <span className="td-muted">Non suivi</span>
-                      : <span className={p.stock < 10 ? 'danger' : ''}>{p.stock}</span>
-                    }
-                  </td>
-                  <td>
-                    {p.stock === 0
-                      ? <span className="badge muted"><span className="dot" />Non suivi</span>
-                      : p.stock < 10
-                      ? <span className="badge danger"><span className="dot" />Rupture imminente</span>
-                      : <span className="badge ok"><span className="dot" />En stock</span>
-                    }
-                  </td>
-                </tr>
+    <Page title="Stock" primaryAction={{ content: 'Créer un transfert', icon: PlusIcon }} secondaryActions={[{ content: 'Exporter', icon: ExportIcon }, { content: 'Ajuster le stock' }]}>
+      <BlockStack gap="400">
+        <ButtonGroup variant="segmented">
+          {['stock', 'locations', 'transfers', 'po'].map((v, i) => (
+            <Button key={v} pressed={view === v} onClick={() => setView(v)}>
+              {['Stock', 'Emplacements', 'Transferts', 'Bons de commande'][i]}
+            </Button>
+          ))}
+        </ButtonGroup>
+        <Card padding="0">
+          <Tabs tabs={TABS_STOCK} selected={tab} onSelect={setTab}>
+            <IndexTable resourceName={{ singular: 'produit', plural: 'produits' }} itemCount={products.length} selectedItemsCount={allResourcesSelected ? 'All' : selectedResources.length} onSelectionChange={handleSelectionChange} headings={[{ title: '' }, { title: 'Produit' }, { title: 'SKU' }, { title: 'Catégorie' }, { title: 'Stock total', alignment: 'end' }, { title: 'Statut' }]}>
+              {products.map((p, index) => (
+                <IndexTable.Row id={p.id} key={p.id} selected={selectedResources.includes(p.id)} position={index}>
+                  <IndexTable.Cell><div style={{ width: 32, height: 32, borderRadius: 6, background: 'var(--p-color-bg-surface-secondary)', border: '1px solid var(--p-color-border)', display: 'grid', placeItems: 'center' }}><ImageIcon width={14} height={14} /></div></IndexTable.Cell>
+                  <IndexTable.Cell><Text as="span" fontWeight="semibold">{p.title}</Text></IndexTable.Cell>
+                  <IndexTable.Cell><Text as="span" tone="subdued"><span style={{ fontFamily: 'monospace' }}>{p.sku}</span></Text></IndexTable.Cell>
+                  <IndexTable.Cell><Text as="span" tone="subdued">{p.category}</Text></IndexTable.Cell>
+                  <IndexTable.Cell><Text as="span" numeric tone={p.stock < 10 && p.stock > 0 ? 'critical' : 'subdued'}>{p.stock === 0 ? 'Non suivi' : p.stock}</Text></IndexTable.Cell>
+                  <IndexTable.Cell><Badge tone={p.stock === 0 ? undefined : p.stock < 10 ? 'critical' : 'success'}>{p.stock === 0 ? 'Non suivi' : p.stock < 10 ? 'Rupture imminente' : 'En stock'}</Badge></IndexTable.Cell>
+                </IndexTable.Row>
               ))}
-            </tbody>
-          </table>
-        </div>
-        <Pager total={products.length} perPage={50} />
-      </div>
-    </div>
+            </IndexTable>
+          </Tabs>
+        </Card>
+      </BlockStack>
+    </Page>
   )
 }

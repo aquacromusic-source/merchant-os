@@ -1,75 +1,52 @@
 'use client'
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { I } from '@/lib/icons'
+import { Page, Card, BlockStack, Text, Badge, Button, IndexTable, useIndexResourceState, Tabs } from '@shopify/polaris'
+import { ExportIcon, PlusIcon } from '@shopify/polaris-icons'
 import { discounts } from '@/lib/data'
-import { PageHeader } from '@/components/ui/PageHeader'
-import { FilterBar } from '@/components/ui/FilterBar'
-import { Checkbox } from '@/components/ui/Checkbox'
-import { Pager } from '@/components/ui/Pager'
+
+function statusBadge(status: string) {
+  const toneMap: Record<string, 'success' | 'warning' | undefined> = {
+    'Actif': 'success', 'Programmée': 'warning', 'Expirée': undefined,
+  }
+  return <Badge tone={toneMap[status]}>{status}</Badge>
+}
 
 export default function DiscountsPage() {
   const router = useRouter()
-  const [tab, setTab] = useState('all')
-
+  const [selectedTab, setSelectedTab] = useState(0)
   const tabs = [
-    { key: 'all', label: 'Toutes', count: discounts.length },
-    { key: 'active', label: 'Actives', count: discounts.filter(d => d.status === 'Actif').length },
-    { key: 'scheduled', label: 'Programmées', count: discounts.filter(d => d.status === 'Programmée').length },
-    { key: 'expired', label: 'Expirées', count: discounts.filter(d => d.status === 'Expirée').length },
+    { id: 'all', content: `Toutes (${discounts.length})` },
+    { id: 'active', content: `Actives (${discounts.filter(d => d.status === 'Actif').length})` },
+    { id: 'scheduled', content: `Programmées (${discounts.filter(d => d.status === 'Programmée').length})` },
+    { id: 'expired', content: `Expirées (${discounts.filter(d => d.status === 'Expirée').length})` },
   ]
-
+  const tabId = tabs[selectedTab]?.id || 'all'
   const list = discounts.filter(d =>
-    tab === 'all' || (tab === 'active' && d.status === 'Actif') ||
-    (tab === 'scheduled' && d.status === 'Programmée') ||
-    (tab === 'expired' && d.status === 'Expirée')
+    tabId === 'all' || (tabId === 'active' && d.status === 'Actif') ||
+    (tabId === 'scheduled' && d.status === 'Programmée') || (tabId === 'expired' && d.status === 'Expirée')
   )
+  const { selectedResources, allResourcesSelected, handleSelectionChange } = useIndexResourceState(list.map(d => ({ id: d.code })))
+
+  const rowMarkup = list.map((d, index) => (
+    <IndexTable.Row id={d.code} key={d.code} selected={selectedResources.includes(d.code)} position={index} onClick={() => router.push('/discounts/' + d.code)}>
+      <IndexTable.Cell><BlockStack gap="050"><Text as="span" fontWeight="semibold"><span style={{ fontFamily: 'monospace' }}>{d.code}</span></Text><Text as="span" variant="bodySm" tone="subdued">{d.descr}</Text></BlockStack></IndexTable.Cell>
+      <IndexTable.Cell>{statusBadge(d.status)}</IndexTable.Cell>
+      <IndexTable.Cell><Text as="span" tone="subdued">{d.type}</Text></IndexTable.Cell>
+      <IndexTable.Cell><Text as="span" tone="subdued">{d.kind}</Text></IndexTable.Cell>
+      <IndexTable.Cell><Text as="span" numeric>{d.uses}</Text></IndexTable.Cell>
+    </IndexTable.Row>
+  ))
 
   return (
-    <div className="page page-wide">
-      <PageHeader
-        icon={<I.Percent size={18} />}
-        title="Réductions"
-        actions={
-          <>
-            <button className="btn btn-sm"><I.Export size={13} /> Exporter</button>
-            <button className="btn btn-sm btn-primary"><I.Plus size={13} /> Créer une réduction</button>
-          </>
-        }
-      />
-      <div className="table-wrap">
-        <FilterBar tabs={tabs} active={tab} onTab={setTab} />
-        <div style={{ overflowX: 'auto' }}>
-          <table className="table">
-            <thead>
-              <tr>
-                <th className="col-checkbox" />
-                <th>Titre</th>
-                <th>Statut</th>
-                <th>Méthode</th>
-                <th>Type</th>
-                <th style={{ textAlign: 'right' }}>Utilisé</th>
-              </tr>
-            </thead>
-            <tbody>
-              {list.map(d => (
-                <tr key={d.code} style={{ cursor: 'pointer' }}>
-                  <td className="col-checkbox"><Checkbox /></td>
-                  <td>
-                    <div className="row-link mono" style={{ fontWeight: 600 }}>{d.code}</div>
-                    <div className="ts">{d.descr}</div>
-                  </td>
-                  <td><span className={`badge ${d.status === 'Actif' ? 'ok' : d.status === 'Programmée' ? 'warn' : 'muted'}`}><span className="dot" />{d.status}</span></td>
-                  <td className="td-muted">{d.type}</td>
-                  <td className="td-muted">{d.kind}</td>
-                  <td className="mono" style={{ textAlign: 'right' }}>{d.uses}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <Pager total={discounts.length} perPage={50} />
-      </div>
-    </div>
+    <Page title="Réductions" primaryAction={{ content: 'Créer une réduction', icon: PlusIcon }} secondaryActions={[{ content: 'Exporter', icon: ExportIcon }]}>
+      <Card padding="0">
+        <Tabs tabs={tabs} selected={selectedTab} onSelect={setSelectedTab}>
+          <IndexTable resourceName={{ singular: 'réduction', plural: 'réductions' }} itemCount={list.length} selectedItemsCount={allResourcesSelected ? 'All' : selectedResources.length} onSelectionChange={handleSelectionChange} headings={[{ title: 'Titre' }, { title: 'Statut' }, { title: 'Méthode' }, { title: 'Type' }, { title: 'Utilisé', alignment: 'end' }]}>
+            {rowMarkup}
+          </IndexTable>
+        </Tabs>
+      </Card>
+    </Page>
   )
 }

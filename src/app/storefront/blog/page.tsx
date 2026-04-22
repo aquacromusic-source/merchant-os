@@ -20,7 +20,7 @@ export default function StorefrontBlogPage() {
   const list = (articles as any[]).filter(a => tabId === 'all' || (tabId === 'published' && a.status === 'Publié') || (tabId === 'draft' && a.status === 'Brouillon'))
   const { selectedResources, allResourcesSelected, handleSelectionChange } = useIndexResourceState(list.map((_: any, i: number) => ({ id: String(i) })))
   return (
-    <Page title="Articles de blog" primaryAction={{ content: 'Ajouter un article', icon: PlusIcon, variant: 'primary' }}>
+    <Page title="Articles de blog" primaryAction={{ content: 'Ajouter un article', icon: PlusIcon }}>
       <Card padding="0">
         <Tabs tabs={tabs} selected={sel} onSelect={setSel}>
           <IndexTable

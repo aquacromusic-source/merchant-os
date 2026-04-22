@@ -11,7 +11,7 @@ export default function ChannelsPage() {
     <Page
       title="Canaux de vente"
       subtitle="Gérez vos canaux de vente et marketplaces."
-      primaryAction={{ content: 'Ajouter un canal', icon: PlusIcon, variant: 'primary' }}
+      primaryAction={{ content: 'Ajouter un canal', icon: PlusIcon }}
     >
       <BlockStack gap="400">
         <Card padding="0">

@@ -8,7 +8,7 @@ export default function AppsPage() {
   return (
     <Page
       title="Applications"
-      primaryAction={{ content: 'Explorer les applications', icon: PlusIcon, variant: 'primary' }}
+      primaryAction={{ content: 'Explorer les applications', icon: PlusIcon }}
     >
       <BlockStack gap="400">
         <Card>

@@ -16,7 +16,7 @@ const menus = [
 
 export default function StorefrontNavigationPage() {
   return (
-    <Page title="Navigation" primaryAction={{ content: 'Créer un menu', icon: PlusIcon, variant: 'primary' }}>
+    <Page title="Navigation" primaryAction={{ content: 'Créer un menu', icon: PlusIcon }}>
       <BlockStack gap="400">
         {menus.map((menu, i) => (
           <Card key={i}>

@@ -11,7 +11,7 @@ export default function CollectionDetailPage({ params }: { params: { id: string 
     <Page
       backAction={{ content: 'Collections', onAction: () => router.push('/collections') }}
       title={c.title}
-      primaryAction={{ content: 'Enregistrer', variant: 'primary' }}
+      primaryAction={{ content: 'Enregistrer' }}
     >
       <Card>
         <BlockStack gap="400">
