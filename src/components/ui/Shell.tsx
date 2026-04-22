@@ -546,13 +546,25 @@ export function Shell({ children }: { children: React.ReactNode }) {
   )
 
   return (
-    <Frame
-      topBar={topBarMarkup}
-      navigation={navigationMarkup}
-      showMobileNavigation={mobileNavigationActive}
-      onNavigationDismiss={toggleMobileNavigation}
-    >
-      {children}
-    </Frame>
+    <div style={{
+      background: '#1a1a1a',
+      minHeight: '100vh',
+      paddingTop: 2,  /* laisse apparaître le fond sombre au-dessus du Frame */
+    }}>
+      <div style={{
+        borderRadius: '12px 12px 0 0',
+        overflow: 'hidden',
+        minHeight: 'calc(100vh - 2px)',
+      }}>
+        <Frame
+          topBar={topBarMarkup}
+          navigation={navigationMarkup}
+          showMobileNavigation={mobileNavigationActive}
+          onNavigationDismiss={toggleMobileNavigation}
+        >
+          {children}
+        </Frame>
+      </div>
+    </div>
   )
 }
