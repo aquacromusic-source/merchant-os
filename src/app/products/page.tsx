@@ -50,15 +50,27 @@ export default function ProductsPage() {
   const [totalProducts, setTotalProducts] = useState(0)
   const [loadingProducts, setLoadingProducts] = useState(true)
 
-  useEffect(() => {
+  const [currentPage, setCurrentPage] = useState(0)
+  const PAGE_SIZE = 100
+
+  const fetchProducts = (page: number, append = false) => {
     setLoadingProducts(true)
-    fetch('/api/products?limit=100')
+    fetch(`/api/products?limit=${PAGE_SIZE}&offset=${page * PAGE_SIZE}`)
       .then(r => r.json())
       .then(data => {
-        setAllProducts(data.products || [])
+        if (append) {
+          setAllProducts(prev => [...prev, ...(data.products || [])])
+        } else {
+          setAllProducts(data.products || [])
+        }
         setTotalProducts(data.total || 0)
+        setCurrentPage(page)
       })
       .finally(() => setLoadingProducts(false))
+  }
+
+  useEffect(() => {
+    fetchProducts(0)
   }, [])
   const [selectedTab, setSelectedTab] = useState(0)
   const [searchValue, setSearchValue] = useState('')

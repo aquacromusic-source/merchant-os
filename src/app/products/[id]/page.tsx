@@ -462,7 +462,7 @@ const fallbackProduct = products[4]
   const [realProduct, setRealProduct] = useState<any>(null)
   useEffect(() => {
     // Si l'id ressemble à un slug (contient des tirets et pas que P-XXXX)
-    if (params.id && !params.id.match(/^P-\d+$/)) {
+    if (params.id) {
       fetch(`/api/products/${params.id}`)
         .then(r => r.json())
         .then(data => {
