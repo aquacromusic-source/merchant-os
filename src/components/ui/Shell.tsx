@@ -62,11 +62,31 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const [searchValue, setSearchValue] = useState('')
   const [userMenuActive, setUserMenuActive] = useState(false)
   const [notifOpen, setNotifOpen] = useState(false)
-  const [notifications, setNotifications] = useState(NOTIFICATIONS)
+  const [notifications, setNotifications] = useState(() => {
+    if (typeof window === 'undefined') return NOTIFICATIONS
+    try {
+      const saved = localStorage.getItem('mos_notifications')
+      if (saved) {
+        const savedData = JSON.parse(saved)
+        // Merge avec NOTIFICATIONS pour garder les nouvelles notifs
+        return NOTIFICATIONS.map(n => {
+          const s = savedData.find((x: any) => x.id === n.id)
+          return s ? { ...n, read: s.read } : n
+        })
+      }
+    } catch {}
+    return NOTIFICATIONS
+  })
 
   const unreadCount = notifications.filter(n => !n.read).length
 
-  const markAllRead = () => setNotifications(prev => prev.map(n => ({ ...n, read: true })))
+  const markAllRead = () => setNotifications(prev => {
+    const updated = prev.map(n => ({ ...n, read: true }))
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('mos_notifications', JSON.stringify(updated))
+    }
+    return updated
+  })
 
   const active = pathname?.replace(/^\//, '') || 'dashboard'
 
@@ -203,7 +223,13 @@ export function Shell({ children }: { children: React.ReactNode }) {
                   gap: 10,
                   alignItems: 'flex-start',
                 }}
-                onClick={() => setNotifications(prev => prev.map(x => x.id === n.id ? { ...x, read: true } : x))}
+                onClick={() => setNotifications(prev => {
+                    const updated = prev.map(x => x.id === n.id ? { ...x, read: true } : x)
+                    if (typeof window !== 'undefined') {
+                      localStorage.setItem('mos_notifications', JSON.stringify(updated))
+                    }
+                    return updated
+                  })}
               >
                 <div style={{
                   width: 8, height: 8, borderRadius: '50%', marginTop: 6, flexShrink: 0,
