@@ -1070,3 +1070,11 @@ input, textarea, select { outline: none; }
   .kpi { border-right: 0 !important; border-top: 1px solid var(--divider) !important; }
   .kpi:first-child { border-top: 0 !important; }
 }
+
+/* === Coin arrondi topbar style Shopify ===
+   Coin bas-gauche de la topbar = arrondi concave
+   où la topbar sombre rejoint la sidebar claire */
+.topbar {
+  border-bottom-left-radius: 12px;
+  overflow: visible;
+}
