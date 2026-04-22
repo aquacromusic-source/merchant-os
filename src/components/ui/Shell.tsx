@@ -65,8 +65,10 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const [notifications, setNotifications] = useState(() => {
     if (typeof window === 'undefined') return NOTIFICATIONS
     try {
+      // Si l'utilisateur a tout effacé, retourner vide
+      if (localStorage.getItem('mos_notifications_cleared') === 'true') return []
       const saved = localStorage.getItem('mos_notifications')
-      if (saved) return JSON.parse(saved)
+      if (saved !== null) return JSON.parse(saved)
     } catch {}
     return NOTIFICATIONS
   })
