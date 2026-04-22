@@ -52,7 +52,7 @@ export default function ProductsPage() {
 
   useEffect(() => {
     setLoadingProducts(true)
-    fetch('/api/products?limit=50')
+    fetch('/api/products?limit=100')
       .then(r => r.json())
       .then(data => {
         setAllProducts(data.products || [])
@@ -118,12 +118,15 @@ export default function ProductsPage() {
     >
       <IndexTable.Cell>
         <div style={{
-          width: 32, height: 32, borderRadius: 6,
+          width: 40, height: 40, borderRadius: 6,
           background: 'var(--p-color-bg-surface-secondary)',
           border: '1px solid var(--p-color-border)',
-          display: 'grid', placeItems: 'center'
+          overflow: 'hidden', flexShrink: 0,
         }}>
-          <ImageIcon width={14} height={14} />
+          {p.image_url
+            ? <img src={p.image_url} alt={p.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+            : <div style={{ width: '100%', height: '100%', display: 'grid', placeItems: 'center' }}><ImageIcon width={14} height={14} /></div>
+          }
         </div>
       </IndexTable.Cell>
       <IndexTable.Cell>

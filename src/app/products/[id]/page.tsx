@@ -1,5 +1,5 @@
 'use client'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Page,
@@ -454,10 +454,27 @@ function SEOPreview({ title, slug }: { title: string; slug: string }) {
 
 export default function ProductDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter()
-  const p = products.find(x => x.id === params.id) || products[4]
+const fallbackProduct = products[4]
+  const p = products.find(x => x.id === params.id) || fallbackProduct
 
   const [images, setImages] = useState(MOCK_IMAGES)
-  const [title, setTitle] = useState(p.title)
+  // Charger le vrai produit si c'est un slug Supabase
+  const [realProduct, setRealProduct] = useState<any>(null)
+  useEffect(() => {
+    // Si l'id ressemble à un slug (contient des tirets et pas que P-XXXX)
+    if (params.id && !params.id.match(/^P-\d+$/)) {
+      fetch(`/api/products/${params.id}`)
+        .then(r => r.json())
+        .then(data => {
+          if (data && data.title) setRealProduct(data)
+        })
+        .catch(() => {})
+    }
+  }, [params.id])
+
+  const productTitle = realProduct?.title || p.title
+  const productImage = realProduct?.image_url || null
+  const [title, setTitle] = useState(productTitle)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const handleSave = async () => {
