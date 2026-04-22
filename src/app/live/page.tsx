@@ -44,8 +44,8 @@ function Globe3D({ visitors }: { visitors: typeof MOCK_VISITORS }) {
       globe
         .width(ref.current.offsetWidth || 500)
         .height(ref.current.offsetHeight || 500)
-        .backgroundColor('#0a0e1a')
-        .globeImageUrl('//unpkg.com/three-globe/example/img/earth-night.jpg')
+        .backgroundColor('#a8d8ea')
+        .globeImageUrl('//unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
         .bumpImageUrl('//unpkg.com/three-globe/example/img/earth-topology.png')
         .atmosphereColor('#00e5ff')
         .atmosphereAltitude(0.15)

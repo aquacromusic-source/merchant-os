@@ -534,13 +534,6 @@ export function Shell({ children }: { children: React.ReactNode }) {
         separator
         items={[
           {
-            url: '/live',
-            label: 'Vue en direct',
-            icon: MarketsIcon,
-            selected: active === 'live',
-            onClick: () => router.push('/live'),
-          },
-          {
             url: '/markets',
             label: 'Marchés',
             icon: MarketsIcon,
