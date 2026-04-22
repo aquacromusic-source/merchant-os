@@ -40,14 +40,58 @@ import { Donut } from '@/components/ui/Donut'
 
 const PALETTE = ['oklch(0.58 0.18 275)', 'oklch(0.62 0.14 195)', 'oklch(0.72 0.12 85)', 'oklch(0.60 0.14 155)', 'oklch(0.65 0.16 25)']
 
-const DATE_RANGES = [
-  { label: "Aujourd'hui", value: 'today' },
-  { label: '7 derniers jours', value: '7d' },
-  { label: '30 derniers jours', value: '30d' },
-  { label: '90 derniers jours', value: '90d' },
-  { label: 'Cette année', value: 'year' },
-  { label: 'Période personnalisée…', value: 'custom' },
+const DATE_GROUPS = [
+  {
+    title: null,
+    items: [
+      { label: "Aujourd'hui", value: 'today' },
+      { label: 'Hier', value: 'yesterday' },
+    ]
+  },
+  {
+    title: 'Derniers',
+    items: [
+      { label: '30 dernières minutes', value: '30min' },
+      { label: '12 dernières heures', value: '12h' },
+      { label: '7 derniers jours', value: '7d' },
+      { label: '30 derniers jours', value: '30d' },
+      { label: '90 derniers jours', value: '90d' },
+      { label: '365 derniers jours', value: '365d' },
+      { label: 'La semaine dernière', value: 'last-week' },
+      { label: 'Le mois dernier', value: 'last-month' },
+      { label: 'Le trimestre dernier', value: 'last-quarter' },
+      { label: '12 derniers mois', value: '12m' },
+      { label: "L'année dernière", value: 'last-year' },
+    ]
+  },
+  {
+    title: 'Période à ce jour',
+    items: [
+      { label: 'Semaine à ce jour', value: 'wtd' },
+      { label: 'Mois à ce jour', value: 'mtd' },
+      { label: 'Trimestre à ce jour', value: 'qtd' },
+      { label: 'Année à ce jour', value: 'ytd' },
+    ]
+  },
+  {
+    title: 'Trimestres',
+    items: [
+      { label: 'T1 2026', value: 'q1-2026' },
+      { label: 'T4 2025', value: 'q4-2025' },
+      { label: 'T3 2025', value: 'q3-2025' },
+      { label: 'T2 2025', value: 'q2-2025' },
+    ]
+  },
+  {
+    title: null,
+    items: [
+      { label: 'Black Friday Cyber Monday', value: 'bfcm' },
+      { label: 'Période personnalisée', value: 'custom' },
+    ]
+  },
 ]
+// Flat list for label lookup
+const DATE_RANGES = DATE_GROUPS.flatMap(g => g.items)
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -112,45 +156,65 @@ export default function DashboardPage() {
         { content: 'Exporter', icon: ExportIcon },
       ]}
     >
-      {/* Date range popover (rendered as overlay trick) */}
+      {/* Date range picker — Shopify style */}
       {datePopoverOpen && (
-        <div
-          style={{
-            position: 'fixed', inset: 0, zIndex: 9998,
-          }}
-          onClick={() => setDatePopoverOpen(false)}
-        >
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={() => setDatePopoverOpen(false)}>
           <div
             style={{
-              position: 'fixed', top: 60, right: 16, zIndex: 9999,
-              background: 'var(--p-color-bg-surface)',
-              border: '1px solid var(--p-color-border)',
-              borderRadius: 12,
-              boxShadow: 'var(--p-shadow-lg)',
-              minWidth: 240,
-              overflow: 'hidden',
+              position: 'fixed', top: 60, left: 16, zIndex: 9999,
+              background: 'white', border: '1px solid #e5e5e5',
+              borderRadius: 12, boxShadow: '0 8px 30px rgba(0,0,0,0.15)',
+              overflow: 'hidden', display: 'flex', maxHeight: '80vh',
             }}
             onClick={e => e.stopPropagation()}
           >
-            {DATE_RANGES.map(r => (
-              <div
-                key={r.value}
-                style={{
-                  padding: '10px 16px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  background: dateRange === r.value ? 'var(--p-color-bg-surface-selected)' : 'transparent',
-                  fontWeight: dateRange === r.value ? 600 : 400,
-                  fontSize: 14,
-                }}
-                onClick={() => { setDateRange(r.value); setDatePopoverOpen(false) }}
-              >
-                <span>{r.label}</span>
-                {dateRange === r.value && <CheckIcon width={16} height={16} />}
+            {/* Colonne gauche — groupes de périodes */}
+            <div style={{ width: 220, overflowY: 'auto', borderRight: '1px solid #e5e5e5', paddingBlock: 8 }}>
+              {DATE_GROUPS.map((group, gi) => (
+                <div key={gi}>
+                  {group.title && (
+                    <div style={{ padding: '8px 16px 3px', fontSize: 11, fontWeight: 600, color: '#8c9196', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                      {group.title}
+                    </div>
+                  )}
+                  {group.items.map(r => (
+                    <div
+                      key={r.value}
+                      onClick={() => { setDateRange(r.value); if (r.value !== 'custom') setDatePopoverOpen(false) }}
+                      style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        padding: '7px 16px', cursor: 'pointer', fontSize: 13,
+                        background: dateRange === r.value ? '#f1f1f1' : 'transparent',
+                        fontWeight: dateRange === r.value ? 600 : 400,
+                        color: '#1a1a1a',
+                        transition: 'background 0.1s',
+                      }}
+                    >
+                      {r.label}
+                      {dateRange === r.value && <CheckIcon width={14} height={14} />}
+                    </div>
+                  ))}
+                  {gi < DATE_GROUPS.length - 1 && (
+                    <div style={{ height: 1, background: '#e5e5e5', margin: '4px 0' }} />
+                  )}
+                </div>
+              ))}
+            </div>
+            {/* Colonne droite — calendrier si "custom" */}
+            {dateRange === 'custom' && (
+              <div style={{ padding: 20, minWidth: 340 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12, color: '#1a1a1a' }}>Période personnalisée</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+                  <input type="date" style={{ flex: 1, padding: '7px 10px', border: '1px solid #c9cccf', borderRadius: 6, fontSize: 13 }} />
+                  <span style={{ color: '#8c9196', fontWeight: 600 }}>→</span>
+                  <input type="date" style={{ flex: 1, padding: '7px 10px', border: '1px solid #c9cccf', borderRadius: 6, fontSize: 13 }} />
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+                  <button onClick={() => setDatePopoverOpen(false)} style={{ padding: '7px 16px', border: '1px solid #c9cccf', borderRadius: 6, cursor: 'pointer', background: 'white', fontSize: 13 }}>Annuler</button>
+                  <button onClick={() => setDatePopoverOpen(false)} style={{ padding: '7px 16px', background: '#1a1a1a', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>Appliquer</button>
+                </div>
               </div>
-            ))}
+            )}
           </div>
         </div>
       )}
