@@ -45,23 +45,23 @@ function Globe3D({ visitors }: { visitors: typeof MOCK_VISITORS }) {
       globe
         .width(ref.current.offsetWidth || 500)
         .height(ref.current.offsetHeight || 500)
-        .backgroundColor('#f0f9ff')
-        .globeImageUrl('//unpkg.com/three-globe/example/img/earth-day.jpg')
+        .backgroundColor('#0a1628')
+        .globeImageUrl('//unpkg.com/three-globe/example/img/earth-dark.jpg')
         .showAtmosphere(true)
-        .atmosphereColor('rgba(100,210,220,0.5)')
+        .atmosphereColor('rgba(0,180,255,0.6)')
         .atmosphereAltitude(0.12)
         // Points visiteurs violets pulsants
         .pointsData(visitors)
         .pointLat('lat')
         .pointLng('lng')
-        .pointColor(() => '#7c3aed')
+        .pointColor(() => '#00ff88')
         .pointAltitude(0.03)
         .pointRadius(0.7)
         // Anneaux autour des visiteurs actifs
         .ringsData(visitors.filter(v => v.value))
         .ringLat('lat')
         .ringLng('lng')
-        .ringColor(() => () => 'rgba(124,58,237,0.6)')
+        .ringColor(() => () => 'rgba(0,255,136,0.6)')
         .ringMaxRadius(3)
         .ringPropagationSpeed(3)
         .ringRepeatPeriod(1200)
@@ -81,7 +81,7 @@ function Globe3D({ visitors }: { visitors: typeof MOCK_VISITORS }) {
   }, [visitors])
 
   return (
-    <div ref={ref} style={{ width: '100%', height: 520, borderRadius: 12, overflow: 'hidden', background: '#f0f9ff' }} />
+    <div ref={ref} style={{ width: '100%', height: 520, borderRadius: 12, overflow: 'hidden', background: '#0a1628' }} />
   )
 }
 
