@@ -102,6 +102,21 @@ const ICON_FILLED: Record<string, React.FC<{size?: number}>> = {
   settings: IFilled.Gear,
   apps: IFilled.Grid,
 }
+function SidebarIcon({ itemKey, Icon, isActive }: {
+  itemKey: string
+  Icon?: React.FC<{ size?: number }>
+  isActive: boolean
+}) {
+  if (!Icon) return null
+  const FilledIcon = ICON_FILLED[itemKey]
+  const Comp = (!isActive && FilledIcon) ? FilledIcon : Icon
+  return (
+    <span style={{ flexShrink: 0, display: 'inline-flex' }}>
+      <Comp size={16} />
+    </span>
+  )
+}
+
 function SidebarItem({ item, active, onNav, iconOnly }: {
   item: SidebarItemDef
   active: string
@@ -120,16 +135,7 @@ function SidebarItem({ item, active, onNav, iconOnly }: {
         onClick={() => onNav(item.key)}
         title={iconOnly ? item.label : undefined}
       >
-        { (() => {
-          if (!item.icon) return null
-          const FilledIcon = ICON_FILLED[item.key]
-          const IconComp = (!isActive && FilledIcon) ? FilledIcon : item.icon
-          return (
-            <span style={{ flexShrink: 0, display: 'inline-flex' }}>
-              <IconComp size={16} />
-            </span>
-          )
-        })() }
+        <SidebarIcon itemKey={item.key} Icon={item.icon} isActive={isActive} />
         {!iconOnly && <span className="truncate">{item.label}</span>}
         {!iconOnly && item.count && <span className="count">{item.count}</span>}
       </button>
