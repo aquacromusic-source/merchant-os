@@ -1131,3 +1131,10 @@ html, body {
     gap: 24px !important;
   }
 }
+
+/* Espace en bas de toutes les pages */
+.Polaris-Page,
+.Polaris-Page__Content,
+[class*="Polaris-Page"] {
+  padding-bottom: 60px !important;
+}
