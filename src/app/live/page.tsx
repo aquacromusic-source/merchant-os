@@ -46,7 +46,7 @@ function Globe3D({ visitors }: { visitors: typeof MOCK_VISITORS }) {
       globe
         .width(ref.current.offsetWidth || 500)
         .height(ref.current.offsetHeight || 500)
-        .backgroundColor('rgba(248,250,252,1)')
+        .backgroundColor('#ffffff')
         .globeImageUrl('')  // Pas de texture — on utilise les hexagones
         .showGlobe(true)
         .showAtmosphere(true)
@@ -67,8 +67,8 @@ function Globe3D({ visitors }: { visitors: typeof MOCK_VISITORS }) {
         .hexBinPointLat('lat')
         .hexBinPointLng('lng')
         .hexBinResolution(3)
-        .hexTopColor(() => 'rgba(100,220,210,0.85)')
-        .hexSideColor(() => 'rgba(100,220,210,0.4)')
+        .hexTopColor(() => 'rgba(32,178,170,0.9)')
+        .hexSideColor(() => 'rgba(32,178,170,0.3)')
         .hexAltitude(0.008)
         // Points violets pour les visiteurs
         .pointsData(visitors)
@@ -93,7 +93,7 @@ function Globe3D({ visitors }: { visitors: typeof MOCK_VISITORS }) {
   }, [visitors])
 
   return (
-    <div ref={ref} style={{ width: '100%', height: 520, borderRadius: 12, overflow: 'hidden', background: '#f8fafc' }} />
+    <div ref={ref} style={{ width: '100%', height: 520, borderRadius: 12, overflow: 'hidden', background: '#ffffff' }} />
   )
 }
 
