@@ -406,10 +406,17 @@ export function Shell({ children }: { children: React.ReactNode }) {
             selected: active === 'analytics',
             onClick: () => router.push('/analytics'),
           },
+          {
+            url: '/live',
+            label: 'Vue en direct',
+            icon: MarketsIcon,
+            selected: active === 'live',
+            onClick: () => router.push('/live'),
+          },
         ]}
       />
       <Navigation.Section
-        title="Canaux de vente"
+        title="Canaux de vente""
         items={[
           {
             url: '/storefront',
