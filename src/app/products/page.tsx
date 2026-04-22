@@ -46,6 +46,20 @@ function statusBadge(status: string) {
 
 export default function ProductsPage() {
   const router = useRouter()
+  const [allProducts, setAllProducts] = useState<any[]>([])
+  const [totalProducts, setTotalProducts] = useState(0)
+  const [loadingProducts, setLoadingProducts] = useState(true)
+
+  useEffect(() => {
+    setLoadingProducts(true)
+    fetch('/api/products?limit=50')
+      .then(r => r.json())
+      .then(data => {
+        setAllProducts(data.products || [])
+        setTotalProducts(data.total || 0)
+      })
+      .finally(() => setLoadingProducts(false))
+  }, [])
   const [selectedTab, setSelectedTab] = useState(0)
   const [searchValue, setSearchValue] = useState('')
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
@@ -55,15 +69,15 @@ export default function ProductsPage() {
   const [importFile, setImportFile] = useState('')
 
   const tabs = [
-    { id: 'all', content: `Tous (${products.length})` },
-    { id: 'live', content: `Actifs (${products.filter(p => p.status === 'live').length})` },
-    { id: 'draft', content: `Brouillons (${products.filter(p => p.status === 'draft').length})` },
-    { id: 'archived', content: `Archivés (${products.filter(p => p.status === 'archived').length})` },
+    { id: 'all', content: `Tous (${totalProducts})` },
+    { id: 'live', content: `Actifs (${allProducts.filter((p: any) => p.status === 'live').length})` },
+    { id: 'draft', content: `Brouillons (${allProducts.filter((p: any) => p.status === 'draft').length})` },
+    { id: 'archived', content: `Archivés (${allProducts.filter((p: any) => p.status === 'archived').length})` },
   ]
 
   const tabId = tabs[selectedTab]?.id || 'all'
 
-  const list = useMemo(() => products.filter(p => {
+  const list = useMemo(() => allProducts.filter((p: any) => {
     if (tabId !== 'all' && p.status !== tabId) return false
     if (searchValue && !p.title.toLowerCase().includes(searchValue.toLowerCase())) return false
     return true
@@ -100,7 +114,7 @@ export default function ProductsPage() {
       key={p.id}
       selected={selectedResources.includes(p.id)}
       position={index}
-      onClick={() => router.push('/products/' + p.id)}
+      onClick={() => router.push('/products/' + (p.slug || p.id))}
     >
       <IndexTable.Cell>
         <div style={{
@@ -144,7 +158,7 @@ export default function ProductsPage() {
               cursor: 'pointer',
               background: 'var(--p-color-bg-surface)',
             }}
-            onClick={() => router.push('/products/' + p.id)}
+            onClick={() => router.push('/products/' + (p.slug || p.id))}
           >
             <div style={{
               height: 140,
