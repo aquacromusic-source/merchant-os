@@ -571,12 +571,14 @@ export function Shell({ children }: { children: React.ReactNode }) {
     <div style={{
       background: '#1a1a1a',
       minHeight: '100vh',
-      paddingTop: 2,  /* laisse apparaître le fond sombre au-dessus du Frame */
+      paddingTop: 8,  /* fond sombre visible au-dessus du Frame */
+      paddingLeft: 0,
+      paddingRight: 0,
     }}>
       <div style={{
         borderRadius: '12px 12px 0 0',
         overflow: 'hidden',
-        minHeight: 'calc(100vh - 2px)',
+        minHeight: 'calc(100vh - 8px)',
       }}>
         <Frame
           topBar={topBarMarkup}
