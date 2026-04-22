@@ -127,6 +127,20 @@ input, textarea, select { outline: none; }
   width: calc(var(--sidebar-w) - 14px);
   padding-right: 12px;
   padding-left: 4px;
+  position: relative;
+}
+/* Shopify-style: floating badge rounded bottom-right corner effect */
+.brand::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 33px;
+  height: 8px;
+  background: var(--topbar-bg);
+  border-radius: 0 0 8px 0;
+  pointer-events: none;
+  z-index: 2;
 }
 .brand-mark {
   width: 24px; height: 24px; border-radius: 8px;
@@ -135,6 +149,7 @@ input, textarea, select { outline: none; }
   box-shadow: inset 0 0 0 1px rgba(255,255,255,0.15), 0 1px 0 rgba(0,0,0,0.4);
   color: white; font-weight: 700; font-size: 11px;
   letter-spacing: -0.02em;
+  position: relative; z-index: 1;
 }
 .brand-name {
   font-weight: 600; font-size: 13px; letter-spacing: -0.01em;
@@ -1056,20 +1071,31 @@ input, textarea, select { outline: none; }
   .kpi:first-child { border-top: 0 !important; }
 }
 
-/* Coin arrondi bas-gauche topbar (comme Shopify) */
+/* === Coin arrondi topbar style Shopify ===
+   La bande noire de la topbar au-dessus de la sidebar
+   se termine avec un coin arrondi en bas-droite */
+.shell-layout {
+  position: relative;
+}
+.topbar::before {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 0;
+  width: var(--sidebar-w);
+  height: 10px;
+  background: var(--topbar-bg);
+  z-index: 10;
+  pointer-events: none;
+}
 .topbar::after {
   content: '';
   position: absolute;
-  bottom: -12px;
-  left: calc(var(--sidebar-w) - 1px);
-  width: 12px;
-  height: 12px;
-  background: var(--topbar-bg);
-  border-bottom-left-radius: 10px;
-  box-shadow: -6px 0 0 0 var(--nav-bg);
+  bottom: -10px;
+  left: calc(var(--sidebar-w) - 10px);
+  width: 20px;
+  height: 20px;
+  background: radial-gradient(circle at top left, transparent 0, transparent 10px, var(--topbar-bg) 10px);
+  z-index: 11;
   pointer-events: none;
-  z-index: 5;
-}
-.topbar {
-  position: relative;
 }
