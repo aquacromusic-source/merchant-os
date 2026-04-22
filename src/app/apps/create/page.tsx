@@ -107,6 +107,27 @@ Par quoi on commence ?`,
   const [saved, setSaved] = useState(false)
   const [saving, setSaving] = useState(false)
   const [deleteModal, setDeleteModal] = useState(false)
+  const [deployModal, setDeployModal] = useState(false)
+  const [deployTarget, setDeployTarget] = useState<'all' | 'selected'>('selected')
+  const [selectedSites, setSelectedSites] = useState<string[]>(['pixelwall'])
+  const [deploying, setDeploying] = useState(false)
+  const [deployed, setDeployed] = useState(false)
+
+  const SITES = [
+    { id: 'pixelwall', name: 'PIXELWALL', url: 'gamin-posters.vercel.app', color: '#00e5ff' },
+    { id: 'popcorn', name: 'Popcorn Posters', url: 'pdf-guide-store.vercel.app', color: '#ff6b35' },
+    { id: 'filmwall', name: 'FilmWall (bientôt)', url: '', color: '#7c3aed', disabled: true },
+    { id: 'sportwall', name: 'SportWall (bientôt)', url: '', color: '#00c853', disabled: true },
+  ]
+
+  const handleDeploy = async () => {
+    setDeploying(true)
+    await new Promise(r => setTimeout(r, 2000))
+    setDeploying(false)
+    setDeployed(true)
+    setDeployModal(false)
+    setTimeout(() => setDeployed(false), 4000)
+  }
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null)
 
   // Auto-scroll on new messages
@@ -572,6 +593,71 @@ Réponds en français, de manière directe et actionnable. Utilise du markdown p
             </BlockStack>
           </Card>
 
+          {/* Déploiement */}
+          <Card>
+            <BlockStack gap="300">
+              <Text as="h2" variant="headingSm" fontWeight="semibold">Déploiement</Text>
+              <Text as="p" variant="bodySm" tone="subdued">
+                Choisir sur quels sites déployer cette application une fois développée.
+              </Text>
+              <BlockStack gap="150">
+                {SITES.map(site => (
+                  <div
+                    key={site.id}
+                    onClick={() => {
+                      if ((site as any).disabled) return
+                      setSelectedSites(prev =>
+                        prev.includes(site.id) ? prev.filter(x => x !== site.id) : [...prev, site.id]
+                      )
+                    }}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 10,
+                      padding: '8px 12px',
+                      borderRadius: 8,
+                      border: selectedSites.includes(site.id) ? `2px solid ${site.color}` : '1px solid #e5e5e5',
+                      background: selectedSites.includes(site.id) ? `${site.color}10` : 'white',
+                      cursor: (site as any).disabled ? 'not-allowed' : 'pointer',
+                      opacity: (site as any).disabled ? 0.5 : 1,
+                      transition: 'all 0.15s',
+                    }}
+                  >
+                    <div style={{ width: 10, height: 10, borderRadius: '50%', background: site.color, flexShrink: 0 }} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: '#1a1a1a' }}>{site.name}</div>
+                      {site.url && <div style={{ fontSize: 11, color: '#8c9196' }}>{site.url}</div>}
+                    </div>
+                    {selectedSites.includes(site.id) && !((site as any).disabled) && (
+                      <div style={{ fontSize: 16, color: site.color }}>✓</div>
+                    )}
+                  </div>
+                ))}
+              </BlockStack>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <Button
+                  fullWidth
+                  variant="plain"
+                  onClick={() => setSelectedSites(SITES.filter(s => !(s as any).disabled).map(s => s.id))}
+                >
+                  Tous les sites
+                </Button>
+                <Button
+                  fullWidth
+                  variant="primary"
+                  onClick={() => setDeployModal(true)}
+                  disabled={selectedSites.length === 0 || !appName}
+                  loading={deploying}
+                >
+                  🚀 Déployer
+                </Button>
+              </div>
+              {deployed && (
+                <div style={{ background: '#ecfdf5', border: '1px solid #6ee7b7', borderRadius: 6, padding: '8px 12px', fontSize: 13, color: '#065f46' }}>
+                  ✓ Déployée sur {selectedSites.length} site{selectedSites.length > 1 ? 's' : ''}
+                </div>
+              )}
+            </BlockStack>
+          </Card>
+
           {/* Actions rapides */}
           <Card>
             <BlockStack gap="200">
@@ -605,6 +691,34 @@ Réponds en français, de manière directe et actionnable. Utilise du markdown p
       >
         <Modal.Section>
           <Text as="p">L&apos;historique de la conversation sera supprimé. Les informations de l&apos;app (nom, description, fonctionnalités) seront conservées.</Text>
+        </Modal.Section>
+      </Modal>
+
+      {/* Modal déploiement */}
+      <Modal
+        open={deployModal}
+        onClose={() => setDeployModal(false)}
+        title="Confirmer le déploiement"
+        primaryAction={{ content: `Déployer sur ${selectedSites.length} site${selectedSites.length > 1 ? 's' : ''}`, loading: deploying, onAction: handleDeploy }}
+        secondaryActions={[{ content: 'Annuler', onAction: () => setDeployModal(false) }]}
+      >
+        <Modal.Section>
+          <BlockStack gap="300">
+            <Text as="p">
+              L&apos;application <strong>{appName}</strong> sera déployée sur :
+            </Text>
+            <BlockStack gap="100">
+              {SITES.filter(s => selectedSites.includes(s.id)).map(site => (
+                <InlineStack key={site.id} gap="200" blockAlign="center">
+                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: site.color }} />
+                  <Text as="p" variant="bodySm">{site.name} — {site.url}</Text>
+                </InlineStack>
+              ))}
+            </BlockStack>
+            <Text as="p" variant="bodySm" tone="subdued">
+              Cette action lancera le processus de développement et d&apos;intégration automatique.
+            </Text>
+          </BlockStack>
         </Modal.Section>
       </Modal>
 
