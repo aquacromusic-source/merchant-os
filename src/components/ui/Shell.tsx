@@ -73,7 +73,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
     return NOTIFICATIONS
   })
 
-  const unreadCount = notifications.filter((n: any) => !n.read).length
+  const unreadCount = (notifications as any[]).length
 
   const markAllRead = () => {
     setNotifications([])
