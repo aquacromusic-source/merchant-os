@@ -98,15 +98,6 @@ function SidebarItem({ item, active, onNav, iconOnly }: {
   const hasSub = item.sub && item.sub.length > 0
   const subOpen = hasSub && isActive
 
-  // Icône pleine par défaut, creuse quand la section est active (sous-page ouverte)
-  const iconStyle: React.CSSProperties = {
-    flexShrink: 0,
-    opacity: isActive ? 0.9 : 1,
-    strokeWidth: isActive ? 1.5 : 2.5,  // creuse = strokeWidth faible, pleine = fort
-    fill: isActive ? 'none' : 'currentColor',
-    stroke: 'currentColor',
-  }
-
   return (
     <>
       <button
@@ -115,31 +106,36 @@ function SidebarItem({ item, active, onNav, iconOnly }: {
         title={iconOnly ? item.label : undefined}
       >
         {item.icon && (
-          <span style={iconStyle}>
-            <item.icon size={16} />
+          <span style={{ flexShrink: 0, display: 'inline-flex' }}>
+            <item.icon
+              size={16}
+              stroke={isActive ? 1.5 : 0}
+              fill={isActive ? undefined : 'currentColor'}
+            />
           </span>
         )}
         {!iconOnly && <span className="truncate">{item.label}</span>}
         {!iconOnly && item.count && <span className="count">{item.count}</span>}
       </button>
       {!iconOnly && subOpen && hasSub && (
-        <div className="nav-sub" style={{ position: 'relative' }}>
+        <div className="nav-sub" style={{ position: 'relative', paddingLeft: 0 }}>
           {/* Ligne verticale reliant parent aux sous-items */}
-          <span style={{
+          <div style={{
             position: 'absolute',
-            left: 12,
+            left: 20,
             top: 0,
-            bottom: 8,
+            bottom: 6,
             width: 1,
-            background: '#c8c8c8',
+            background: '#c0c0c0',
             borderRadius: 1,
+            pointerEvents: 'none',
           }}/>
           {item.sub!.map(s => (
             <button
               key={s.key}
               className={`nav-item ${active === s.key ? 'active' : ''}`}
               onClick={() => onNav(s.key)}
-              style={{ paddingLeft: 28 }}
+              style={{ paddingLeft: 36 }}
             >
               <span className="truncate">{s.label}</span>
             </button>
