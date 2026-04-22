@@ -28,7 +28,7 @@ import {
   ShareIcon,
   ViewIcon,
 } from '@shopify/polaris-icons'
-import { products } from '@/lib/data'
+import { products, collections as allCollections } from '@/lib/data'
 
 // ─── Mock extended product data ──────────────────────────────────────────────
 
@@ -71,7 +71,7 @@ const MOCK_IMAGES: { id: string; label: string; alt: string; format: string; dim
 
 const SALES_CHANNELS = ['Boutique en ligne', 'Point de vente', 'TikTok', 'Pinterest', 'Facebook']
 const MARKETS = ['Spain', 'European Union', 'International', 'Pologne', 'Portugal', 'Allemagne', 'France', 'Italie', 'Norvège', 'Pays-Bas']
-const COLLECTIONS_TAGS = ['Basketball Posters - Epic NB...', 'Best Selling Products', 'Newest Products', 'AVADA', 'Smart Products Filter Index', 'EasygiftAll Products']
+// Collections chargées dynamiquement depuis data.ts
 const PRODUCT_TAGS = ['Wall Art', 'Poster', 'Michael Jordan', 'Basketball', 'Space Jordan', 'Comic']
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -530,7 +530,7 @@ const fallbackProduct = products[4]
   const [productType, setProductType] = useState(p.type)
   const [themeTemplate, setThemeTemplate] = useState('produits-postersbase')
   const [channelTags, setChannelTags] = useState(SALES_CHANNELS)
-  const [collectionTags, setCollectionTags] = useState(COLLECTIONS_TAGS)
+  const [collectionTags, setCollectionTags] = useState<string[]>([])
   const [productTags, setProductTags] = useState(PRODUCT_TAGS)
 
   const slug = p.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
@@ -914,16 +914,22 @@ const fallbackProduct = products[4]
                               <span style={{ maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>{c}</span>
                             </Tag>
                           ))}
-                          <input
-                            placeholder="Ajouter une collection…"
-                            style={{ border: 'none', outline: 'none', fontSize: 13, minWidth: 160, flex: 1 }}
-                            onKeyDown={e => {
-                              if (e.key === 'Enter' && e.currentTarget.value.trim()) {
-                                setCollectionTags(t => [...t, e.currentTarget.value.trim()])
-                                e.currentTarget.value = ''
+                          <select
+                            style={{ border: 'none', outline: 'none', fontSize: 13, flex: 1, background: 'transparent', cursor: 'pointer', color: '#2563eb' }}
+                            value=""
+                            onChange={e => {
+                              const val = e.target.value
+                              if (val && !collectionTags.includes(val)) {
+                                setCollectionTags(t => [...t, val])
                               }
+                              e.target.value = ''
                             }}
-                          />
+                          >
+                            <option value="">+ Ajouter une collection…</option>
+                            {(allCollections as any[]).filter(c => !collectionTags.includes(c.title) && c.status === 'live').map((c: any) => (
+                              <option key={c.id} value={c.title}>{c.title}</option>
+                            ))}
+                          </select>
                         </div>
                       </div>
                     </BlockStack>
