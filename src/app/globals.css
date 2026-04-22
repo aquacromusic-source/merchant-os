@@ -1071,10 +1071,25 @@ input, textarea, select { outline: none; }
   .kpi:first-child { border-top: 0 !important; }
 }
 
-/* === Coin arrondi topbar style Shopify ===
-   Coin bas-gauche de la topbar = arrondi concave
-   où la topbar sombre rejoint la sidebar claire */
+/* === Style Shopify : topbar avec coins arrondis bas-gauche ET bas-droite ===
+   La topbar sombre est arrondie en bas des deux côtés
+   ce qui lui donne l'effet "carte flottante" */
 .topbar {
-  border-bottom-left-radius: 12px;
-  overflow: visible;
+  border-bottom-left-radius: 14px;
+  border-bottom-right-radius: 14px;
+  position: relative;
+  z-index: 20;
+  /* Débordement pour que les arrondis soient visibles */
+  margin-bottom: -14px;
+  padding-bottom: 14px;
+}
+/* La sidebar doit commencer SOUS les arrondis */
+.sidebar {
+  margin-top: 14px;
+}
+/* Le main aussi */
+.main {
+  margin-top: 14px;
+  border-top-left-radius: 12px;
+  overflow: hidden;
 }
