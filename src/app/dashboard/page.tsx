@@ -241,9 +241,9 @@ export default function DashboardPage() {
           <Button icon={OrderIcon} onClick={() => router.push('/orders')}>
             7 commandes à traiter
           </Button>
-          <Button icon={CreditCardIcon}>1 paiement à saisir</Button>
-          <Button icon={AlertTriangleIcon} tone="critical">2 rétrofacturations</Button>
-          <Button icon={ProductIcon}>4 produits en rupture</Button>
+          <Button icon={CreditCardIcon} onClick={() => router.push('/orders?tab=unpaid')}>1 paiement à saisir</Button>
+          <Button icon={AlertTriangleIcon} tone="critical" onClick={() => router.push('/finance')}>2 rétrofacturations</Button>
+          <Button icon={ProductIcon} onClick={() => router.push('/inventory')}>4 produits en rupture</Button>
         </InlineStack>
 
         <Layout>
