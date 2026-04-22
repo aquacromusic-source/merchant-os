@@ -106,7 +106,7 @@ input, textarea, select { outline: none; }
 .topbar {
   grid-column: 1 / 3;
   background: var(--topbar-bg);
-  color: var(--nav-ink-topbar, #F3EEDF);
+  color: #ffffff;
   border-bottom: 1px solid rgba(255,255,255,0.06);
   display: flex;
   align-items: center;
@@ -114,6 +114,14 @@ input, textarea, select { outline: none; }
   padding: 0 16px;
   z-index: 20;
 }
+.topbar * { color: inherit; }
+.topbar svg { color: rgba(255,255,255,0.8); }
+.topbar .brand-name { color: #ffffff; font-weight: 600; }
+.topbar .brand-sub { color: rgba(255,255,255,0.6); }
+.topbar .top-iconbtn { color: rgba(255,255,255,0.8); }
+.topbar .top-iconbtn:hover { color: #ffffff; background: rgba(255,255,255,0.08); }
+.topbar .store-pill { color: #ffffff; }
+.topbar .store-pill .icon-chev { color: rgba(255,255,255,0.6); }
 .brand {
   display: flex; align-items: center; gap: 9px;
   width: calc(var(--sidebar-w) - 14px);
@@ -238,14 +246,15 @@ input, textarea, select { outline: none; }
 .nav-item svg { color: #5c5c5c; flex-shrink: 0; }
 .nav-item:hover { background: #ebebeb; color: #303030; }
 .nav-item.active {
-  background: #f1f1f1;
+  background: #ffffff;
   color: #303030;
   font-weight: 700;
   box-shadow: none;
   border-left: 3px solid #303030;
-  border-radius: 0;
+  border-radius: 0 8px 8px 0;
   padding-left: 7px;
   margin-left: 0;
+  margin-right: 8px;
 }
 .nav-item.active svg { color: #303030; }
 .nav-item .count {
