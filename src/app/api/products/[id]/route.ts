@@ -4,7 +4,7 @@ import { put } from '@vercel/blob'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://depztempjsdlpnfcjxir.supabase.co',
-  process.env.SUPABASE_SERVICE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRlcHp0ZW1wanNkbHBuZmNqeGlyIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NjQ1OTQwNiwiZXhwIjoyMDkyMDM1NDA2fQ.fldUtbH9jF6F1-Z-oKEp15xp1WSB4VsXnMm44n2olqE'
+  process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_KEY!
 )
 
 // PATCH — mettre à jour un produit

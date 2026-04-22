@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-const SUPABASE_URL = 'https://depztempjsdlpnfcjxir.supabase.co'
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRlcHp0ZW1wanNkbHBuZmNqeGlyIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NjQ1OTQwNiwiZXhwIjoyMDkyMDM1NDA2fQ.fldUtbH9jF6F1-Z-oKEp15xp1WSB4VsXnMm44n2olqE'
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY!
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
