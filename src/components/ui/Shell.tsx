@@ -104,10 +104,9 @@ const ICON_FILLED: Record<string, React.FC<{size?: number}>> = {
 }
 function SidebarIcon({ itemKey, Icon, isActive }: {
   itemKey: string
-  Icon?: React.FC<{ size?: number }>
+  Icon: React.FC<{ size?: number }>
   isActive: boolean
 }) {
-  if (!Icon) return null
   const FilledIcon = ICON_FILLED[itemKey]
   const Comp = (!isActive && FilledIcon) ? FilledIcon : Icon
   return (
@@ -135,7 +134,7 @@ function SidebarItem({ item, active, onNav, iconOnly }: {
         onClick={() => onNav(item.key)}
         title={iconOnly ? item.label : undefined}
       >
-        <SidebarIcon itemKey={item.key} Icon={item.icon} isActive={isActive} />
+        {item.icon && <SidebarIcon itemKey={item.key} Icon={item.icon} isActive={isActive} />}
         {!iconOnly && <span className="truncate">{item.label}</span>}
         {!iconOnly && item.count && <span className="count">{item.count}</span>}
       </button>
