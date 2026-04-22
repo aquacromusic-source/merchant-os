@@ -416,7 +416,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
         ]}
       />
       <Navigation.Section
-        title="Canaux de vente""
+        title="Canaux de vente"
         items={[
           {
             url: '/storefront',
