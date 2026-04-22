@@ -81,7 +81,7 @@ export default function ProductsPage() {
     if (tabId !== 'all' && p.status !== tabId) return false
     if (searchValue && !p.title.toLowerCase().includes(searchValue.toLowerCase())) return false
     return true
-  }), [tabId, searchValue])
+  }), [tabId, searchValue, allProducts])
 
   const { selectedResources, allResourcesSelected, handleSelectionChange } = useIndexResourceState(
     list.map(p => ({ id: p.id }))
