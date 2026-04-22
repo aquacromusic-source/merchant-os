@@ -461,12 +461,18 @@ const fallbackProduct = products[4]
   // Charger le vrai produit si c'est un slug Supabase
   const [realProduct, setRealProduct] = useState<any>(null)
   useEffect(() => {
-    // Si l'id ressemble à un slug (contient des tirets et pas que P-XXXX)
     if (params.id) {
       fetch(`/api/products/${params.id}`)
         .then(r => r.json())
         .then(data => {
-          if (data && data.title) setRealProduct(data)
+          if (data && data.title) {
+            setRealProduct(data)
+            setTitle(data.title)  // Mettre à jour le titre immédiatement
+            if (data.image_url) {
+              const realImg = { id: 'real-main', label: data.title, alt: data.title, format: 'JPG', dims: 'Original', size: '—', date: 'En ligne', url: data.image_url }
+              setImages(prev => [realImg, ...prev.filter(x => x.id !== 'real-main')])
+            }
+          }
         })
         .catch(() => {})
     }
