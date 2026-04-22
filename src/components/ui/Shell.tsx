@@ -536,7 +536,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
           {
             url: '/live',
             label: 'Vue en direct',
-            icon: GlobeIcon,
+            icon: MarketsIcon,
             selected: active === 'live',
             onClick: () => router.push('/live'),
           },
