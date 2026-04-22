@@ -60,7 +60,7 @@ const MOCK_VARIANTS: VariantRow[] = [
 const SIZE_OPTIONS = ['A4', 'A3', 'A2', 'A1']
 const FRAME_OPTIONS = ['Without Frame', 'With Black Frame', 'With White Frame']
 
-const MOCK_IMAGES = [
+const MOCK_IMAGES: { id: string; label: string; alt: string; format: string; dims: string; size: string; date: string; url: string }[] = [
   { id: 'img1', label: 'Hero', alt: 'Vue principale du poster', format: 'JPG', dims: '2400 × 3200', size: '1.2 MB', date: '12 avr. 2026' },
   { id: 'img2', label: 'Détail 1', alt: 'Détail texture', format: 'JPG', dims: '1600 × 1600', size: '820 KB', date: '12 avr. 2026' },
   { id: 'img3', label: 'Détail 2', alt: 'Vue encadrement noir', format: 'JPG', dims: '1600 × 2000', size: '940 KB', date: '12 avr. 2026' },
@@ -457,14 +457,47 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
   const p = products.find(x => x.id === params.id) || products[4]
 
   const [images, setImages] = useState(MOCK_IMAGES)
+  const [title, setTitle] = useState(p.title)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const handleSave = async () => {
     setSaving(true)
-    await new Promise(r => setTimeout(r, 800))
-    setSaving(false)
-    setSaved(true)
-    setTimeout(() => setSaved(false), 3000)
+    try {
+      // 1. Sauvegarder les métadonnées en DB
+      const res = await fetch(`/api/products/${p.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title,
+          tags: productTags,
+          collections: collectionTags,
+          status,
+          price: p.price,
+        }),
+      })
+
+      // 2. Uploader les nouvelles images (celles avec une URL blob:// locale)
+      const newLocalImages = images.filter(img => img.url && img.url.startsWith('blob:'))
+      if (newLocalImages.length > 0) {
+        const formData = new FormData()
+        for (const img of newLocalImages) {
+          const response = await fetch(img.url)
+          const blob = await response.blob()
+          formData.append('images', blob, img.label)
+        }
+        await fetch(`/api/products/${p.id}`, {
+          method: 'POST',
+          body: formData,
+        })
+      }
+
+      setSaved(true)
+      setTimeout(() => setSaved(false), 4000)
+    } catch (err) {
+      console.error('Save error:', err)
+    } finally {
+      setSaving(false)
+    }
   }
 
   const [status, setStatus] = useState('live')
