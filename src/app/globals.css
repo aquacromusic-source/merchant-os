@@ -1138,3 +1138,11 @@ html, body {
 [class*="Polaris-Page"] {
   padding-bottom: 60px !important;
 }
+
+/* Espace en bas dans le Frame Polaris */
+.Polaris-Frame__Content {
+  padding-bottom: 60px !important;
+}
+main.Polaris-Frame__Main {
+  padding-bottom: 60px !important;
+}
