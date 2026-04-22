@@ -291,7 +291,7 @@ export default function ProductsPage() {
                 loading={loadingProducts}
                 onClick={() => fetchProducts(currentPage + 1, true)}
               >
-                Charger {Math.min(PAGE_SIZE, totalProducts - allProducts.length)} de plus
+                Charger {String(Math.min(PAGE_SIZE, totalProducts - allProducts.length))} de plus
               </Button>
             )}
           </div>

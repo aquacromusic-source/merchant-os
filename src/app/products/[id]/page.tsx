@@ -482,17 +482,7 @@ const fallbackProduct = products[4]
   const productTitle = realProduct?.title || p.title || '...'
   const productImage = realProduct?.image_url || null
   
-  // Affichage de chargement si on attend le vrai produit
-  if (!realProduct && !title && productId && !productId.match(/^P-\d+$/)) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 24, marginBottom: 8 }}>⏳</div>
-          <div style={{ color: '#666' }}>Chargement du produit...</div>
-        </div>
-      </div>
-    )
-  }
+  // Hooks AVANT tout return conditionnel
   const [title, setTitle] = useState('')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
