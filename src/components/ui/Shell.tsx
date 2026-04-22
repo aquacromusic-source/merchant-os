@@ -120,16 +120,16 @@ function SidebarItem({ item, active, onNav, iconOnly }: {
         onClick={() => onNav(item.key)}
         title={iconOnly ? item.label : undefined}
       >
-        {item.icon && (() => {
+        { (() => {
+          if (!item.icon) return null
           const FilledIcon = ICON_FILLED[item.key]
-          // Icône pleine si non actif + version filled dispo, outline si actif
           const IconComp = (!isActive && FilledIcon) ? FilledIcon : item.icon
           return (
-            <span style={{ flexShrink: 0, display: 'inline-flex', color: isActive ? '#2f2f2f' : '#2f2f2f' }}>
+            <span style={{ flexShrink: 0, display: 'inline-flex' }}>
               <IconComp size={16} />
             </span>
           )
-        })()}
+        })() }
         {!iconOnly && <span className="truncate">{item.label}</span>}
         {!iconOnly && item.count && <span className="count">{item.count}</span>}
       </button>
