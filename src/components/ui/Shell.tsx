@@ -192,7 +192,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
               justifyContent: 'space-between',
             }}>
               <Text as="p" fontWeight="semibold">Notifications</Text>
-              {unreadCount > 0 && (
+              {(notifications as any[]).length > 0 && (
                 <button
                   onClick={markAllRead}
                   style={{
@@ -200,7 +200,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
                     fontSize: 13, color: 'var(--p-color-text-interactive)',
                   }}
                 >
-                  Tout marquer lu
+                  Tout effacer
                 </button>
               )}
             </div>
