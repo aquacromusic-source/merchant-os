@@ -112,19 +112,21 @@ export function Shell({ children }: { children: React.ReactNode }) {
   )
 
   const notifBellMarkup = (
-    <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
+    <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', height: '100%', justifyContent: 'center' }}>
       <button
         onClick={() => setNotifOpen(v => !v)}
         style={{
           background: 'none',
           border: 'none',
           cursor: 'pointer',
-          padding: '8px',
-          display: 'flex',
+          padding: '6px 8px',
+          display: 'inline-flex',
           alignItems: 'center',
           justifyContent: 'center',
           borderRadius: 8,
           position: 'relative',
+          verticalAlign: 'middle',
+          lineHeight: 1,
         }}
         aria-label="Notifications"
       >
