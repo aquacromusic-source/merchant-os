@@ -38,9 +38,7 @@ import {
   SearchIcon,
   ShareIcon,
   StoreIcon,
-  TagIcon,
   ViewIcon,
-  ArrowLeftIcon,
 } from '@shopify/polaris-icons'
 import { products } from '@/lib/data'
 
@@ -211,7 +209,7 @@ function VariantDetailPanel({ variant, onClose }: { variant: VariantRow; onClose
                     ['Total', '0', '1', `${Math.max(0,variant.stock-2)}`, `${variant.stock}`],
                   ]}
                 />
-                <Button plain>Afficher l&apos;historique des ajustements</Button>
+                <Button variant="plain">Afficher l&apos;historique des ajustements</Button>
               </BlockStack>
             </Box>
           </Card>
@@ -265,7 +263,7 @@ function ImageModal({ image, onClose }: { image: typeof MOCK_IMAGES[0]; onClose:
       open
       onClose={onClose}
       title={image.label}
-      large
+      size="large"
       primaryAction={{ content: 'Terminé', onAction: onClose }}
       secondaryActions={[
         { content: 'Recadrage', onAction: () => {} },
@@ -520,7 +518,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
         backAction={{ content: 'Produits', onAction: () => router.push('/products') }}
         title={p.title}
         titleMetadata={<Badge tone={statusBadge[status] ?? 'attention'}>{status === 'live' ? 'Actif' : status === 'draft' ? 'Brouillon' : 'Non répertorié'}</Badge>}
-        primaryAction={{ content: 'Enregistrer', variant: 'primary' }}
+        primaryAction={{ content: 'Enregistrer' }}
         secondaryActions={[
           { content: 'Dupliquer', icon: DuplicateIcon, onAction: () => {} },
           { content: 'Afficher', icon: ViewIcon, onAction: () => {} },
@@ -555,7 +553,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                           autoComplete="off"
                         />
                         <div>
-                          <Text as="label" variant="bodySm" fontWeight="medium">Description</Text>
+                          <Text as="p" variant="bodySm" fontWeight="medium">Description</Text>
                           <Box paddingBlockStart="100">
                             <div style={{ border: '1px solid #c4c4c4', borderRadius: 8, overflow: 'hidden' }}>
                               <RichTextToolbar />
@@ -660,7 +658,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                             { label: 'Frame', options: FRAME_OPTIONS },
                           ].map(opt => (
                             <div key={opt.label}>
-                              <Text as="label" variant="bodySm" fontWeight="medium">{opt.label}</Text>
+                              <Text as="p" variant="bodySm" fontWeight="medium">{opt.label}</Text>
                               <Box paddingBlockStart="100">
                                 <InlineStack gap="200" wrap>
                                   {opt.options.map(o => (
@@ -670,7 +668,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                                       background: 'white', cursor: 'pointer',
                                     }}>{o}</div>
                                   ))}
-                                  <Button plain size="slim" icon={PlusIcon}>Ajouter une autre option</Button>
+                                  <Button variant="plain" size="slim" icon={PlusIcon}>Ajouter une autre option</Button>
                                 </InlineStack>
                               </Box>
                             </div>
@@ -705,7 +703,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                       <BlockStack gap="300">
                         <InlineStack align="space-between">
                           <Text variant="headingMd" as="h2">Champs méta</Text>
-                          <Button plain>Tout voir</Button>
+                          <Button variant="plain">Tout voir</Button>
                         </InlineStack>
                         <TextField label="Smind size chart" value="" autoComplete="off" onChange={() => {}} placeholder="Ex: S=36, M=38…" />
                         <TextField label="Google Product Category" value="Home & Garden > Decor > Posters & Prints" autoComplete="off" onChange={() => {}} />
@@ -793,7 +791,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                         <Tag key={m}>{m}</Tag>
                       ))}
                     </div>
-                    <Button plain size="slim">+{MARKETS.length - 5} autres</Button>
+                    <Button variant="plain" size="slim">{`+${MARKETS.length - 5} autres`}</Button>
                   </BlockStack>
                 </Card>
 
@@ -815,7 +813,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                         <Text as="span" variant="bodySm" fontWeight="semibold">63,10 €</Text>
                       </InlineStack>
                     </BlockStack>
-                    <Button plain size="slim">Afficher les détails</Button>
+                    <Button variant="plain" size="slim">Afficher les détails</Button>
                   </BlockStack>
                 </Card>
 
@@ -839,7 +837,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                     />
                     {/* Collections */}
                     <BlockStack gap="100">
-                      <Text as="label" variant="bodySm" fontWeight="medium">Collections</Text>
+                      <Text as="p" variant="bodySm" fontWeight="medium">Collections</Text>
                       <div style={{ border: '1px solid #c4c4c4', borderRadius: 7, padding: '6px 10px', background: 'white', minHeight: 38 }}>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
                           {collectionTags.map(c => (
@@ -852,7 +850,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                     </BlockStack>
                     {/* Tags */}
                     <BlockStack gap="100">
-                      <Text as="label" variant="bodySm" fontWeight="medium">Balises</Text>
+                      <Text as="p" variant="bodySm" fontWeight="medium">Balises</Text>
                       <div style={{ border: '1px solid #c4c4c4', borderRadius: 7, padding: '6px 10px', background: 'white', minHeight: 38 }}>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
                           {productTags.map(t => (
