@@ -11,8 +11,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr">
-      <body style={{ background: "var(--topbar-bg, #1a1a1a)" }}>
+    <html lang="fr" style={{ background: "#1a1a1a" }}>
+      <body style={{ background: "#1a1a1a", margin: 0 }}>
         <PolarisProvider>
           <div className="shell-wrapper"><Shell>{children}</Shell></div>
         </PolarisProvider>

@@ -1088,3 +1088,10 @@ body {
   min-height: 100vh;
   background: var(--bg);
 }
+
+/* Force fond sombre sur html/body pour l'effet shell arrondi */
+html, body {
+  background: #1a1a1a !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
