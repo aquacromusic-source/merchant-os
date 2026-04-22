@@ -24,14 +24,16 @@
   --divider: #d8d8d8;
 
   /* Sidebar / topbar — dark */
-  --nav-bg: #1a1a1a;
-  --nav-bg-2: #252525;
-  --nav-border: #2e2e2e;
-  --nav-ink: #F3EEDF;
-  --nav-ink-2: #C4BEA9;
-  --nav-ink-3: #8B8470;
-  --nav-hover: #2a2a2a;
-  --nav-active: #333333;
+  --nav-bg: #ebebeb;
+  --topbar-bg: #1a1a1a;
+  --nav-ink-topbar: #F3EEDF;
+  --nav-bg-2: #e0e0e0;
+  --nav-border: #d4d4d4;
+  --nav-ink: #2a2823;
+  --nav-ink-2: #4a4640;
+  --nav-ink-3: #7a7570;
+  --nav-hover: #ddddd8;
+  --nav-active: #d4d0ca;
 
   /* Accents — warm terracotta */
   --accent: oklch(0.58 0.15 45);
@@ -103,7 +105,8 @@ input, textarea, select { outline: none; }
 }
 .topbar {
   grid-column: 1 / 3;
-  background: var(--nav-bg);
+  background: var(--topbar-bg);
+  color: var(--nav-ink-topbar, #F3EEDF);
   border-bottom: 1px solid var(--nav-border);
   display: flex;
   align-items: center;
