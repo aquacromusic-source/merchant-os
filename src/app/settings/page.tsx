@@ -19,10 +19,10 @@ import {
 } from '@shopify/polaris'
 import {
   SettingsIcon,
-  DeliveryIcon,
+  ShippingLabelIcon,
   CreditCardIcon,
-  PersonIcon,
-  ShoppingCartIcon,
+  PersonFilledIcon,
+  OrderIcon,
   ReceiptEuroIcon,
   LocationIcon,
   GlobeIcon,
@@ -99,7 +99,7 @@ function SettingContent({ active }: { active: string }) {
     <Card>
       <BlockStack gap="300">
         <InlineStack gap="200" blockAlign="center">
-          <DeliveryIcon width={16} height={16} />
+          <ShippingLabelIcon width={16} height={16} />
           <Text as="h2" variant="headingSm" fontWeight="semibold">Expédition et livraison</Text>
         </InlineStack>
         {[

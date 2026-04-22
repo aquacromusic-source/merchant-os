@@ -1,75 +1,44 @@
 'use client'
 import React, { useState } from 'react'
-import { I } from '@/lib/icons'
+import { Page, Card, Text, Badge, IndexTable, useIndexResourceState, Tabs } from '@shopify/polaris'
+import { PlusIcon } from '@shopify/polaris-icons'
 import { pages } from '@/lib/data'
-import { PageHeader } from '@/components/ui/PageHeader'
-import { FilterBar } from '@/components/ui/FilterBar'
-import { Checkbox } from '@/components/ui/Checkbox'
-import { Pager } from '@/components/ui/Pager'
+
+function statusBadge(status: string) {
+  const m: Record<string, 'success' | 'warning' | undefined> = { 'Publié': 'success', 'Planifié': 'warning' }
+  return <Badge tone={m[status]}>{status}</Badge>
+}
 
 export default function StorefrontPagesPage() {
-  const [tab, setTab] = useState('all')
+  const [sel, setSel] = useState(0)
   const tabs = [
-    { key: 'all', label: 'Toutes', count: pages.length },
-    { key: 'published', label: 'Publiées', count: pages.filter(p => p.status === 'Publié').length },
-    { key: 'draft', label: 'Brouillons', count: pages.filter(p => p.status === 'Brouillon').length },
+    { id: 'all', content: `Toutes (${(pages as any[]).length})` },
+    { id: 'published', content: `Publiées (${(pages as any[]).filter(p => p.status === 'Publié').length})` },
   ]
-
-  const list = pages.filter(p =>
-    tab === 'all' ||
-    (tab === 'published' && p.status === 'Publié') ||
-    (tab === 'draft' && p.status === 'Brouillon')
-  )
-
+  const list = (pages as any[]).filter(p => sel === 0 || p.status === 'Publié')
+  const { selectedResources, allResourcesSelected, handleSelectionChange } = useIndexResourceState(list.map((_: any, i: number) => ({ id: String(i) })))
   return (
-    <div className="page page-wide">
-      <PageHeader
-        icon={<I.FileText size={18} />}
-        title="Pages"
-        actions={
-          <>
-            <button className="btn btn-sm"><I.Export size={13} /> Exporter</button>
-            <button className="btn btn-sm btn-primary"><I.Plus size={13} /> Créer une page</button>
-          </>
-        }
-      />
-      <div className="table-wrap">
-        <FilterBar tabs={tabs} active={tab} onTab={setTab} />
-        <table className="table">
-          <thead>
-            <tr>
-              <th className="col-checkbox"><Checkbox /></th>
-              <th>Titre</th>
-              <th>URL</th>
-              <th>Statut</th>
-              <th>Dernière modification</th>
-              <th />
-            </tr>
-          </thead>
-          <tbody>
-            {list.map((p, i) => (
-              <tr key={i} style={{ cursor: 'pointer' }}>
-                <td className="col-checkbox"><Checkbox /></td>
-                <td><span className="row-link" style={{ fontWeight: 500 }}>{p.title}</span></td>
-                <td className="mono ts">{p.url}</td>
-                <td>
-                  <span className={`badge ${p.status === 'Publié' ? 'ok' : 'muted'}`}>
-                    <span className="dot" />{p.status}
-                  </span>
-                </td>
-                <td className="td-muted">{p.updated}</td>
-                <td>
-                  <div className="hstack">
-                    <button className="btn btn-sm btn-ghost btn-icon"><I.Edit size={13} /></button>
-                    <button className="btn btn-sm btn-ghost btn-icon"><I.Eye size={13} /></button>
-                  </div>
-                </td>
-              </tr>
+    <Page title="Pages" primaryAction={{ content: 'Ajouter une page', icon: PlusIcon, variant: 'primary' }}>
+      <Card padding="0">
+        <Tabs tabs={tabs} selected={sel} onSelect={setSel}>
+          <IndexTable
+            resourceName={{ singular: 'page', plural: 'pages' }}
+            itemCount={list.length}
+            selectedItemsCount={allResourcesSelected ? 'All' : selectedResources.length}
+            onSelectionChange={handleSelectionChange}
+            headings={[{ title: 'Titre' }, { title: 'URL' }, { title: 'Statut' }, { title: 'Mise à jour' }]}
+          >
+            {list.map((p: any, i: number) => (
+              <IndexTable.Row id={String(i)} key={i} selected={selectedResources.includes(String(i))} position={i}>
+                <IndexTable.Cell><Text as="span" fontWeight="semibold">{p.title}</Text></IndexTable.Cell>
+                <IndexTable.Cell><Text as="span" tone="subdued"><span style={{ fontFamily: 'monospace' }}>{p.url}</span></Text></IndexTable.Cell>
+                <IndexTable.Cell>{statusBadge(p.status)}</IndexTable.Cell>
+                <IndexTable.Cell><Text as="span" tone="subdued">{p.updated}</Text></IndexTable.Cell>
+              </IndexTable.Row>
             ))}
-          </tbody>
-        </table>
-        <Pager total={pages.length} perPage={25} />
-      </div>
-    </div>
+          </IndexTable>
+        </Tabs>
+      </Card>
+    </Page>
   )
 }

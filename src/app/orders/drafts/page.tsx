@@ -5,7 +5,7 @@ import { PlusIcon } from '@shopify/polaris-icons'
 
 export default function OrdersDraftsPage() {
   return (
-    <Page title="Brouillons de commandes" primaryAction={{ content: 'Créer une commande', icon: PlusIcon, variant: 'primary' }}>
+    <Page title="Brouillons de commandes" primaryAction={{ content: 'Créer une commande', icon: PlusIcon }}>
       <Card><EmptyState heading="Aucun brouillon" image=""><Text as="p" variant="bodySm" tone="subdued">Les brouillons apparaîtront ici.</Text></EmptyState></Card>
     </Page>
   )

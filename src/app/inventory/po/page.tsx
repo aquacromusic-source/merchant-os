@@ -5,7 +5,7 @@ import { PlusIcon } from '@shopify/polaris-icons'
 
 export default function InventoryPOPage() {
   return (
-    <Page title="Bons de commande" primaryAction={{ content: 'Créer un bon de commande', icon: PlusIcon, variant: 'primary' }}>
+    <Page title="Bons de commande" primaryAction={{ content: 'Créer un bon de commande', icon: PlusIcon }}>
       <Card><EmptyState heading="Aucun bon de commande" image=""><Text as="p" variant="bodySm" tone="subdued">Les bons de commande apparaîtront ici.</Text></EmptyState></Card>
     </Page>
   )

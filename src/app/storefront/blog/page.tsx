@@ -1,79 +1,46 @@
 'use client'
 import React, { useState } from 'react'
-import { I } from '@/lib/icons'
+import { Page, Card, Text, Badge, IndexTable, useIndexResourceState, Tabs } from '@shopify/polaris'
+import { PlusIcon } from '@shopify/polaris-icons'
 import { articles } from '@/lib/data'
-import { PageHeader } from '@/components/ui/PageHeader'
-import { FilterBar } from '@/components/ui/FilterBar'
-import { Checkbox } from '@/components/ui/Checkbox'
-import { Pager } from '@/components/ui/Pager'
+
+function statusBadge(status: string) {
+  const m: Record<string, 'success' | 'warning' | undefined> = { 'Publié': 'success', 'Programmée': 'warning' }
+  return <Badge tone={m[status]}>{status}</Badge>
+}
 
 export default function StorefrontBlogPage() {
-  const [tab, setTab] = useState('all')
+  const [sel, setSel] = useState(0)
   const tabs = [
-    { key: 'all', label: 'Tous', count: articles.length },
-    { key: 'published', label: 'Publiés', count: articles.filter(a => a.status === 'Publié').length },
-    { key: 'draft', label: 'Brouillons', count: articles.filter(a => a.status === 'Brouillon').length },
-    { key: 'scheduled', label: 'Programmés', count: articles.filter(a => a.status === 'Programmée').length },
+    { id: 'all', content: `Tous (${(articles as any[]).length})` },
+    { id: 'published', content: `Publiés (${(articles as any[]).filter(a => a.status === 'Publié').length})` },
+    { id: 'draft', content: `Brouillons (${(articles as any[]).filter(a => a.status === 'Brouillon').length})` },
   ]
-
-  const list = articles.filter(a =>
-    tab === 'all' ||
-    (tab === 'published' && a.status === 'Publié') ||
-    (tab === 'draft' && a.status === 'Brouillon') ||
-    (tab === 'scheduled' && a.status === 'Programmée')
-  )
-
+  const tabId = tabs[sel]?.id || 'all'
+  const list = (articles as any[]).filter(a => tabId === 'all' || (tabId === 'published' && a.status === 'Publié') || (tabId === 'draft' && a.status === 'Brouillon'))
+  const { selectedResources, allResourcesSelected, handleSelectionChange } = useIndexResourceState(list.map((_: any, i: number) => ({ id: String(i) })))
   return (
-    <div className="page page-wide">
-      <PageHeader
-        icon={<I.Newspaper size={18} />}
-        title="Articles de blog"
-        actions={
-          <>
-            <button className="btn btn-sm"><I.Export size={13} /> Exporter</button>
-            <button className="btn btn-sm btn-primary"><I.Plus size={13} /> Écrire un article</button>
-          </>
-        }
-      />
-      <div className="table-wrap">
-        <FilterBar tabs={tabs} active={tab} onTab={setTab} />
-        <table className="table">
-          <thead>
-            <tr>
-              <th className="col-checkbox"><Checkbox /></th>
-              <th>Titre</th>
-              <th>Auteur</th>
-              <th>Statut</th>
-              <th>Date</th>
-              <th>Lecture</th>
-              <th />
-            </tr>
-          </thead>
-          <tbody>
-            {list.map((a, i) => (
-              <tr key={i} style={{ cursor: 'pointer' }}>
-                <td className="col-checkbox"><Checkbox /></td>
-                <td><span className="row-link" style={{ fontWeight: 500 }}>{a.title}</span></td>
-                <td className="td-muted">{a.author}</td>
-                <td>
-                  <span className={`badge ${a.status === 'Publié' ? 'ok' : a.status === 'Programmée' ? 'warn' : 'muted'}`}>
-                    <span className="dot" />{a.status}
-                  </span>
-                </td>
-                <td className="td-muted">{a.date}</td>
-                <td className="td-muted">{a.read}</td>
-                <td>
-                  <div className="hstack">
-                    <button className="btn btn-sm btn-ghost btn-icon"><I.Edit size={13} /></button>
-                    <button className="btn btn-sm btn-ghost btn-icon"><I.Eye size={13} /></button>
-                  </div>
-                </td>
-              </tr>
+    <Page title="Articles de blog" primaryAction={{ content: 'Ajouter un article', icon: PlusIcon, variant: 'primary' }}>
+      <Card padding="0">
+        <Tabs tabs={tabs} selected={sel} onSelect={setSel}>
+          <IndexTable
+            resourceName={{ singular: 'article', plural: 'articles' }}
+            itemCount={list.length}
+            selectedItemsCount={allResourcesSelected ? 'All' : selectedResources.length}
+            onSelectionChange={handleSelectionChange}
+            headings={[{ title: 'Titre' }, { title: 'Auteur' }, { title: 'Statut' }, { title: 'Date' }]}
+          >
+            {list.map((a: any, i: number) => (
+              <IndexTable.Row id={String(i)} key={i} selected={selectedResources.includes(String(i))} position={i}>
+                <IndexTable.Cell><Text as="span" fontWeight="semibold">{a.title}</Text></IndexTable.Cell>
+                <IndexTable.Cell><Text as="span" tone="subdued">{a.author}</Text></IndexTable.Cell>
+                <IndexTable.Cell>{statusBadge(a.status)}</IndexTable.Cell>
+                <IndexTable.Cell><Text as="span" tone="subdued">{a.date}</Text></IndexTable.Cell>
+              </IndexTable.Row>
             ))}
-          </tbody>
-        </table>
-        <Pager total={articles.length} perPage={25} />
-      </div>
-    </div>
+          </IndexTable>
+        </Tabs>
+      </Card>
+    </Page>
   )
 }
