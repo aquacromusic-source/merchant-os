@@ -1095,3 +1095,39 @@ html, body {
   margin: 0 !important;
   padding: 0 !important;
 }
+
+/* ── Full width pour grands écrans ─────────────────────────────
+   Polaris limite le contenu à ~1200px. Sur 27 pouces c'est trop
+   étroit. On force le plein écran sur toutes les tailles. */
+.Polaris-Frame__Content,
+.Polaris-Frame__Main,
+.Polaris-Page,
+.Polaris-Page__Content,
+[class*="Polaris-Frame__Content"],
+[class*="Polaris-Frame__Main"],
+[class*="Polaris-Page"]:not(.Polaris-Page--narrowWidth) {
+  max-width: none !important;
+}
+
+/* Page Polaris — étirer sur toute la largeur disponible */
+.Polaris-Page {
+  max-width: none !important;
+  padding-inline: 24px !important;
+}
+
+/* Sur grand écran (27 pouces = ~2560px, écran 2K = ~1440px+) */
+@media (min-width: 1440px) {
+  .Polaris-Page {
+    padding-inline: 40px !important;
+  }
+}
+
+@media (min-width: 1920px) {
+  .Polaris-Page {
+    padding-inline: 60px !important;
+  }
+  /* Grilles plus larges sur grand écran */
+  .Polaris-Layout {
+    gap: 24px !important;
+  }
+}
