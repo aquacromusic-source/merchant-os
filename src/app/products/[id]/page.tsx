@@ -19,25 +19,12 @@ import {
   Modal,
   Tabs,
   DataTable,
-  Icon,
-  Thumbnail,
-  Banner,
   Checkbox,
-  ProgressBar,
 } from '@shopify/polaris'
 import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
   DuplicateIcon,
-  EditIcon,
-  GlobeIcon,
-  ImageIcon,
   PlusIcon,
-  ProductIcon,
-  DeleteIcon,
-  SearchIcon,
   ShareIcon,
-  StoreIcon,
   ViewIcon,
 } from '@shopify/polaris-icons'
 import { products } from '@/lib/data'
@@ -638,7 +625,6 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                           onChange={setCategory}
                           autoComplete="off"
                           placeholder="Rechercher une catégorie…"
-                          prefix={<Icon source={SearchIcon} />}
                           helpText="La catégorie détermine les champs de méta et les taxonomies produit."
                         />
                       </BlockStack>
