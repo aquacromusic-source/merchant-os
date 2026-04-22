@@ -183,7 +183,7 @@ export default function LivePage() {
             <BlockStack gap="300">
               <InlineStack align="space-between" blockAlign="center">
                 <Text as="h2" variant="headingSm" fontWeight="semibold">Visiteurs dans le monde</Text>
-                <Badge tone="success">{stats.online} en ligne</Badge>
+                <Badge tone="success">{String(stats.online)} en ligne</Badge>
               </InlineStack>
               <Globe3D visitors={visitors} />
               <Text as="p" variant="bodySm" tone="subdued" alignment="center">
