@@ -1,14 +1,16 @@
 'use client'
 import React from 'react'
+import { useRouter } from 'next/navigation'
 import { Page, Card, BlockStack, InlineStack, InlineGrid, Text, Badge, Button } from '@shopify/polaris'
 import { PlusIcon } from '@shopify/polaris-icons'
 import { apps, appsMarket } from '@/lib/data'
 
 export default function AppsPage() {
+  const router = useRouter()
   return (
     <Page
       title="Applications"
-      primaryAction={{ content: 'Explorer les applications', icon: PlusIcon }}
+      primaryAction={{ content: 'Créer une application', icon: PlusIcon, onAction: () => router.push('/apps/create') }}
     >
       <BlockStack gap="400">
         <Card>
