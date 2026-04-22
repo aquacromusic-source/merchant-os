@@ -62,29 +62,21 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const [searchValue, setSearchValue] = useState('')
   const [userMenuActive, setUserMenuActive] = useState(false)
   const [notifOpen, setNotifOpen] = useState(false)
-  const [notifications, setNotifications] = useState(() => {
-    if (typeof window === 'undefined') return NOTIFICATIONS
-    try {
-      // Si l'utilisateur a tout effacé, retourner vide
-      if (localStorage.getItem('mos_notifications_cleared') === 'true') return []
-      const saved = localStorage.getItem('mos_notifications')
-      if (saved !== null) return JSON.parse(saved)
-    } catch {}
-    return NOTIFICATIONS
-  })
+  // Toujours partir de vide — le useEffect charge depuis localStorage
+  const [notifications, setNotifications] = useState<any[]>([])
 
-  // Synchroniser les notifs depuis localStorage à chaque montage
+  // Charger les notifs depuis localStorage au montage
   React.useEffect(() => {
-    if (typeof window === 'undefined') return
     try {
-      if (localStorage.getItem('mos_notifications_cleared') === 'true') {
-        setNotifications([])
-        return
-      }
+      // Si cleared → rester vide pour toujours
+      if (localStorage.getItem('mos_notifications_cleared') === 'true') return
       const saved = localStorage.getItem('mos_notifications')
       if (saved !== null) {
-        const parsed = JSON.parse(saved)
-        setNotifications(parsed)
+        setNotifications(JSON.parse(saved))
+      } else {
+        // Première visite : charger les notifs par défaut ET les sauvegarder
+        setNotifications(NOTIFICATIONS)
+        localStorage.setItem('mos_notifications', JSON.stringify(NOTIFICATIONS))
       }
     } catch {}
   }, [])
