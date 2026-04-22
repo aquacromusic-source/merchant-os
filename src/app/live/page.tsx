@@ -26,7 +26,7 @@ const MOCK_SALES = [
   { product: 'Spider-Man 2', qty: 4, revenue: '159,80 €', flag: '🇸🇬', ago: 'il y a 14 min' },
 ]
 
-// Globe 3D component
+// Globe 3D style Shopify — hexagonal cyan sur fond clair
 function Globe3D({ visitors }: { visitors: typeof MOCK_VISITORS }) {
   const ref = useRef<HTMLDivElement>(null)
   const globeRef = useRef<any>(null)
@@ -44,34 +44,38 @@ function Globe3D({ visitors }: { visitors: typeof MOCK_VISITORS }) {
       globe
         .width(ref.current.offsetWidth || 500)
         .height(ref.current.offsetHeight || 500)
-        .backgroundColor('#ebebeb')
-        .globeImageUrl('//unpkg.com/three-globe/example/img/earth-night.jpg')
-        .bumpImageUrl('//unpkg.com/three-globe/example/img/earth-topology.png')
-        .atmosphereColor('#00e5ff')
-        .atmosphereAltitude(0.15)
+        .backgroundColor('rgba(0,0,0,0)')
+        // Pas de texture photo — globe custom avec polygones
+        .globeImageUrl('')
+        .showGlobe(true)
+        .showAtmosphere(true)
+        .atmosphereColor('rgba(100,210,220,0.3)')
+        .atmosphereAltitude(0.1)
+        // Hexagones style Shopify
+        .hexBinPointsData(
+          Array.from({length: 800}, () => ({
+            lat: (Math.random() - 0.5) * 180,
+            lng: (Math.random() - 0.5) * 360,
+          }))
+        )
+        .hexBinPointLat('lat')
+        .hexBinPointLng('lng')
+        .hexBinResolution(4)
+        .hexTopColor(() => 'rgba(100,210,220,0.9)')
+        .hexSideColor(() => 'rgba(100,210,220,0.3)')
+        .hexAltitude(0.01)
+        // Points visiteurs en violet
         .pointsData(visitors)
         .pointLat('lat')
         .pointLng('lng')
-        .pointColor(() => '#00e5ff')
-        .pointAltitude(0.02)
-        .pointRadius(0.5)
-        .pointsMerge(false)
-        .labelsData(visitors.filter(v => v.value))
-        .labelLat('lat')
-        .labelLng('lng')
-        .labelText((d: any) => `${d.flag} ${d.city}`)
-        .labelSize(1.2)
-        .labelColor(() => '#ffd600')
-        .labelDotRadius(0.4)
-        .labelAltitude(0.02)
+        .pointColor(() => '#7c3aed')
+        .pointAltitude(0.04)
+        .pointRadius(0.6)
 
-      // Auto-rotate
       globe.controls().autoRotate = true
-      globe.controls().autoRotateSpeed = 0.5
+      globe.controls().autoRotateSpeed = 0.4
       globe.controls().enableZoom = false
-
-      // Point de vue initial centré sur l'Europe
-      globe.pointOfView({ lat: 20, lng: 10, altitude: 2 }, 0)
+      globe.pointOfView({ lat: 20, lng: -10, altitude: 1.8 }, 0)
     })
 
     return () => {
@@ -83,7 +87,7 @@ function Globe3D({ visitors }: { visitors: typeof MOCK_VISITORS }) {
   }, [visitors])
 
   return (
-    <div ref={ref} style={{ width: '100%', height: 500, borderRadius: 12, overflow: 'hidden', background: '#0a0e1a' }} />
+    <div ref={ref} style={{ width: '100%', height: 520, borderRadius: 12, overflow: 'hidden', background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)' }} />
   )
 }
 
@@ -177,7 +181,7 @@ export default function LivePage() {
           ))}
         </InlineGrid>
 
-        <InlineGrid columns={{ xs: 1, lg: '1fr 2fr' }} gap="400">
+        <InlineGrid columns={{ xs: 1, lg: '380px 1fr' }} gap="400">
           {/* Activité en direct — GAUCHE */}
           <BlockStack gap="400">
             {/* Visiteurs actifs */}
