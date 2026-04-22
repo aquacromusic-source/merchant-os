@@ -1070,32 +1070,3 @@ input, textarea, select { outline: none; }
   .kpi { border-right: 0 !important; border-top: 1px solid var(--divider) !important; }
   .kpi:first-child { border-top: 0 !important; }
 }
-
-/* === Coin arrondi topbar style Shopify ===
-   La bande noire de la topbar au-dessus de la sidebar
-   se termine avec un coin arrondi en bas-droite */
-.shell-layout {
-  position: relative;
-}
-.topbar::before {
-  content: '';
-  position: absolute;
-  bottom: -10px;
-  left: 0;
-  width: var(--sidebar-w);
-  height: 10px;
-  background: var(--topbar-bg);
-  z-index: 10;
-  pointer-events: none;
-}
-.topbar::after {
-  content: '';
-  position: absolute;
-  bottom: -10px;
-  left: calc(var(--sidebar-w) - 10px);
-  width: 20px;
-  height: 20px;
-  background: radial-gradient(circle at top left, transparent 0, transparent 10px, var(--topbar-bg) 10px);
-  z-index: 11;
-  pointer-events: none;
-}
