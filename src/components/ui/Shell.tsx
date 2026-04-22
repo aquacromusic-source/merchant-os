@@ -585,9 +585,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
           showMobileNavigation={mobileNavigationActive}
           onNavigationDismiss={toggleMobileNavigation}
         >
-          <div style={{ paddingBottom: 60 }}>
-            {children}
-          </div>
+{children}
         </Frame>
       </div>
     </div>
