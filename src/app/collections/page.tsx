@@ -1,17 +1,18 @@
 'use client'
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Page,
   Card,
   Text,
   Badge,
-  Button,
   IndexTable,
   useIndexResourceState,
   Tabs,
+  TextField,
+  Box,
 } from '@shopify/polaris'
-import { PlusIcon } from '@shopify/polaris-icons'
+import { PlusIcon, SearchIcon } from '@shopify/polaris-icons'
 import { collections } from '@/lib/data'
 
 function statusBadge(status: string) {
@@ -25,6 +26,7 @@ function statusBadge(status: string) {
 export default function CollectionsPage() {
   const router = useRouter()
   const [selectedTab, setSelectedTab] = useState(0)
+  const [searchValue, setSearchValue] = useState('')
 
   const tabs = [
     { id: 'all', content: `Toutes (${collections.length})` },
@@ -34,7 +36,12 @@ export default function CollectionsPage() {
   ]
 
   const tabId = tabs[selectedTab]?.id || 'all'
-  const list = collections.filter(c => tabId === 'all' || c.status === tabId)
+
+  const list = useMemo(() => collections.filter(c => {
+    if (tabId !== 'all' && c.status !== tabId) return false
+    if (searchValue && !c.title.toLowerCase().includes(searchValue.toLowerCase())) return false
+    return true
+  }), [searchValue, tabId])
 
   const { selectedResources, allResourcesSelected, handleSelectionChange } = useIndexResourceState(
     list.map(c => ({ id: c.id }))
@@ -47,6 +54,19 @@ export default function CollectionsPage() {
     >
       <Card padding="0">
         <Tabs tabs={tabs} selected={selectedTab} onSelect={setSelectedTab}>
+          <Box padding="300" paddingBlockEnd="0">
+            <TextField
+              label=""
+              labelHidden
+              value={searchValue}
+              onChange={setSearchValue}
+              prefix={<SearchIcon />}
+              placeholder="Rechercher une collection…"
+              autoComplete="off"
+              clearButton
+              onClearButtonClick={() => setSearchValue('')}
+            />
+          </Box>
           <IndexTable
             resourceName={{ singular: 'collection', plural: 'collections' }}
             itemCount={list.length}
@@ -69,18 +89,12 @@ export default function CollectionsPage() {
                 onClick={() => router.push('/collections/' + c.id)}
               >
                 <IndexTable.Cell>
-                  {c.title}
+                  <Text as="span" fontWeight="semibold" variant="bodySm">{c.title}</Text>
                 </IndexTable.Cell>
-                <IndexTable.Cell>
-                  {c.products}
-                </IndexTable.Cell>
-                <IndexTable.Cell>
-                  {c.type}
-                </IndexTable.Cell>
+                <IndexTable.Cell>{String(c.products)}</IndexTable.Cell>
+                <IndexTable.Cell><Text as="span" tone="subdued" variant="bodySm">{c.type}</Text></IndexTable.Cell>
                 <IndexTable.Cell>{statusBadge(c.status)}</IndexTable.Cell>
-                <IndexTable.Cell>
-                  {c.updated}
-                </IndexTable.Cell>
+                <IndexTable.Cell><Text as="span" tone="subdued" variant="bodySm">{c.updated}</Text></IndexTable.Cell>
               </IndexTable.Row>
             ))}
           </IndexTable>

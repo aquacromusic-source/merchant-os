@@ -45,6 +45,15 @@ import {
   EmailIcon,
 } from '@shopify/polaris-icons'
 
+const NOTIFICATIONS = [
+  { id: '1', title: 'Nouvelle commande #16042', body: 'Liam Sexton · 133,80 €', time: 'il y a 4 min', tone: 'success' as const, read: false },
+  { id: '2', title: 'Paiement reçu', body: 'Visa ···· 8937 · 233,95 €', time: 'il y a 18 min', tone: 'success' as const, read: false },
+  { id: '3', title: 'Stock bas', body: 'Nomad Roll-Top Backpack — 4 unités', time: 'il y a 40 min', tone: 'warning' as const, read: false },
+  { id: '4', title: 'Rétrofacturation ouverte', body: '#15973 · 89,00 € — répondre avant 3j', time: 'il y a 2 h', tone: 'critical' as const, read: false },
+  { id: '5', title: 'Campagne envoyée', body: 'Teasing printemps · 42 040 destinataires', time: 'il y a 3 h', tone: undefined, read: true },
+  { id: '6', title: 'Nouveau message client', body: 'Dawid B. — question sur la livraison', time: 'il y a 5 h', tone: undefined, read: true },
+]
+
 export function Shell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
@@ -52,6 +61,12 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const [searchActive, setSearchActive] = useState(false)
   const [searchValue, setSearchValue] = useState('')
   const [userMenuActive, setUserMenuActive] = useState(false)
+  const [notifOpen, setNotifOpen] = useState(false)
+  const [notifications, setNotifications] = useState(NOTIFICATIONS)
+
+  const unreadCount = notifications.filter(n => !n.read).length
+
+  const markAllRead = () => setNotifications(prev => prev.map(n => ({ ...n, read: true })))
 
   const active = pathname?.replace(/^\//, '') || 'dashboard'
 
@@ -96,6 +111,125 @@ export function Shell({ children }: { children: React.ReactNode }) {
     />
   )
 
+  const notifBellMarkup = (
+    <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
+      <button
+        onClick={() => setNotifOpen(v => !v)}
+        style={{
+          background: 'none',
+          border: 'none',
+          cursor: 'pointer',
+          padding: '8px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          borderRadius: 8,
+          position: 'relative',
+        }}
+        aria-label="Notifications"
+      >
+        <NotificationIcon width={20} height={20} />
+        {unreadCount > 0 && (
+          <span style={{
+            position: 'absolute',
+            top: 4,
+            right: 4,
+            background: 'oklch(0.55 0.22 25)',
+            color: 'white',
+            borderRadius: '50%',
+            width: 16,
+            height: 16,
+            fontSize: 10,
+            fontWeight: 700,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            lineHeight: 1,
+          }}>
+            {unreadCount}
+          </span>
+        )}
+      </button>
+      {notifOpen && (
+        <>
+          <div
+            style={{ position: 'fixed', inset: 0, zIndex: 498 }}
+            onClick={() => setNotifOpen(false)}
+          />
+          <div style={{
+            position: 'absolute',
+            top: '100%',
+            right: 0,
+            zIndex: 499,
+            background: 'var(--p-color-bg-surface)',
+            border: '1px solid var(--p-color-border)',
+            borderRadius: 12,
+            boxShadow: 'var(--p-shadow-lg)',
+            width: 360,
+            maxHeight: 480,
+            overflowY: 'auto',
+          }}>
+            <div style={{
+              padding: '14px 16px 10px',
+              borderBottom: '1px solid var(--p-color-border)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}>
+              <Text as="p" fontWeight="semibold">Notifications</Text>
+              {unreadCount > 0 && (
+                <button
+                  onClick={markAllRead}
+                  style={{
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    fontSize: 13, color: 'var(--p-color-text-interactive)',
+                  }}
+                >
+                  Tout marquer lu
+                </button>
+              )}
+            </div>
+            {notifications.map(n => (
+              <div
+                key={n.id}
+                style={{
+                  padding: '12px 16px',
+                  borderBottom: '1px solid var(--p-color-border-subdued)',
+                  background: n.read ? 'transparent' : 'var(--p-color-bg-surface-secondary)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  gap: 10,
+                  alignItems: 'flex-start',
+                }}
+                onClick={() => setNotifications(prev => prev.map(x => x.id === n.id ? { ...x, read: true } : x))}
+              >
+                <div style={{
+                  width: 8, height: 8, borderRadius: '50%', marginTop: 6, flexShrink: 0,
+                  background: !n.read
+                    ? (n.tone === 'critical' ? 'oklch(0.55 0.22 25)'
+                      : n.tone === 'warning' ? 'oklch(0.70 0.15 65)'
+                      : n.tone === 'success' ? 'oklch(0.60 0.15 145)'
+                      : 'var(--p-color-bg-fill-tertiary)')
+                    : 'transparent',
+                }} />
+                <div style={{ flex: 1 }}>
+                  <Text as="p" variant="bodySm" fontWeight={n.read ? 'regular' : 'semibold'}>{n.title}</Text>
+                  <Text as="p" variant="bodySm" tone="subdued">{n.body}</Text>
+                  <Text as="p" variant="bodySm" tone="subdued">{n.time}</Text>
+                </div>
+              </div>
+            ))}
+            {notifications.length === 0 && (
+              <div style={{ padding: 24, textAlign: 'center' }}>
+                <Text as="p" tone="subdued">Aucune notification</Text>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  )
+
   const topBarMarkup = (
     <TopBar
       showNavigationToggle
@@ -113,6 +247,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
       }
       onSearchResultsDismiss={handleSearchResultsDismiss}
       onNavigationToggle={toggleMobileNavigation}
+      secondaryMenu={notifBellMarkup}
     />
   )
 

@@ -1,5 +1,5 @@
 'use client'
-import React, { useState } from 'react'
+import React, { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Page,
@@ -15,6 +15,10 @@ import {
   Tag,
   ProgressBar,
   TextField,
+  Modal,
+  Select,
+  FormLayout,
+  Banner,
 } from '@shopify/polaris'
 import {
   ChevronLeftIcon,
@@ -29,8 +33,8 @@ import {
   NoteIcon,
   PersonIcon,
   ShieldCheckMarkIcon,
-  ChartVerticalIcon,
   ImageIcon,
+  PlusIcon,
 } from '@shopify/polaris-icons'
 import { orders, customers } from '@/lib/data'
 import { money } from '@/lib/utils'
@@ -42,13 +46,118 @@ function paymentBadge(tone: string, label: string) {
   return <Badge tone={toneMap[tone] || undefined}>{label}</Badge>
 }
 
+interface TimelineEvent {
+  t: string
+  b: React.ReactNode
+  tone?: 'success' | 'attention' | 'critical' | undefined
+  isNote?: boolean
+}
+
 export default function OrderDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter()
   const order = orders.find(o => o.id.slice(1) === params.id) || orders[0]
   const cust = customers.find(c => c.id === order.customerId) || customers[0]
 
+  // Status state
+  const [fulfillStatus, setFulfillStatus] = useState(order.fulfill)
+  const [paymentStatus] = useState(order.payment)
+
+  // Timeline
+  const [timelineNote, setTimelineNote] = useState('')
+  const [timelineEvents, setTimelineEvents] = useState<TimelineEvent[]>([
+    { t: 'il y a 16 min', b: <span key="t1"><strong>GLS France</strong> a envoyé un e-mail de confirmation d&apos;expédition.</span>, tone: 'success' },
+    { t: 'il y a 41 min', b: <span key="t2">Le traitement de la commande a été débloqué.</span>, tone: 'attention' },
+    { t: '08:28', b: <span key="t3">L&apos;e-mail de confirmation de commande a été envoyé.</span>, tone: undefined },
+    { t: '08:28', b: <span key="t4"><span style={{ fontFamily: 'monospace' }}>Un paiement de {money(order.total)} a été traité avec une carte Visa.</span></span>, tone: 'attention' },
+  ])
+
+  // Modal: Mark as shipped
+  const [shipModalOpen, setShipModalOpen] = useState(false)
+  const [trackingNumber, setTrackingNumber] = useState('')
+  const [carrier, setCarrier] = useState('GLS')
+
+  // Modal: Create label
+  const [labelModalOpen, setLabelModalOpen] = useState(false)
+  const [labelCarrier, setLabelCarrier] = useState('GLS')
+  const [labelFormat, setLabelFormat] = useState('A4')
+  const [labelCreated, setLabelCreated] = useState(false)
+
+  // Modal: Refund
+  const [refundModalOpen, setRefundModalOpen] = useState(false)
+  const [refundAmount, setRefundAmount] = useState(String(order.total))
+  const [refundReason, setRefundReason] = useState('')
+  const [refundDone, setRefundDone] = useState(false)
+
+  // Modal: Edit address
+  const [addressModalOpen, setAddressModalOpen] = useState(false)
+  const [addrName, setAddrName] = useState(cust.name)
+  const [addrLine1, setAddrLine1] = useState('12 rue des Artisans')
+  const [addrCity, setAddrCity] = useState(cust.city)
+  const [addrZip, setAddrZip] = useState('75011')
+  const [addrCountry, setAddrCountry] = useState(cust.country)
+
   const riskProgress = order.risk === 'high' ? 80 : order.risk === 'medium' ? 50 : 18
   const riskTone = order.risk === 'high' ? 'critical' : order.risk === 'medium' ? 'warning' : 'success'
+
+  const handlePublishNote = useCallback(() => {
+    if (!timelineNote.trim()) return
+    const note: TimelineEvent = {
+      t: 'À l\'instant',
+      b: <span key={`note-${Date.now()}`}><strong>Note interne :</strong> {timelineNote}</span>,
+      tone: undefined,
+      isNote: true,
+    }
+    setTimelineEvents(prev => [note, ...prev])
+    setTimelineNote('')
+  }, [timelineNote])
+
+  const handleMarkShipped = useCallback(() => {
+    setFulfillStatus({ key: 'fulfilled', label: 'Expédiée', tone: 'ok' })
+    const event: TimelineEvent = {
+      t: 'À l\'instant',
+      b: <span key={`ship-${Date.now()}`}>Commande marquée comme expédiée via <strong>{carrier}</strong> — suivi : <span style={{ fontFamily: 'monospace' }}>{trackingNumber}</span></span>,
+      tone: 'success',
+    }
+    setTimelineEvents(prev => [event, ...prev])
+    setShipModalOpen(false)
+    setTrackingNumber('')
+  }, [carrier, trackingNumber])
+
+  const handleCreateLabel = useCallback(() => {
+    setLabelCreated(true)
+    const event: TimelineEvent = {
+      t: 'À l\'instant',
+      b: <span key={`label-${Date.now()}`}>Étiquette d&apos;expédition créée — {labelCarrier} format {labelFormat}</span>,
+      tone: 'attention',
+    }
+    setTimelineEvents(prev => [event, ...prev])
+    setTimeout(() => setLabelModalOpen(false), 800)
+  }, [labelCarrier, labelFormat])
+
+  const handleRefund = useCallback(() => {
+    setRefundDone(true)
+    const event: TimelineEvent = {
+      t: 'À l\'instant',
+      b: <span key={`refund-${Date.now()}`}>Remboursement de <strong>{money(parseFloat(refundAmount))}</strong> initié. Motif : {refundReason}</span>,
+      tone: 'critical',
+    }
+    setTimelineEvents(prev => [event, ...prev])
+    setRefundModalOpen(false)
+  }, [refundAmount, refundReason])
+
+  const handleSaveAddress = useCallback(() => {
+    const event: TimelineEvent = {
+      t: 'À l\'instant',
+      b: <span key={`addr-${Date.now()}`}>Adresse de livraison modifiée : {addrName}, {addrLine1}, {addrZip} {addrCity}, {addrCountry}</span>,
+      tone: 'attention',
+    }
+    setTimelineEvents(prev => [event, ...prev])
+    setAddressModalOpen(false)
+  }, [addrName, addrLine1, addrCity, addrZip, addrCountry])
+
+  const fulfillBadgeTone: Record<string, 'success' | 'warning' | 'critical' | 'info' | 'attention' | undefined> = {
+    ok: 'success', warn: 'warning', danger: 'critical', info: 'info', accent: 'attention',
+  }
 
   return (
     <Page
@@ -56,13 +165,13 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
       title={order.id}
       titleMetadata={
         <InlineStack gap="200">
-          {order.payment.label}
-          {order.fulfill.label}
+          <Badge tone={fulfillBadgeTone[paymentStatus.tone] || undefined}>{paymentStatus.label}</Badge>
+          <Badge tone={fulfillBadgeTone[fulfillStatus.tone] || undefined}>{fulfillStatus.label}</Badge>
         </InlineStack>
       }
       subtitle="22 avril 2026 · 08:28 · Boutique en ligne"
       secondaryActions={[
-        { content: 'Rembourser', icon: RefreshIcon },
+        { content: 'Rembourser', icon: RefreshIcon, onAction: () => setRefundModalOpen(true) },
         { content: 'Retourner', icon: ArchiveIcon },
         { content: 'Modifier', icon: EditIcon },
         { content: 'Autres actions', icon: ChevronDownIcon },
@@ -71,6 +180,12 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
       <Layout>
         <Layout.Section>
           <BlockStack gap="400">
+            {refundDone && (
+              <Banner tone="warning" title="Remboursement en cours" onDismiss={() => setRefundDone(false)}>
+                <p>Le remboursement a été initié et sera traité sous 3-5 jours ouvrés.</p>
+              </Banner>
+            )}
+
             {/* Fulfillment card */}
             <Card>
               <BlockStack gap="400">
@@ -101,7 +216,7 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
                     }}>
                       <ImageIcon width={18} height={18} />
                     </div>
-                    <BlockStack gap="050" >
+                    <BlockStack gap="050">
                       <Text as="p" variant="bodySm" fontWeight="semibold">{li.name}</Text>
                       <Text as="p" variant="bodySm" tone="subdued">{li.variant}</Text>
                       <Text as="p" variant="bodySm" tone="subdued">
@@ -121,7 +236,16 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
                   <Text as="p" variant="bodySm" tone="subdued">
                     Expédiée le 22 avril · reçue estimée 25 avril
                   </Text>
-                  <Button icon={LabelPrinterIcon} size="slim">Imprimer étiquette</Button>
+                  <InlineStack gap="200">
+                    <Button icon={LabelPrinterIcon} size="slim" onClick={() => setLabelModalOpen(true)}>
+                      Créer étiquette
+                    </Button>
+                    {fulfillStatus.key !== 'fulfilled' && (
+                      <Button icon={DeliveryIcon} size="slim" variant="primary" onClick={() => setShipModalOpen(true)}>
+                        Marquer comme expédiée
+                      </Button>
+                    )}
+                  </InlineStack>
                 </InlineStack>
               </BlockStack>
             </Card>
@@ -159,6 +283,9 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
                     <span style={{ fontFamily: 'monospace' }}>{money(order.total)}</span>
                   </Text>
                 </InlineStack>
+                <Button size="slim" icon={RefreshIcon} onClick={() => setRefundModalOpen(true)}>
+                  Rembourser
+                </Button>
               </BlockStack>
             </Card>
 
@@ -175,21 +302,32 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
                     background: 'var(--p-color-bg-fill-tertiary)',
                     display: 'grid', placeItems: 'center', flexShrink: 0
                   }}>A</div>
-                  <TextField label="" labelHidden placeholder="Laisser un commentaire…" autoComplete="off" />
-                  <Button variant="primary" size="slim">Publier</Button>
+                  <div style={{ flex: 1 }}>
+                    <TextField
+                      label=""
+                      labelHidden
+                      placeholder="Laisser un commentaire…"
+                      autoComplete="off"
+                      value={timelineNote}
+                      onChange={setTimelineNote}
+                      multiline={2}
+                    />
+                  </div>
+                  <Button variant="primary" size="slim" onClick={handlePublishNote}>
+                    Publier
+                  </Button>
                 </InlineStack>
                 <Divider />
-                {[
-                  { t: 'il y a 16 min', b: <span key="t1"><strong>GLS France</strong> a envoyé un e-mail de confirmation d&apos;expédition.</span>, tone: 'success' as const },
-                  { t: 'il y a 41 min', b: <span key="t2">Le traitement de la commande a été débloqué.</span>, tone: 'attention' as const },
-                  { t: '08:28', b: <span key="t3">L&apos;e-mail de confirmation de commande a été envoyé.</span>, tone: undefined },
-                  { t: '08:28', b: <span key="t4"><span style={{ fontFamily: 'monospace' }}>Un paiement de {money(order.total)} a été traité avec une carte Visa.</span></span>, tone: 'attention' as const },
-                ].map((tl, i) => (
+                {timelineEvents.map((tl, i) => (
                   <div key={i}>
                     {i > 0 && <Divider />}
                     <Box paddingBlockStart={i > 0 ? '300' : '0'}>
                       <BlockStack gap="050">
-                        <Text as="p" variant="bodySm" tone="subdued">{tl.t}</Text>
+                        <InlineStack gap="100" blockAlign="center">
+                          <Text as="p" variant="bodySm" tone="subdued">{tl.t}</Text>
+                          {tl.tone && <Badge tone={tl.tone}>{tl.tone === 'success' ? '✓' : tl.tone === 'critical' ? '!' : '•'}</Badge>}
+                          {tl.isNote && <Badge tone="info">Note interne</Badge>}
+                        </InlineStack>
                         <Text as="p" variant="bodySm">{tl.b}</Text>
                       </BlockStack>
                     </Box>
@@ -248,8 +386,15 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
                 </BlockStack>
                 <Divider />
                 <BlockStack gap="100">
-                  <Text as="p" variant="bodySm" tone="subdued" fontWeight="semibold">ADRESSE DE LIVRAISON</Text>
-                  <Text as="p" variant="bodySm">{cust.name}<br />{cust.city}, {cust.country}</Text>
+                  <InlineStack align="space-between" blockAlign="center">
+                    <Text as="p" variant="bodySm" tone="subdued" fontWeight="semibold">ADRESSE DE LIVRAISON</Text>
+                    <Button variant="plain" size="slim" icon={EditIcon} onClick={() => setAddressModalOpen(true)}>
+                      Modifier
+                    </Button>
+                  </InlineStack>
+                  <Text as="p" variant="bodySm">{cust.name}</Text>
+                  <Text as="p" variant="bodySm">{addrLine1}</Text>
+                  <Text as="p" variant="bodySm">{addrZip} {addrCity}, {addrCountry}</Text>
                 </BlockStack>
               </BlockStack>
             </Card>
@@ -261,7 +406,7 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
                   <ShieldCheckMarkIcon width={16} height={16} />
                   <Text as="h2" variant="headingSm" fontWeight="semibold">Risque de la commande</Text>
                 </InlineStack>
-                <ProgressBar progress={riskProgress} tone={riskTone === "warning" ? "critical" : (riskTone as "success" | "critical")} />
+                <ProgressBar progress={riskProgress} tone={riskTone === 'warning' ? 'critical' : (riskTone as 'success' | 'critical')} />
                 <Text as="p" variant="bodySm" tone="subdued">
                   Le risque de rétrofacturation est {order.risk === 'high' ? 'élevé' : order.risk === 'medium' ? 'moyen' : 'faible'}.
                 </Text>
@@ -284,6 +429,164 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
           </BlockStack>
         </Layout.Section>
       </Layout>
+
+      {/* Modal: Mark as shipped */}
+      <Modal
+        open={shipModalOpen}
+        onClose={() => setShipModalOpen(false)}
+        title="Marquer comme expédiée"
+        primaryAction={{ content: 'Confirmer', onAction: handleMarkShipped }}
+        secondaryActions={[{ content: 'Annuler', onAction: () => setShipModalOpen(false) }]}
+      >
+        <Modal.Section>
+          <FormLayout>
+            <Select
+              label="Transporteur"
+              options={[
+                { label: 'GLS', value: 'GLS' },
+                { label: 'Colissimo', value: 'Colissimo' },
+                { label: 'Mondial Relay', value: 'Mondial Relay' },
+                { label: 'DHL', value: 'DHL' },
+                { label: 'Chronopost', value: 'Chronopost' },
+              ]}
+              value={carrier}
+              onChange={setCarrier}
+            />
+            <TextField
+              label="Numéro de suivi"
+              value={trackingNumber}
+              onChange={setTrackingNumber}
+              autoComplete="off"
+              placeholder="Ex : 1Z999AA10123456784"
+            />
+          </FormLayout>
+        </Modal.Section>
+      </Modal>
+
+      {/* Modal: Create label */}
+      <Modal
+        open={labelModalOpen}
+        onClose={() => { setLabelModalOpen(false); setLabelCreated(false) }}
+        title="Créer une étiquette d'expédition"
+        primaryAction={labelCreated ? undefined : { content: 'Créer l\'étiquette', onAction: handleCreateLabel }}
+        secondaryActions={[{ content: 'Annuler', onAction: () => { setLabelModalOpen(false); setLabelCreated(false) } }]}
+      >
+        <Modal.Section>
+          {labelCreated ? (
+            <Banner tone="success" title="Étiquette créée !">
+              <p>Votre étiquette {labelCarrier} format {labelFormat} a été générée.</p>
+            </Banner>
+          ) : (
+            <FormLayout>
+              <Select
+                label="Transporteur"
+                options={[
+                  { label: 'GLS', value: 'GLS' },
+                  { label: 'Colissimo', value: 'Colissimo' },
+                  { label: 'Mondial Relay', value: 'Mondial Relay' },
+                ]}
+                value={labelCarrier}
+                onChange={setLabelCarrier}
+              />
+              <Select
+                label="Format d\'étiquette"
+                options={[
+                  { label: 'A4', value: 'A4' },
+                  { label: 'A6 (thermique)', value: 'A6' },
+                  { label: 'A5', value: 'A5' },
+                ]}
+                value={labelFormat}
+                onChange={setLabelFormat}
+              />
+            </FormLayout>
+          )}
+        </Modal.Section>
+      </Modal>
+
+      {/* Modal: Refund */}
+      <Modal
+        open={refundModalOpen}
+        onClose={() => setRefundModalOpen(false)}
+        title="Rembourser la commande"
+        primaryAction={{ content: 'Rembourser', destructive: true, onAction: handleRefund }}
+        secondaryActions={[{ content: 'Annuler', onAction: () => setRefundModalOpen(false) }]}
+      >
+        <Modal.Section>
+          <FormLayout>
+            <Text as="p" variant="bodySm" tone="subdued">Articles de la commande :</Text>
+            {[
+              { name: 'George Russell Fire A3', price: 44.95 },
+              { name: 'Nomad Roll-Top Backpack', price: 189.00 },
+            ].map((item, i) => (
+              <InlineStack key={i} align="space-between" blockAlign="center">
+                <Text as="p" variant="bodySm">{item.name}</Text>
+                <Text as="p" variant="bodySm" fontWeight="semibold">{money(item.price)}</Text>
+              </InlineStack>
+            ))}
+            <Divider />
+            <TextField
+              label="Montant à rembourser (€)"
+              type="number"
+              value={refundAmount}
+              onChange={setRefundAmount}
+              autoComplete="off"
+            />
+            <TextField
+              label="Motif du remboursement"
+              value={refundReason}
+              onChange={setRefundReason}
+              autoComplete="off"
+              placeholder="Produit défectueux, erreur de commande…"
+            />
+          </FormLayout>
+        </Modal.Section>
+      </Modal>
+
+      {/* Modal: Edit address */}
+      <Modal
+        open={addressModalOpen}
+        onClose={() => setAddressModalOpen(false)}
+        title="Modifier l'adresse de livraison"
+        primaryAction={{ content: 'Enregistrer', onAction: handleSaveAddress }}
+        secondaryActions={[{ content: 'Annuler', onAction: () => setAddressModalOpen(false) }]}
+      >
+        <Modal.Section>
+          <FormLayout>
+            <TextField
+              label="Nom complet"
+              value={addrName}
+              onChange={setAddrName}
+              autoComplete="name"
+            />
+            <TextField
+              label="Adresse"
+              value={addrLine1}
+              onChange={setAddrLine1}
+              autoComplete="street-address"
+            />
+            <FormLayout.Group>
+              <TextField
+                label="Code postal"
+                value={addrZip}
+                onChange={setAddrZip}
+                autoComplete="postal-code"
+              />
+              <TextField
+                label="Ville"
+                value={addrCity}
+                onChange={setAddrCity}
+                autoComplete="address-level2"
+              />
+            </FormLayout.Group>
+            <TextField
+              label="Pays"
+              value={addrCountry}
+              onChange={setAddrCountry}
+              autoComplete="country"
+            />
+          </FormLayout>
+        </Modal.Section>
+      </Modal>
     </Page>
   )
 }

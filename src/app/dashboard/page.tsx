@@ -1,5 +1,5 @@
 'use client'
-import React from 'react'
+import React, { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Page,
@@ -15,6 +15,8 @@ import {
   DataTable,
   Divider,
   Box,
+  ActionList,
+  Popover,
 } from '@shopify/polaris'
 import {
   CalendarIcon,
@@ -25,8 +27,7 @@ import {
   AlertTriangleIcon,
   ProductIcon,
   ChartVerticalIcon,
-  ArrowUpIcon,
-  ClockIcon,
+  ChevronDownIcon,
   CheckIcon,
   PersonIcon,
   ChevronRightIcon,
@@ -39,16 +40,24 @@ import { Donut } from '@/components/ui/Donut'
 
 const PALETTE = ['oklch(0.58 0.18 275)', 'oklch(0.62 0.14 195)', 'oklch(0.72 0.12 85)', 'oklch(0.60 0.14 155)', 'oklch(0.65 0.16 25)']
 
-function paymentBadge(tone: string, label: string) {
-  const toneMap: Record<string, 'success' | 'warning' | 'critical' | 'info' | 'attention'> = {
-    ok: 'success', warn: 'warning', danger: 'critical', info: 'info', accent: 'attention',
-  }
-  return <Badge tone={toneMap[tone] || undefined}>{label}</Badge>
-}
+const DATE_RANGES = [
+  { label: "Aujourd'hui", value: 'today' },
+  { label: '7 derniers jours', value: '7d' },
+  { label: '30 derniers jours', value: '30d' },
+  { label: '90 derniers jours', value: '90d' },
+  { label: 'Cette année', value: 'year' },
+  { label: 'Période personnalisée…', value: 'custom' },
+]
 
 export default function DashboardPage() {
   const router = useRouter()
   const A = analytics
+
+  const [dateRange, setDateRange] = useState('30d')
+  const [datePopoverOpen, setDatePopoverOpen] = useState(false)
+  const [tooltipData, setTooltipData] = useState<{ x: number; y: number; value: string; label: string } | null>(null)
+
+  const selectedLabel = DATE_RANGES.find(r => r.value === dateRange)?.label || '30 derniers jours'
 
   const kpis = [
     { l: 'Visites', v: '46 820', d: '+5 %', up: true, sk: A.sessions },
@@ -67,15 +76,85 @@ export default function DashboardPage() {
     o.fulfill.label,
   ])
 
+  const dateLabels = React.useMemo(() => ['22 mar', '28 mar', '4 avr', '10 avr', '16 avr', '22 avr'], [])
+
+  // Interactive chart mouse handler
+  const handleChartMouseMove = useCallback((e: React.MouseEvent<SVGElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    const relX = (e.clientX - rect.left) / rect.width
+    const idx = Math.round(relX * (A.timeseries.length - 1))
+    const clampedIdx = Math.max(0, Math.min(A.timeseries.length - 1, idx))
+    const value = A.timeseries[clampedIdx]
+    const labelIdx = Math.round(relX * (dateLabels.length - 1))
+    const label = dateLabels[Math.max(0, Math.min(dateLabels.length - 1, labelIdx))]
+    setTooltipData({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+      value: money(value * 800),
+      label,
+    })
+  }, [A.timeseries, dateLabels])
+
+  const handleChartMouseLeave = useCallback(() => {
+    setTooltipData(null)
+  }, [])
+
   return (
     <Page
       title="Tableau de bord"
       secondaryActions={[
-        { content: '30 derniers jours', icon: CalendarIcon },
+        {
+          content: selectedLabel,
+          icon: CalendarIcon,
+          onAction: () => setDatePopoverOpen(true),
+        },
         { content: 'Tous les canaux', icon: ChannelsIcon },
         { content: 'Exporter', icon: ExportIcon },
       ]}
     >
+      {/* Date range popover (rendered as overlay trick) */}
+      {datePopoverOpen && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, zIndex: 9998,
+          }}
+          onClick={() => setDatePopoverOpen(false)}
+        >
+          <div
+            style={{
+              position: 'fixed', top: 60, right: 16, zIndex: 9999,
+              background: 'var(--p-color-bg-surface)',
+              border: '1px solid var(--p-color-border)',
+              borderRadius: 12,
+              boxShadow: 'var(--p-shadow-lg)',
+              minWidth: 240,
+              overflow: 'hidden',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            {DATE_RANGES.map(r => (
+              <div
+                key={r.value}
+                style={{
+                  padding: '10px 16px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  background: dateRange === r.value ? 'var(--p-color-bg-surface-selected)' : 'transparent',
+                  fontWeight: dateRange === r.value ? 600 : 400,
+                  fontSize: 14,
+                }}
+                onClick={() => { setDateRange(r.value); setDatePopoverOpen(false) }}
+              >
+                <span>{r.label}</span>
+                {dateRange === r.value && <CheckIcon width={16} height={16} />}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <BlockStack gap="500">
         {/* KPI bar */}
         <InlineGrid columns={5} gap="300">
@@ -85,7 +164,7 @@ export default function DashboardPage() {
                 <Text as="p" variant="bodySm" tone="subdued">{k.l}</Text>
                 <InlineStack gap="200" align="start" blockAlign="center">
                   <Text as="p" variant="headingMd" fontWeight="bold">{k.v}</Text>
-                  {k.d}
+                  <Text as="span" variant="bodySm" tone={k.up ? 'success' : 'critical'}>{k.d}</Text>
                 </InlineStack>
                 <Sparkline data={k.sk} w={200} h={26} />
               </BlockStack>
@@ -127,13 +206,42 @@ export default function DashboardPage() {
                         </Text>
                       </BlockStack>
                       <InlineStack gap="200">
-                        <Badge tone="attention">30 derniers jours</Badge>
+                        <Badge tone="attention">{selectedLabel}</Badge>
                         <Badge>Période précédente</Badge>
                       </InlineStack>
                     </InlineStack>
-                    <AreaChart data={A.timeseries} compareData={A.orders.map(v => v * 0.85)} h={220} />
+                    <div style={{ position: 'relative' }}>
+                      <svg
+                        width="100%"
+                        height="1"
+                        style={{ position: 'absolute', top: 0, left: 0, overflow: 'visible', zIndex: 10 }}
+                        onMouseMove={handleChartMouseMove}
+                        onMouseLeave={handleChartMouseLeave}
+                      >
+                        <rect width="100%" height="220" fill="transparent" />
+                      </svg>
+                      <AreaChart data={A.timeseries} compareData={A.orders.map(v => v * 0.85)} h={220} />
+                      {tooltipData && (
+                        <div style={{
+                          position: 'absolute',
+                          left: tooltipData.x + 12,
+                          top: tooltipData.y - 20,
+                          background: 'var(--p-color-bg-surface-inverse)',
+                          color: 'var(--p-color-text-inverse)',
+                          padding: '6px 10px',
+                          borderRadius: 8,
+                          fontSize: 12,
+                          fontWeight: 600,
+                          pointerEvents: 'none',
+                          zIndex: 20,
+                          whiteSpace: 'nowrap',
+                        }}>
+                          {tooltipData.label} · {tooltipData.value}
+                        </div>
+                      )}
+                    </div>
                     <InlineStack align="space-between">
-                      {['22 mar', '28 mar', '4 avr', '10 avr', '16 avr', '22 avr'].map(d => (
+                      {dateLabels.map(d => (
                         <Text key={d} as="span" variant="bodySm" tone="subdued">{d}</Text>
                       ))}
                     </InlineStack>
@@ -255,7 +363,7 @@ export default function DashboardPage() {
                         <InlineStack key={i} gap="200" blockAlign="center" align="space-between">
                           <InlineStack gap="100" blockAlign="center">
                             <span style={{ width: 8, height: 8, borderRadius: 2, background: PALETTE[i], display: 'inline-block', flexShrink: 0 }} />
-                            {c.name}
+                            <Text as="span" variant="bodySm">{c.name}</Text>
                           </InlineStack>
                           <Text as="span" variant="bodySm" fontWeight="semibold">{c.share}%</Text>
                         </InlineStack>

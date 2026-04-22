@@ -1,5 +1,5 @@
 'use client'
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Page,
@@ -16,12 +16,13 @@ import {
   Box,
   Avatar,
   Tag,
+  TextField,
 } from '@shopify/polaris'
 import {
   ExportIcon,
   ImportIcon,
   PlusIcon,
-  PersonAddIcon,
+  SearchIcon,
 } from '@shopify/polaris-icons'
 import { customers } from '@/lib/data'
 import { money } from '@/lib/utils'
@@ -29,6 +30,7 @@ import { money } from '@/lib/utils'
 export default function CustomersPage() {
   const router = useRouter()
   const [selectedTab, setSelectedTab] = useState(0)
+  const [searchValue, setSearchValue] = useState('')
 
   const tabs = [
     { id: 'all', content: `Tous (${customers.length})` },
@@ -39,12 +41,16 @@ export default function CustomersPage() {
 
   const tabId = tabs[selectedTab]?.id || 'all'
 
-  const list = customers.filter(c => {
+  const list = useMemo(() => customers.filter(c => {
     if (tabId === 'subscribed' && !c.subscribed) return false
     if (tabId === 'vip' && !c.tags.includes('VIP')) return false
     if (tabId === 'risk' && c.status !== 'À risque') return false
+    if (searchValue && !(
+      c.name.toLowerCase().includes(searchValue.toLowerCase()) ||
+      c.email.toLowerCase().includes(searchValue.toLowerCase())
+    )) return false
     return true
-  })
+  }), [searchValue, tabId])
 
   const { selectedResources, allResourcesSelected, handleSelectionChange } = useIndexResourceState(
     list.map(c => ({ id: c.id }))
@@ -72,15 +78,9 @@ export default function CustomersPage() {
       <IndexTable.Cell>
         <Text as="span" tone="subdued" variant="bodySm">{c.city}, {c.country}</Text>
       </IndexTable.Cell>
-      <IndexTable.Cell>
-        {String(c.orders)}
-      </IndexTable.Cell>
-      <IndexTable.Cell>
-        {money(c.spend)}
-      </IndexTable.Cell>
-      <IndexTable.Cell>
-        {c.lastOrder}
-      </IndexTable.Cell>
+      <IndexTable.Cell>{String(c.orders)}</IndexTable.Cell>
+      <IndexTable.Cell>{money(c.spend)}</IndexTable.Cell>
+      <IndexTable.Cell>{c.lastOrder}</IndexTable.Cell>
       <IndexTable.Cell>
         <Badge tone={c.subscribed ? 'success' : undefined}>{c.subscribed ? 'Oui' : 'Non'}</Badge>
       </IndexTable.Cell>
@@ -115,7 +115,7 @@ export default function CustomersPage() {
                 <Text as="p" variant="bodySm" tone="subdued">{k.l}</Text>
                 <InlineStack gap="100" blockAlign="center">
                   <Text as="p" variant="headingMd" fontWeight="bold">{k.v}</Text>
-                  {k.d && k.d}
+                  {k.d && <Text as="span" variant="bodySm" tone="success">{k.d}</Text>}
                 </InlineStack>
               </BlockStack>
             </Card>
@@ -124,6 +124,19 @@ export default function CustomersPage() {
 
         <Card padding="0">
           <Tabs tabs={tabs} selected={selectedTab} onSelect={setSelectedTab}>
+            <Box padding="300" paddingBlockEnd="0">
+              <TextField
+                label=""
+                labelHidden
+                value={searchValue}
+                onChange={setSearchValue}
+                prefix={<SearchIcon />}
+                placeholder="Rechercher un client…"
+                autoComplete="off"
+                clearButton
+                onClearButtonClick={() => setSearchValue('')}
+              />
+            </Box>
             <IndexTable
               resourceName={{ singular: 'client', plural: 'clients' }}
               itemCount={list.length}

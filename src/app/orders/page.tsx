@@ -155,15 +155,15 @@ export default function OrdersPage() {
           <span style={{ fontFamily: 'monospace' }}>{o.id}</span>
         </Text>
       </IndexTable.Cell>
-      <IndexTable.Cell>{o.date}</IndexTable.Cell>
-      <IndexTable.Cell>{o.customer}</IndexTable.Cell>
-      <IndexTable.Cell>{money(o.total)}</IndexTable.Cell>
+      <IndexTable.Cell><Text as="span" tone="subdued" variant="bodySm">{o.date}</Text></IndexTable.Cell>
+      <IndexTable.Cell><Text as="span" variant="bodySm">{o.customer}</Text></IndexTable.Cell>
+      <IndexTable.Cell><Text as="span" variant="bodySm" numeric>{money(o.total)}</Text></IndexTable.Cell>
       <IndexTable.Cell>{paymentBadge(o.payment.tone, o.payment.label)}</IndexTable.Cell>
       <IndexTable.Cell>{paymentBadge(o.fulfill.tone, o.fulfill.label)}</IndexTable.Cell>
       <IndexTable.Cell>
         <Text as="span" tone="subdued" variant="bodySm">{o.items} article{o.items > 1 ? 's' : ''}</Text>
       </IndexTable.Cell>
-      <IndexTable.Cell>{o.channel}</IndexTable.Cell>
+      <IndexTable.Cell><Text as="span" tone="subdued" variant="bodySm">{o.channel}</Text></IndexTable.Cell>
     </IndexTable.Row>
   ))
 
