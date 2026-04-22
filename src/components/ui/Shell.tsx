@@ -82,7 +82,7 @@ const CMD_GROUPS: { title: string; items: CmdItem[] }[] = [
 interface SidebarItemDef {
   key: string
   label: string
-  icon?: React.FC<{ size?: number }>
+  icon?: React.FC<{ size?: number; stroke?: number; fill?: string }>
   count?: string
   sub?: { key: string; label: string }[]
 }
