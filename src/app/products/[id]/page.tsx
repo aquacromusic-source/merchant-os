@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useEffect, use } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Page,
@@ -452,9 +452,9 @@ function SEOPreview({ title, slug }: { title: string; slug: string }) {
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
-export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default function ProductDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter()
-  const { id: productId } = use(params)
+  const productId = params.id
 const fallbackProduct = products[4]
   const p = products.find(x => x.id === productId) || fallbackProduct
 
