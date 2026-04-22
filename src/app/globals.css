@@ -1076,10 +1076,11 @@ input, textarea, select { outline: none; }
    La sidebar + zone contenu ont des coins arrondis en HAUT
    ce qui crée l'effet d'encoche dans la topbar. */
 .sidebar {
-  border-top-right-radius: 12px;
-  overflow: hidden;
+  border-top-right-radius: 12px !important;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 .main {
-  border-top-left-radius: 12px;
-  overflow: hidden;
+  border-top-left-radius: 12px !important;
+  overflow: auto;
 }
