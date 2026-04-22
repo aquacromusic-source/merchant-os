@@ -89,7 +89,7 @@ interface SidebarItemDef {
 
 
 // Mapping icône pleine → icône creuse (outline pour item actif)
-const ICON_FILLED: Record<string, React.FC<{size?: number}>> = {
+const ICON_FILLED: Record<string, React.FC<{size?: number}> | undefined> = {
   dashboard: IFilled.Home,
   orders: IFilled.Cart,
   products: IFilled.Box,
