@@ -1,131 +1,172 @@
 'use client'
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { I } from '@/lib/icons'
+import {
+  Page,
+  Card,
+  BlockStack,
+  InlineStack,
+  InlineGrid,
+  Text,
+  Badge,
+  Button,
+  IndexTable,
+  useIndexResourceState,
+  Tabs,
+  TextField,
+  Box,
+} from '@shopify/polaris'
+import {
+  ExportIcon,
+  ImportIcon,
+  PlusIcon,
+  SearchIcon,
+  ViewIcon,
+  ArchiveIcon,
+  ImageIcon,
+} from '@shopify/polaris-icons'
 import { products } from '@/lib/data'
 import { money } from '@/lib/utils'
-import { PageHeader } from '@/components/ui/PageHeader'
-import { FilterBar, BulkBar } from '@/components/ui/FilterBar'
-import { Checkbox } from '@/components/ui/Checkbox'
-import { Sparkline } from '@/components/ui/Sparkline'
-import { Pager } from '@/components/ui/Pager'
+
+function statusBadge(status: string) {
+  const toneMap: Record<string, 'success' | 'warning' | undefined> = {
+    live: 'success', draft: undefined, archived: 'warning',
+  }
+  const labelMap: Record<string, string> = { live: 'Actif', draft: 'Brouillon', archived: 'Archivé' }
+  return <Badge tone={toneMap[status]}>{labelMap[status] || status}</Badge>
+}
 
 export default function ProductsPage() {
   const router = useRouter()
-  const [tab, setTab] = useState('all')
-  const [sel, setSel] = useState<Set<string>>(new Set())
-  const [search, setSearch] = useState('')
+  const [selectedTab, setSelectedTab] = useState(0)
+  const [searchValue, setSearchValue] = useState('')
 
   const tabs = [
-    { key: 'all', label: 'Tous', count: products.length },
-    { key: 'live', label: 'Actifs', count: products.filter(p => p.status === 'live').length },
-    { key: 'draft', label: 'Brouillons', count: products.filter(p => p.status === 'draft').length },
-    { key: 'archived', label: 'Archivés', count: products.filter(p => p.status === 'archived').length },
+    { id: 'all', content: `Tous (${products.length})` },
+    { id: 'live', content: `Actifs (${products.filter(p => p.status === 'live').length})` },
+    { id: 'draft', content: `Brouillons (${products.filter(p => p.status === 'draft').length})` },
+    { id: 'archived', content: `Archivés (${products.filter(p => p.status === 'archived').length})` },
   ]
+
+  const tabId = tabs[selectedTab]?.id || 'all'
 
   const list = products.filter(p => {
-    if (tab !== 'all' && p.status !== tab) return false
-    if (search && !p.title.toLowerCase().includes(search.toLowerCase())) return false
+    if (tabId !== 'all' && p.status !== tabId) return false
+    if (searchValue && !p.title.toLowerCase().includes(searchValue.toLowerCase())) return false
     return true
   })
-  const toggle = (id: string) => { const n = new Set(sel); n.has(id) ? n.delete(id) : n.add(id); setSel(n) }
-  const allSel = list.length > 0 && list.every(p => sel.has(p.id))
 
-  const kpis = [
-    { l: 'Période', v: '30 jours' },
-    { l: 'Taux de vente moyen', v: '0,1 %' },
-    { l: 'Analyse ABC · A', v: '105 363 €' },
-    { l: 'Analyse ABC · B', v: '15 059 €' },
-    { l: 'Analyse ABC · C', v: '4 525 939 €' },
+  const { selectedResources, allResourcesSelected, handleSelectionChange } = useIndexResourceState(
+    list.map(p => ({ id: p.id }))
+  )
+
+  const promotedBulkActions = [
+    { content: 'Rendre actif', icon: ViewIcon, onAction: () => {} },
+    { content: 'Archiver', icon: ArchiveIcon, onAction: () => {} },
   ]
 
+  const rowMarkup = list.map((p, index) => (
+    <IndexTable.Row
+      id={p.id}
+      key={p.id}
+      selected={selectedResources.includes(p.id)}
+      position={index}
+      onClick={() => router.push('/products/' + p.id)}
+    >
+      <IndexTable.Cell>
+        <div style={{
+          width: 32, height: 32, borderRadius: 6,
+          background: 'var(--p-color-bg-surface-secondary)',
+          border: '1px solid var(--p-color-border)',
+          display: 'grid', placeItems: 'center'
+        }}>
+          <ImageIcon width={14} height={14} />
+        </div>
+      </IndexTable.Cell>
+      <IndexTable.Cell>
+        p.title
+      </IndexTable.Cell>
+      <IndexTable.Cell>{statusBadge(p.status)}</IndexTable.Cell>
+      <IndexTable.Cell>
+        <Text as="span" tone={p.stock < 10 && p.stock > 0 ? 'critical' : 'subdued'} variant="bodySm">
+          {p.stock === 0 ? 'Stock non suivi' : `${p.stock} en stock`}
+        </Text>
+      </IndexTable.Cell>
+      <IndexTable.Cell>
+        p.category
+      </IndexTable.Cell>
+      <IndexTable.Cell>
+        p.channels
+      </IndexTable.Cell>
+      <IndexTable.Cell>
+        p.vendor
+      </IndexTable.Cell>
+    </IndexTable.Row>
+  ))
+
   return (
-    <div className="page page-wide">
-      <PageHeader
-        icon={<I.Box size={18} />}
-        title="Produits"
-        actions={
-          <>
-            <button className="btn btn-sm"><I.Export size={13} /> Exporter</button>
-            <button className="btn btn-sm"><I.Import size={13} /> Importer</button>
-            <button className="btn btn-sm btn-primary" onClick={() => router.push('/products/P-1002')}><I.Plus size={13} /> Ajouter un produit</button>
-          </>
-        }
-      />
+    <Page
+      title="Produits"
+      primaryAction={{ content: 'Ajouter un produit', icon: PlusIcon, onAction: () => router.push('/products/P-1002') }}
+      secondaryActions={[
+        { content: 'Exporter', icon: ExportIcon },
+        { content: 'Importer', icon: ImportIcon },
+      ]}
+    >
+      <BlockStack gap="500">
+        <InlineGrid columns={5} gap="300">
+          {[
+            { l: 'Période', v: '30 jours' },
+            { l: 'Taux de vente moyen', v: '0,1 %' },
+            { l: 'Analyse ABC · A', v: '105 363 €' },
+            { l: 'Analyse ABC · B', v: '15 059 €' },
+            { l: 'Analyse ABC · C', v: '4 525 939 €' },
+          ].map((k, i) => (
+            <Card key={i}>
+              <BlockStack gap="100">
+                <Text as="p" variant="bodySm" tone="subdued">{k.l}</Text>
+                <Text as="p" variant="headingMd" fontWeight="bold">{k.v}</Text>
+              </BlockStack>
+            </Card>
+          ))}
+        </InlineGrid>
 
-      <div className="kpi-grid mb-12">
-        {kpis.map((k, i) => (
-          <div className="kpi" key={i}>
-            <div className="kpi-label">{k.l}</div>
-            <div className="kpi-value" style={{ fontSize: 15 }}>{k.v}</div>
-          </div>
-        ))}
-      </div>
-
-      <div className="table-wrap">
-        {sel.size > 0
-          ? <BulkBar count={sel.size} onClear={() => setSel(new Set())} actions={<>
-              <button className="btn btn-sm"><I.Eye size={13} /> Rendre actif</button>
-              <button className="btn btn-sm"><I.Archive size={13} /> Archiver</button>
-              <button className="btn btn-sm"><I.Tag size={13} /> Baliser</button>
-            </>} />
-          : <FilterBar tabs={tabs} active={tab} onTab={setTab} search={search} onSearch={setSearch} />
-        }
-        <div style={{ overflowX: 'auto' }}>
-          <table className="table">
-            <thead>
-              <tr>
-                <th className="col-checkbox"><Checkbox checked={allSel} indeterminate={!allSel && sel.size > 0} onChange={() => setSel(allSel ? new Set() : new Set(list.map(p => p.id)))} /></th>
-                <th style={{ width: 44, paddingRight: 0 }}></th>
-                <th>Produit</th>
-                <th>Statut</th>
-                <th>Stock</th>
-                <th>Catégorie</th>
-                <th>Canaux</th>
-                <th>Fournisseur</th>
-              </tr>
-            </thead>
-            <tbody>
-              {list.map(p => {
-                const statusTone = p.status === 'live' ? 'ok' : p.status === 'draft' ? 'muted' : 'warn'
-                const statusLabel = p.status === 'live' ? 'Actif' : p.status === 'draft' ? 'Brouillon' : 'Archivé'
-                return (
-                  <tr key={p.id} className={sel.has(p.id) ? 'selected' : ''} onClick={() => router.push('/products/' + p.id)} style={{ cursor: 'pointer' }}>
-                    <td className="col-checkbox" onClick={e => e.stopPropagation()}><Checkbox checked={sel.has(p.id)} onChange={() => toggle(p.id)} /></td>
-                    <td style={{ paddingRight: 0 }}><div className="thumb"><I.Image size={13} /></div></td>
-                    <td><span className="row-link">{p.title}</span></td>
-                    <td><span className={`badge ${statusTone}`}><span className="dot" />{statusLabel}</span></td>
-                    <td>{p.stock === 0 ? <span className="td-muted">Stock non suivi</span> : <span className="t" style={{ color: 'var(--ink-2)' }}>{p.stock} en stock</span>}</td>
-                    <td className="td-muted">{p.category}</td>
-                    <td className="mono">{p.channels}</td>
-                    <td className="td-muted">{p.vendor}</td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
-        {/* Mobile cards */}
-        <div className="mobile-cards" style={{ display: 'none' }}>
-          {list.map(p => {
-            const statusTone = p.status === 'live' ? 'ok' : p.status === 'draft' ? 'muted' : 'warn'
-            const statusLabel = p.status === 'live' ? 'Actif' : p.status === 'draft' ? 'Brouillon' : 'Archivé'
-            return (
-              <div key={p.id} className="mobile-card" onClick={() => router.push('/products/' + p.id)}>
-                <div className="mobile-card-row">
-                  <span className="row-link" style={{ fontWeight: 500 }}>{p.title}</span>
-                  <span className={`badge ${statusTone}`}><span className="dot" />{statusLabel}</span>
-                </div>
-                <div className="mobile-card-row">
-                  <span className="td-muted">{p.category} · {p.vendor}</span>
-                  <span className="td-strong mono">{money(p.price)}</span>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-        <Pager page={1} total={list.length} perPage={50} />
-      </div>
-    </div>
+        <Card padding="0">
+          <Tabs tabs={tabs} selected={selectedTab} onSelect={setSelectedTab}>
+            <Box padding="300" paddingBlockEnd="0">
+              <TextField
+                label=""
+                labelHidden
+                value={searchValue}
+                onChange={setSearchValue}
+                prefix={<SearchIcon />}
+                placeholder="Rechercher un produit…"
+                autoComplete="off"
+                clearButton
+                onClearButtonClick={() => setSearchValue('')}
+              />
+            </Box>
+            <IndexTable
+              resourceName={{ singular: 'produit', plural: 'produits' }}
+              itemCount={list.length}
+              selectedItemsCount={allResourcesSelected ? 'All' : selectedResources.length}
+              onSelectionChange={handleSelectionChange}
+              promotedBulkActions={promotedBulkActions}
+              headings={[
+                { title: '' },
+                { title: 'Produit' },
+                { title: 'Statut' },
+                { title: 'Stock' },
+                { title: 'Catégorie' },
+                { title: 'Canaux', alignment: 'end' },
+                { title: 'Fournisseur' },
+              ]}
+            >
+              {rowMarkup}
+            </IndexTable>
+          </Tabs>
+        </Card>
+      </BlockStack>
+    </Page>
   )
 }

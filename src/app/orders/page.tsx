@@ -83,11 +83,11 @@ export default function OrdersPage() {
         </Text>
       </IndexTable.Cell>
       <IndexTable.Cell>
-        <Text as="span" tone="subdued" variant="bodySm">{o.date}</Text>
+        o.date
       </IndexTable.Cell>
       <IndexTable.Cell>{o.customer}</IndexTable.Cell>
       <IndexTable.Cell>
-        <Text as="span" fontWeight="semibold" numeric>{money(o.total)}</Text>
+        money(o.total)
       </IndexTable.Cell>
       <IndexTable.Cell>{paymentBadge(o.payment.tone, o.payment.label)}</IndexTable.Cell>
       <IndexTable.Cell>{paymentBadge(o.fulfill.tone, o.fulfill.label)}</IndexTable.Cell>
@@ -95,7 +95,7 @@ export default function OrdersPage() {
         <Text as="span" tone="subdued" variant="bodySm">{o.items} article{o.items > 1 ? 's' : ''}</Text>
       </IndexTable.Cell>
       <IndexTable.Cell>
-        <Text as="span" tone="subdued" variant="bodySm">{o.channel}</Text>
+        o.channel
       </IndexTable.Cell>
     </IndexTable.Row>
   ))
@@ -109,7 +109,7 @@ export default function OrdersPage() {
   return (
     <Page
       title="Commandes"
-      primaryAction={{ content: 'Créer une commande', icon: PlusIcon, variant: 'primary' }}
+      primaryAction={{ content: 'Créer une commande', icon: PlusIcon }}
       secondaryActions={[
         { content: 'Exporter', icon: ExportIcon },
         { content: 'Autres actions', icon: ChevronDownIcon },
@@ -123,7 +123,7 @@ export default function OrdersPage() {
                 <Text as="p" variant="bodySm" tone="subdued">{k.l}</Text>
                 <InlineStack gap="100" blockAlign="center">
                   <Text as="p" variant="headingMd" fontWeight="bold">{k.v}</Text>
-                  <Text as="span" variant="bodySm" tone="success">{k.d}</Text>
+                  k.d
                 </InlineStack>
                 <Sparkline data={k.sk} w={180} h={24} />
               </BlockStack>

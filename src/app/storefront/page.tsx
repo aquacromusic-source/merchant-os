@@ -1,86 +1,78 @@
 'use client'
 import React from 'react'
-import { I } from '@/lib/icons'
+import {
+  Page,
+  Card,
+  BlockStack,
+  InlineStack,
+  Text,
+  Badge,
+  Button,
+  Divider,
+  Box,
+} from '@shopify/polaris'
+import {
+  PlusIcon,
+  EditIcon,
+  ViewIcon,
+} from '@shopify/polaris-icons'
 import { themes } from '@/lib/data'
-import { PageHeader, SectionHeader } from '@/components/ui/PageHeader'
 
 export default function StorefrontPage() {
   return (
-    <div className="page">
-      <PageHeader icon={<I.Store size={18} />} title="Boutique en ligne" />
+    <Page title="Boutique en ligne">
+      <BlockStack gap="400">
+        {/* Current theme */}
+        <Card>
+          <BlockStack gap="300">
+            <InlineStack align="space-between" blockAlign="center">
+              <Text as="h2" variant="headingSm" fontWeight="semibold">Thème actuel</Text>
+              <InlineStack gap="200">
+                <Badge tone="warning">Mise à jour dispo</Badge>
+                <Button icon={ViewIcon} size="slim">Aperçu</Button>
+                <Button variant="primary" size="slim">Personnaliser</Button>
+              </InlineStack>
+            </InlineStack>
+            <BlockStack gap="200">
+              <Text as="p" fontWeight="semibold">{themes.current.name}</Text>
+              <Text as="p" variant="bodySm" tone="subdued">
+                Version {themes.current.version} · Enregistré {themes.current.saved}
+              </Text>
+              <InlineStack gap="200">
+                <Button icon={EditIcon} size="slim">Modifier le code</Button>
+                <Button size="slim">Dupliquer</Button>
+              </InlineStack>
+            </BlockStack>
+          </BlockStack>
+        </Card>
 
-      {/* Current theme */}
-      <div className="card mb-12">
-        <div className="card-header">
-          <div className="card-title"><I.Palette size={14} /><span>Thème actuel</span></div>
-          <div className="hstack">
-            <span className="badge warn"><span className="dot" />Mise à jour dispo</span>
-            <button className="btn btn-sm">Aperçu</button>
-            <button className="btn btn-sm btn-primary">Personnaliser</button>
-          </div>
-        </div>
-        <div className="card-body">
-          <div className="row" style={{ gap: 16 }}>
-            <div className="ph-img" style={{ width: 160, height: 110 }}>aperçu</div>
-            <div>
-              <div className="h3">{themes.current.name}</div>
-              <div className="tm mt-8">Version {themes.current.version} · Enregistré {themes.current.saved}</div>
-              <div className="row mt-12">
-                <button className="btn btn-sm"><I.Edit size={13} /> Modifier le code</button>
-                <button className="btn btn-sm"><I.Copy size={13} /> Dupliquer</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Drafts */}
-      <div className="card mb-12">
-        <SectionHeader title="Thèmes de développement" icon={<I.Layers size={14} />} action={<button className="btn btn-sm btn-ghost"><I.Plus size={13} /> Ajouter</button>} />
-        <div>
+        {/* Drafts */}
+        <Card padding="0">
+          <Box padding="400" paddingBlockEnd="0">
+            <InlineStack align="space-between" blockAlign="center">
+              <Text as="h2" variant="headingSm" fontWeight="semibold">Thèmes de développement</Text>
+              <Button icon={PlusIcon} size="slim">Ajouter</Button>
+            </InlineStack>
+          </Box>
           {themes.drafts.map((t, i) => (
-            <div key={i} className="card-section">
-              <div className="row" style={{ gap: 12 }}>
-                <div className="ph-img" style={{ width: 80, height: 56 }}>draft</div>
-                <div style={{ flex: 1 }}>
-                  <div className="t" style={{ fontWeight: 500 }}>{t.name}</div>
-                  <div className="ts">v{t.version} · Enregistré {t.saved}</div>
-                </div>
-                <div className="hstack">
-                  <button className="btn btn-sm">Aperçu</button>
-                  <button className="btn btn-sm btn-ghost">Publier</button>
-                  <button className="btn btn-sm btn-ghost btn-icon"><I.Dots size={13} /></button>
-                </div>
-              </div>
+            <div key={i}>
+              <Divider />
+              <Box padding="400">
+                <InlineStack align="space-between" blockAlign="center">
+                  <BlockStack gap="050">
+                    <Text as="p" fontWeight="semibold">{t.name}</Text>
+                    <Text as="p" variant="bodySm" tone="subdued">v{t.version} · Enregistré {t.saved}</Text>
+                  </BlockStack>
+                  <InlineStack gap="200">
+                    <Button size="slim">Aperçu</Button>
+                    <Button variant="primary" size="slim">Publier</Button>
+                  </InlineStack>
+                </InlineStack>
+              </Box>
             </div>
           ))}
-        </div>
-      </div>
-
-      {/* Navigation */}
-      <div className="card mb-12">
-        <SectionHeader title="Navigation" icon={<I.Sort size={14} />} />
-        <div className="card-body">
-          {["Menu principal", "Menu pied de page", "Navigation mobile"].map((m, i) => (
-            <div key={i} className="info-row">
-              <div><div className="t" style={{ fontWeight: 500 }}>{m}</div><div className="ts">3–8 liens</div></div>
-              <I.ChevRight size={14} style={{ color: 'var(--ink-4)' }} />
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Preferences */}
-      <div className="card">
-        <SectionHeader title="Préférences" icon={<I.Gear size={14} />} />
-        <div className="card-body">
-          <div className="field"><label className="label">Titre de la boutique</label><input className="input" defaultValue="Studio Nord & Co" /></div>
-          <div className="field"><label className="label">Meta description</label><textarea className="textarea" rows={2} defaultValue="Boutique artisanale en ligne — objets du quotidien, éditions limitées." /></div>
-          <div className="row mt-12">
-            <button className="btn btn-sm btn-primary">Enregistrer</button>
-          </div>
-        </div>
-      </div>
-    </div>
+        </Card>
+      </BlockStack>
+    </Page>
   )
 }

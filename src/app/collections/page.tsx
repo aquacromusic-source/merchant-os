@@ -1,68 +1,91 @@
 'use client'
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { I } from '@/lib/icons'
+import {
+  Page,
+  Card,
+  Text,
+  Badge,
+  Button,
+  IndexTable,
+  useIndexResourceState,
+  Tabs,
+} from '@shopify/polaris'
+import { PlusIcon } from '@shopify/polaris-icons'
 import { collections } from '@/lib/data'
-import { PageHeader } from '@/components/ui/PageHeader'
-import { FilterBar } from '@/components/ui/FilterBar'
-import { Checkbox } from '@/components/ui/Checkbox'
-import { Pager } from '@/components/ui/Pager'
+
+function statusBadge(status: string) {
+  const toneMap: Record<string, 'success' | 'warning' | undefined> = {
+    live: 'success', draft: undefined, archived: 'warning',
+  }
+  const labelMap: Record<string, string> = { live: 'Active', draft: 'Brouillon', archived: 'Archivée' }
+  return <Badge tone={toneMap[status]}>{labelMap[status] || status}</Badge>
+}
 
 export default function CollectionsPage() {
   const router = useRouter()
-  const [tab, setTab] = useState('all')
+  const [selectedTab, setSelectedTab] = useState(0)
 
   const tabs = [
-    { key: 'all', label: 'Toutes', count: collections.length },
-    { key: 'live', label: 'Actives', count: collections.filter(c => c.status === 'live').length },
-    { key: 'draft', label: 'Brouillons', count: collections.filter(c => c.status === 'draft').length },
-    { key: 'archived', label: 'Archivées', count: collections.filter(c => c.status === 'archived').length },
+    { id: 'all', content: `Toutes (${collections.length})` },
+    { id: 'live', content: `Actives (${collections.filter(c => c.status === 'live').length})` },
+    { id: 'draft', content: `Brouillons (${collections.filter(c => c.status === 'draft').length})` },
+    { id: 'archived', content: `Archivées (${collections.filter(c => c.status === 'archived').length})` },
   ]
 
-  const list = collections.filter(c => tab === 'all' || c.status === tab)
+  const tabId = tabs[selectedTab]?.id || 'all'
+  const list = collections.filter(c => tabId === 'all' || c.status === tabId)
+
+  const { selectedResources, allResourcesSelected, handleSelectionChange } = useIndexResourceState(
+    list.map(c => ({ id: c.id }))
+  )
 
   return (
-    <div className="page page-wide">
-      <PageHeader
-        icon={<I.Layers size={18} />}
-        title="Collections"
-        actions={<button className="btn btn-sm btn-primary"><I.Plus size={13} /> Créer une collection</button>}
-      />
-      <div className="table-wrap">
-        <FilterBar tabs={tabs} active={tab} onTab={setTab} />
-        <div style={{ overflowX: 'auto' }}>
-          <table className="table">
-            <thead>
-              <tr>
-                <th className="col-checkbox" />
-                <th>Collection</th>
-                <th>Produits</th>
-                <th>Type</th>
-                <th>Statut</th>
-                <th>Mise à jour</th>
-              </tr>
-            </thead>
-            <tbody>
-              {list.map(c => (
-                <tr key={c.id} style={{ cursor: 'pointer' }}>
-                  <td className="col-checkbox"><Checkbox /></td>
-                  <td className="td-strong row-link">{c.title}</td>
-                  <td className="mono">{c.products}</td>
-                  <td className="td-muted">{c.type}</td>
-                  <td>
-                    <span className={`badge ${c.status === 'live' ? 'ok' : c.status === 'draft' ? 'muted' : 'warn'}`}>
-                      <span className="dot" />
-                      {c.status === 'live' ? 'Active' : c.status === 'draft' ? 'Brouillon' : 'Archivée'}
-                    </span>
-                  </td>
-                  <td className="td-muted">{c.updated}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <Pager total={collections.length} perPage={20} />
-      </div>
-    </div>
+    <Page
+      title="Collections"
+      primaryAction={{ content: 'Créer une collection', icon: PlusIcon }}
+    >
+      <Card padding="0">
+        <Tabs tabs={tabs} selected={selectedTab} onSelect={setSelectedTab}>
+          <IndexTable
+            resourceName={{ singular: 'collection', plural: 'collections' }}
+            itemCount={list.length}
+            selectedItemsCount={allResourcesSelected ? 'All' : selectedResources.length}
+            onSelectionChange={handleSelectionChange}
+            headings={[
+              { title: 'Collection' },
+              { title: 'Produits', alignment: 'end' },
+              { title: 'Type' },
+              { title: 'Statut' },
+              { title: 'Mise à jour' },
+            ]}
+          >
+            {list.map((c, index) => (
+              <IndexTable.Row
+                id={c.id}
+                key={c.id}
+                selected={selectedResources.includes(c.id)}
+                position={index}
+                onClick={() => router.push('/collections/' + c.id)}
+              >
+                <IndexTable.Cell>
+                  c.title
+                </IndexTable.Cell>
+                <IndexTable.Cell>
+                  c.products
+                </IndexTable.Cell>
+                <IndexTable.Cell>
+                  c.type
+                </IndexTable.Cell>
+                <IndexTable.Cell>{statusBadge(c.status)}</IndexTable.Cell>
+                <IndexTable.Cell>
+                  c.updated
+                </IndexTable.Cell>
+              </IndexTable.Row>
+            ))}
+          </IndexTable>
+        </Tabs>
+      </Card>
+    </Page>
   )
 }

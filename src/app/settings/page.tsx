@@ -1,127 +1,188 @@
 'use client'
 import React, { useState } from 'react'
-import { I } from '@/lib/icons'
-import { PageHeader } from '@/components/ui/PageHeader'
+import {
+  Page,
+  Layout,
+  Card,
+  BlockStack,
+  InlineStack,
+  InlineGrid,
+  Text,
+  Badge,
+  Button,
+  Divider,
+  Select,
+  TextField,
+  Banner,
+  Box,
+  Navigation,
+} from '@shopify/polaris'
+import {
+  SettingsIcon,
+  DeliveryIcon,
+  CreditCardIcon,
+  PersonIcon,
+  ShoppingCartIcon,
+  ReceiptEuroIcon,
+  LocationIcon,
+  GlobeIcon,
+  NotificationIcon,
+  ImageIcon,
+  FolderIcon,
+  ChevronRightIcon,
+  AlertTriangleIcon,
+} from '@shopify/polaris-icons'
 
 const SETTINGS_NAV = [
-  ['general', 'Général', 'Store'],
-  ['plan', 'Forfait', 'Zap'],
-  ['billing', 'Facturation', 'Receipt'],
-  ['users', 'Utilisateurs et permissions', 'Users'],
-  ['payments', 'Paiements', 'CreditCard'],
-  ['checkout', 'Finalisation de commande', 'ShoppingBag'],
-  ['accounts', 'Comptes clients', 'Users'],
-  ['shipping', 'Expédition et livraison', 'Truck'],
-  ['taxes', 'Taxes et droits de douane', 'Percent'],
-  ['locations', 'Emplacements', 'Location'],
-  ['domains', 'Domaines', 'Globe'],
-  ['notifications', 'Notifications', 'Bell'],
-  ['brand', 'Marque', 'Palette'],
-  ['files', 'Fichiers', 'Folder'],
+  { key: 'general', label: 'Général' },
+  { key: 'plan', label: 'Forfait' },
+  { key: 'billing', label: 'Facturation' },
+  { key: 'users', label: 'Utilisateurs et permissions' },
+  { key: 'payments', label: 'Paiements' },
+  { key: 'checkout', label: 'Finalisation de commande' },
+  { key: 'accounts', label: 'Comptes clients' },
+  { key: 'shipping', label: 'Expédition et livraison' },
+  { key: 'taxes', label: 'Taxes et droits de douane' },
+  { key: 'locations', label: 'Emplacements' },
+  { key: 'domains', label: 'Domaines' },
+  { key: 'notifications', label: 'Notifications' },
+  { key: 'brand', label: 'Marque' },
+  { key: 'files', label: 'Fichiers' },
 ]
 
 function SettingContent({ active }: { active: string }) {
   if (active === 'general') return (
-    <div className="stack">
-      <div className="card">
-        <div className="card-header"><div className="card-title">Informations sur la boutique</div></div>
-        <div className="card-body">
-          <div className="field"><label className="label">Nom de la boutique</label><input className="input" defaultValue="Studio Nord & Co" /></div>
-          <div className="field"><label className="label">E-mail du compte</label><input className="input" type="email" defaultValue="hello@studionord.co" /></div>
-          <div className="field"><label className="label">Numéro de téléphone</label><input className="input" defaultValue="+33 1 42 00 00 00" /></div>
-          <div className="field"><label className="label">Devise</label><select className="select"><option>EUR — Euro</option><option>USD — Dollar</option></select></div>
-          <div className="row mt-12"><button className="btn btn-sm btn-primary">Enregistrer</button></div>
-        </div>
-      </div>
-      <div className="card">
-        <div className="card-header"><div className="card-title">Adresse de la boutique</div></div>
-        <div className="card-body">
-          <div className="field"><label className="label">Adresse</label><input className="input" defaultValue="12 rue des Ateliers" /></div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            <div className="field"><label className="label">Ville</label><input className="input" defaultValue="Paris" /></div>
-            <div className="field"><label className="label">Code postal</label><input className="input" defaultValue="75011" /></div>
-          </div>
-          <div className="field"><label className="label">Pays</label><select className="select"><option>France</option></select></div>
-          <div className="row mt-12"><button className="btn btn-sm btn-primary">Enregistrer</button></div>
-        </div>
-      </div>
-    </div>
+    <BlockStack gap="400">
+      <Card>
+        <BlockStack gap="400">
+          <Text as="h2" variant="headingSm" fontWeight="semibold">Informations sur la boutique</Text>
+          <TextField label="Nom de la boutique" value="Studio Nord & Co" autoComplete="off" />
+          <TextField label="E-mail du compte" type="email" value="hello@studionord.co" autoComplete="off" />
+          <TextField label="Numéro de téléphone" value="+33 1 42 00 00 00" autoComplete="off" />
+          <Select
+            label="Devise"
+            options={[
+              { label: 'EUR — Euro', value: 'eur' },
+              { label: 'USD — Dollar', value: 'usd' },
+            ]}
+            value="eur"
+            onChange={() => {}}
+          />
+          <InlineStack>
+            <Button variant="primary">Enregistrer</Button>
+          </InlineStack>
+        </BlockStack>
+      </Card>
+      <Card>
+        <BlockStack gap="400">
+          <Text as="h2" variant="headingSm" fontWeight="semibold">Adresse de la boutique</Text>
+          <TextField label="Adresse" value="12 rue des Ateliers" autoComplete="off" />
+          <InlineGrid columns={2} gap="300">
+            <TextField label="Ville" value="Paris" autoComplete="off" />
+            <TextField label="Code postal" value="75011" autoComplete="off" />
+          </InlineGrid>
+          <Select
+            label="Pays"
+            options={[{ label: 'France', value: 'fr' }]}
+            value="fr"
+            onChange={() => {}}
+          />
+          <InlineStack>
+            <Button variant="primary">Enregistrer</Button>
+          </InlineStack>
+        </BlockStack>
+      </Card>
+    </BlockStack>
   )
 
   if (active === 'shipping') return (
-    <div className="stack">
-      <div className="card">
-        <div className="card-header"><div className="card-title"><I.Truck size={14} /><span>Expédition et livraison</span></div></div>
-        <div className="card-body">
-          <div className="info-row">
-            <div><div className="t" style={{ fontWeight: 500 }}>Profil d&apos;expédition général</div><div className="ts">3 zones · 7 tarifs</div></div>
-            <I.ChevRight size={14} style={{ color: 'var(--ink-4)' }} />
+    <Card>
+      <BlockStack gap="300">
+        <InlineStack gap="200" blockAlign="center">
+          <DeliveryIcon width={16} height={16} />
+          <Text as="h2" variant="headingSm" fontWeight="semibold">Expédition et livraison</Text>
+        </InlineStack>
+        {[
+          { t: "Profil d'expédition général", s: "3 zones · 7 tarifs" },
+          { t: "Expédition locale", s: "Non configurée" },
+        ].map((item, i) => (
+          <div key={i}>
+            {i > 0 && <Divider />}
+            <Box paddingBlockStart={i > 0 ? '300' : '0'}>
+              <InlineStack align="space-between" blockAlign="center">
+                <BlockStack gap="050">
+                  <Text as="p" fontWeight="semibold">{item.t}</Text>
+                  <Text as="p" variant="bodySm" tone="subdued">{item.s}</Text>
+                </BlockStack>
+                <Button variant="plain" icon={ChevronRightIcon} />
+              </InlineStack>
+            </Box>
           </div>
-          <div className="info-row mt-8">
-            <div><div className="t" style={{ fontWeight: 500 }}>Expédition locale</div><div className="ts">Non configurée</div></div>
-            <I.ChevRight size={14} style={{ color: 'var(--ink-4)' }} />
-          </div>
-        </div>
-      </div>
-    </div>
+        ))}
+      </BlockStack>
+    </Card>
   )
 
   if (active === 'payments') return (
-    <div className="stack">
-      <div className="card">
-        <div className="card-header"><div className="card-title"><I.CreditCard size={14} /><span>Fournisseur de paiement</span></div></div>
-        <div className="card-body">
-          <div className="info-row">
-            <div>
-              <div className="t" style={{ fontWeight: 500 }}>Merchant OS Payments</div>
-              <div className="ts">Actif · Visa, Mastercard, Apple Pay, Google Pay</div>
-            </div>
-            <span className="badge ok"><span className="dot" />Actif</span>
-          </div>
-        </div>
-      </div>
-    </div>
+    <Card>
+      <BlockStack gap="300">
+        <InlineStack gap="200" blockAlign="center">
+          <CreditCardIcon width={16} height={16} />
+          <Text as="h2" variant="headingSm" fontWeight="semibold">Fournisseur de paiement</Text>
+        </InlineStack>
+        <InlineStack align="space-between" blockAlign="center">
+          <BlockStack gap="050">
+            <Text as="p" fontWeight="semibold">Merchant OS Payments</Text>
+            <Text as="p" variant="bodySm" tone="subdued">Actif · Visa, Mastercard, Apple Pay, Google Pay</Text>
+          </BlockStack>
+          <Badge tone="success">Actif</Badge>
+        </InlineStack>
+      </BlockStack>
+    </Card>
   )
 
   if (active === 'taxes') return (
-    <div className="stack">
-      <div className="card">
-        <div className="card-header"><div className="card-title"><I.Percent size={14} /><span>Taxes et droits de douane</span></div></div>
-        <div className="card-body">
-          <div className="banner warn">
-            <I.Warning size={16} />
-            <div className="banner-body">
-              <div className="banner-title">Configuration TVA UE requise</div>
-              <div className="banner-text">Configurez votre numéro OSS/IOSS pour les ventes en Europe.</div>
-            </div>
+    <Card>
+      <BlockStack gap="300">
+        <InlineStack gap="200" blockAlign="center">
+          <ReceiptEuroIcon width={16} height={16} />
+          <Text as="h2" variant="headingSm" fontWeight="semibold">Taxes et droits de douane</Text>
+        </InlineStack>
+        <Banner tone="warning">
+          <Text as="p" fontWeight="semibold">Configuration TVA UE requise</Text>
+          <Text as="p" variant="bodySm">Configurez votre numéro OSS/IOSS pour les ventes en Europe.</Text>
+        </Banner>
+        {[
+          ['France', '20% TVA standard'],
+          ['Allemagne', '19% TVA standard'],
+          ['Espagne', '21% IVA'],
+          ['Pays-Bas', '21% BTW'],
+        ].map(([country, rate], i) => (
+          <div key={i}>
+            {i > 0 && <Divider />}
+            <Box paddingBlockStart={i > 0 ? '300' : '0'}>
+              <InlineStack align="space-between" blockAlign="center">
+                <BlockStack gap="050">
+                  <Text as="p" fontWeight="semibold">{country}</Text>
+                  <Text as="p" variant="bodySm" tone="subdued">{rate}</Text>
+                </BlockStack>
+                <Button variant="plain" icon={ChevronRightIcon} />
+              </InlineStack>
+            </Box>
           </div>
-          {[
-            ['France', '20% TVA standard'],
-            ['Allemagne', '19% TVA standard'],
-            ['Espagne', '21% IVA'],
-            ['Pays-Bas', '21% BTW'],
-          ].map(([c, r], i) => (
-            <div key={i} className="info-row mt-8">
-              <div><div className="t" style={{ fontWeight: 500 }}>{c}</div><div className="ts">{r}</div></div>
-              <I.ChevRight size={14} style={{ color: 'var(--ink-4)' }} />
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
+        ))}
+      </BlockStack>
+    </Card>
   )
 
-  // Default fallback
   return (
-    <div className="card">
-      <div className="card-body">
-        <div className="empty">
-          <div className="glyph"><I.Gear size={22} /></div>
-          <h4>Section en cours de configuration</h4>
-          <p>Cette section sera bientôt disponible.</p>
-        </div>
-      </div>
-    </div>
+    <Card>
+      <BlockStack gap="300" inlineAlign="center">
+        <SettingsIcon width={40} height={40} />
+        <Text as="h3" variant="headingMd">Section en cours de configuration</Text>
+        <Text as="p" variant="bodySm" tone="subdued">Cette section sera bientôt disponible.</Text>
+      </BlockStack>
+    </Card>
   )
 }
 
@@ -129,36 +190,50 @@ export default function SettingsPage() {
   const [active, setActive] = useState('general')
 
   return (
-    <div className="page">
-      <PageHeader
-        title="Paramètres"
-        subtitle="Gérez votre boutique, votre compte et vos préférences."
-      />
-      <div className="settings-shell">
-        <div className="settings-nav">
-          <div className="card" style={{ padding: 10 }}>
-            <div className="row" style={{ gap: 10, padding: '6px 6px 10px', borderBottom: '1px solid var(--divider)', marginBottom: 6 }}>
-              <div className="thumb lg" style={{ background: 'linear-gradient(135deg, oklch(0.75 0.12 50), oklch(0.65 0.14 30))', color: 'white', fontWeight: 600 }}>S</div>
-              <div><div className="t" style={{ fontWeight: 600 }}>Studio Nord & Co</div><div className="ts mono">studionord.co</div></div>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-              {SETTINGS_NAV.map(([key, label]) => (
-                <button
-                  key={key}
-                  className={`nav-item ${active === key ? 'active' : ''}`}
-                  style={{ color: active === key ? undefined : 'var(--ink-2)', background: active === key ? undefined : 'transparent', borderColor: active === key ? 'var(--border)' : 'transparent', border: active === key ? '1px solid var(--border)' : '1px solid transparent', height: 30 }}
-                  onClick={() => setActive(key)}
-                >
-                  <span>{label as string}</span>
-                </button>
+    <Page
+      title="Paramètres"
+      subtitle="Gérez votre boutique, votre compte et vos préférences."
+    >
+      <Layout>
+        <Layout.Section variant="oneThird">
+          <Card padding="0">
+            <Box padding="400" paddingBlockEnd="300">
+              <InlineStack gap="300" blockAlign="center">
+                <div style={{
+                  width: 36, height: 36, borderRadius: 8, flexShrink: 0,
+                  background: 'linear-gradient(135deg, oklch(0.75 0.12 50), oklch(0.65 0.14 30))',
+                  display: 'grid', placeItems: 'center', color: 'white', fontWeight: 700
+                }}>S</div>
+                <BlockStack gap="050">
+                  <Text as="p" fontWeight="semibold">Studio Nord &amp; Co</Text>
+                  <Text as="p" variant="bodySm" tone="subdued">
+                    <span style={{ fontFamily: 'monospace' }}>studionord.co</span>
+                  </Text>
+                </BlockStack>
+              </InlineStack>
+            </Box>
+            <Divider />
+            <BlockStack gap="050">
+              {SETTINGS_NAV.map(item => (
+                <Box key={item.key} padding="100" paddingInline="300">
+                  <Button
+                    variant={active === item.key ? 'secondary' : 'plain'}
+                    fullWidth
+                    textAlign="left"
+                    onClick={() => setActive(item.key)}
+                  >
+                    {item.label}
+                  </Button>
+                </Box>
               ))}
-            </div>
-          </div>
-        </div>
-        <div className="stack">
+            </BlockStack>
+          </Card>
+        </Layout.Section>
+
+        <Layout.Section>
           <SettingContent active={active} />
-        </div>
-      </div>
-    </div>
+        </Layout.Section>
+      </Layout>
+    </Page>
   )
 }

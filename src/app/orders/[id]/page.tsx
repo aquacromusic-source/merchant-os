@@ -56,8 +56,8 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
       title={order.id}
       titleMetadata={
         <InlineStack gap="200">
-          {paymentBadge(order.payment.tone, order.payment.label)}
-          {paymentBadge(order.fulfill.tone, order.fulfill.label)}
+          {order.payment.label}
+          {order.fulfill.label}
         </InlineStack>
       }
       subtitle="22 avril 2026 · 08:28 · Boutique en ligne"
@@ -101,7 +101,7 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
                     }}>
                       <ImageIcon width={18} height={18} />
                     </div>
-                    <BlockStack gap="050" inlineSize="fill">
+                    <BlockStack gap="050" >
                       <Text as="p" variant="bodySm" fontWeight="semibold">{li.name}</Text>
                       <Text as="p" variant="bodySm" tone="subdued">{li.variant}</Text>
                       <Text as="p" variant="bodySm" tone="subdued">
@@ -261,7 +261,7 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
                   <ShieldCheckMarkIcon width={16} height={16} />
                   <Text as="h2" variant="headingSm" fontWeight="semibold">Risque de la commande</Text>
                 </InlineStack>
-                <ProgressBar progress={riskProgress} tone={riskTone} />
+                <ProgressBar progress={riskProgress} tone={riskTone === "warning" ? "critical" : (riskTone as "success" | "critical")} />
                 <Text as="p" variant="bodySm" tone="subdued">
                   Le risque de rétrofacturation est {order.risk === 'high' ? 'élevé' : order.risk === 'medium' ? 'moyen' : 'faible'}.
                 </Text>

@@ -274,10 +274,10 @@ function ImageModal({ image, onClose }: { image: typeof MOCK_IMAGES[0]; onClose:
               <BlockStack gap="100">
                 <Text variant="headingSm" as="h3">Détails</Text>
                 <Divider />
-                <InlineStack align="space-between"><Text as="span" tone="subdued" variant="bodySm">Format</Text><Text as="span" variant="bodySm">{image.format}</Text></InlineStack>
-                <InlineStack align="space-between"><Text as="span" tone="subdued" variant="bodySm">Dimensions</Text><Text as="span" variant="bodySm">{image.dims}</Text></InlineStack>
-                <InlineStack align="space-between"><Text as="span" tone="subdued" variant="bodySm">Taille</Text><Text as="span" variant="bodySm">{image.size}</Text></InlineStack>
-                <InlineStack align="space-between"><Text as="span" tone="subdued" variant="bodySm">Ajoutée</Text><Text as="span" variant="bodySm">{image.date}</Text></InlineStack>
+                <InlineStack align="space-between"><Text as="span" tone="subdued" variant="bodySm">Format</Text>image.format</InlineStack>
+                <InlineStack align="space-between"><Text as="span" tone="subdued" variant="bodySm">Dimensions</Text>image.dims</InlineStack>
+                <InlineStack align="space-between"><Text as="span" tone="subdued" variant="bodySm">Taille</Text>image.size</InlineStack>
+                <InlineStack align="space-between"><Text as="span" tone="subdued" variant="bodySm">Ajoutée</Text>image.date</InlineStack>
               </BlockStack>
             </Box>
             <Box paddingBlockStart="200">
@@ -344,7 +344,7 @@ function VariantsTable({ onSelectVariant }: { onSelectVariant: (v: VariantRow) =
               <InlineStack gap="200" blockAlign="center">
                 <ImagePlaceholder label={size} size="sm" />
                 <BlockStack gap="0">
-                  <Text as="span" fontWeight="semibold">{size}</Text>
+                  size
                   <Text as="span" variant="bodySm" tone="subdued">{variants.length} variantes {isExp ? '↕' : '↕'}</Text>
                 </BlockStack>
               </InlineStack>
@@ -368,8 +368,8 @@ function VariantsTable({ onSelectVariant }: { onSelectVariant: (v: VariantRow) =
                 <InlineStack gap="200" blockAlign="center">
                   <ImagePlaceholder label={v.size[0]} size="sm" />
                   <BlockStack gap="0">
-                    <Text as="span" variant="bodySm">{v.frame}</Text>
-                    <Text as="span" variant="bodySm" tone="subdued">{v.sku}</Text>
+                    v.frame
+                    v.sku
                   </BlockStack>
                 </InlineStack>
                 <div style={{ textAlign: 'right', fontSize: 13, alignSelf: 'center' }}>{v.price.toFixed(2)} €</div>

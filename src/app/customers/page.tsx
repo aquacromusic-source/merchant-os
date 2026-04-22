@@ -1,119 +1,150 @@
 'use client'
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { I } from '@/lib/icons'
+import {
+  Page,
+  Card,
+  BlockStack,
+  InlineStack,
+  InlineGrid,
+  Text,
+  Badge,
+  Button,
+  IndexTable,
+  useIndexResourceState,
+  Tabs,
+  Box,
+  Avatar,
+  Tag,
+} from '@shopify/polaris'
+import {
+  ExportIcon,
+  ImportIcon,
+  PlusIcon,
+  PersonAddIcon,
+} from '@shopify/polaris-icons'
 import { customers } from '@/lib/data'
 import { money } from '@/lib/utils'
-import { PageHeader } from '@/components/ui/PageHeader'
-import { FilterBar } from '@/components/ui/FilterBar'
-import { Checkbox } from '@/components/ui/Checkbox'
-import { NameAvatar } from '@/components/ui/NameAvatar'
-import { Pager } from '@/components/ui/Pager'
 
 export default function CustomersPage() {
   const router = useRouter()
-  const [tab, setTab] = useState('all')
-  const [sel, setSel] = useState<Set<string>>(new Set())
+  const [selectedTab, setSelectedTab] = useState(0)
 
   const tabs = [
-    { key: 'all', label: 'Tous', count: customers.length },
-    { key: 'subscribed', label: 'Abonnés', count: customers.filter(c => c.subscribed).length },
-    { key: 'vip', label: 'VIP', count: customers.filter(c => c.tags.includes('VIP')).length },
-    { key: 'risk', label: 'À risque', count: customers.filter(c => c.status === 'À risque').length },
+    { id: 'all', content: `Tous (${customers.length})` },
+    { id: 'subscribed', content: `Abonnés (${customers.filter(c => c.subscribed).length})` },
+    { id: 'vip', content: `VIP (${customers.filter(c => c.tags.includes('VIP')).length})` },
+    { id: 'risk', content: `À risque (${customers.filter(c => c.status === 'À risque').length})` },
   ]
 
+  const tabId = tabs[selectedTab]?.id || 'all'
+
   const list = customers.filter(c => {
-    if (tab === 'subscribed' && !c.subscribed) return false
-    if (tab === 'vip' && !c.tags.includes('VIP')) return false
-    if (tab === 'risk' && c.status !== 'À risque') return false
+    if (tabId === 'subscribed' && !c.subscribed) return false
+    if (tabId === 'vip' && !c.tags.includes('VIP')) return false
+    if (tabId === 'risk' && c.status !== 'À risque') return false
     return true
   })
 
+  const { selectedResources, allResourcesSelected, handleSelectionChange } = useIndexResourceState(
+    list.map(c => ({ id: c.id }))
+  )
+
+  const rowMarkup = list.map((c, index) => (
+    <IndexTable.Row
+      id={c.id}
+      key={c.id}
+      selected={selectedResources.includes(c.id)}
+      position={index}
+      onClick={() => router.push('/customers/' + c.id)}
+    >
+      <IndexTable.Cell>
+        <InlineStack gap="200" blockAlign="center">
+          <Avatar customer name={c.name} size="sm" />
+          c.name
+        </InlineStack>
+      </IndexTable.Cell>
+      <IndexTable.Cell>
+        <Text as="span" tone="subdued" variant="bodySm">
+          <span style={{ fontFamily: 'monospace' }}>{c.email}</span>
+        </Text>
+      </IndexTable.Cell>
+      <IndexTable.Cell>
+        <Text as="span" tone="subdued" variant="bodySm">{c.city}, {c.country}</Text>
+      </IndexTable.Cell>
+      <IndexTable.Cell>
+        c.orders
+      </IndexTable.Cell>
+      <IndexTable.Cell>
+        money(c.spend)
+      </IndexTable.Cell>
+      <IndexTable.Cell>
+        c.lastOrder
+      </IndexTable.Cell>
+      <IndexTable.Cell>
+        <Badge tone={c.subscribed ? 'success' : undefined}>{c.subscribed ? 'Oui' : 'Non'}</Badge>
+      </IndexTable.Cell>
+      <IndexTable.Cell>
+        <InlineStack gap="100" wrap>
+          {c.tags.map(t => <Tag key={t}>{t}</Tag>)}
+        </InlineStack>
+      </IndexTable.Cell>
+    </IndexTable.Row>
+  ))
+
   return (
-    <div className="page page-wide">
-      <PageHeader
-        icon={<I.Users size={18} />}
-        title="Clients"
-        actions={
-          <>
-            <button className="btn btn-sm"><I.Export size={13} /> Exporter</button>
-            <button className="btn btn-sm"><I.Import size={13} /> Importer</button>
-            <button className="btn btn-sm btn-primary"><I.Plus size={13} /> Ajouter un client</button>
-          </>
-        }
-      />
-
-      <div className="kpi-grid mb-12">
-        {[
-          { l: 'Total clients', v: '3 248', d: '+12%' },
-          { l: 'Abonnés', v: '1 842', d: '+8%' },
-          { l: 'Valeur vie · moyenne', v: '189,20 €' },
-          { l: 'Taux de retour', v: '26 %', d: '+2 pts' },
-          { l: 'Segments actifs', v: '8' },
-        ].map((k, i) => (
-          <div className="kpi" key={i}>
-            <div className="kpi-label">{k.l}</div>
-            <div className="kpi-value">{k.v}{k.d && <span className="delta up">{k.d}</span>}</div>
-          </div>
-        ))}
-      </div>
-
-      <div className="table-wrap">
-        <FilterBar tabs={tabs} active={tab} onTab={setTab} />
-        <div style={{ overflowX: 'auto' }}>
-          <table className="table">
-            <thead>
-              <tr>
-                <th className="col-checkbox" />
-                <th>Nom</th>
-                <th>E-mail</th>
-                <th>Ville</th>
-                <th>Commandes</th>
-                <th style={{ textAlign: 'right' }}>Dépensé</th>
-                <th>Dernière commande</th>
-                <th>Abonné</th>
-                <th>Balises</th>
-              </tr>
-            </thead>
-            <tbody>
-              {list.map(c => (
-                <tr key={c.id} onClick={() => router.push('/customers/' + c.id)} style={{ cursor: 'pointer' }}>
-                  <td className="col-checkbox" onClick={e => e.stopPropagation()}>
-                    <Checkbox checked={sel.has(c.id)} onChange={() => { const n = new Set(sel); n.has(c.id) ? n.delete(c.id) : n.add(c.id); setSel(n) }} />
-                  </td>
-                  <td><div className="row" style={{ gap: 8 }}><NameAvatar name={c.name} className="sm" /><span className="row-link">{c.name}</span></div></td>
-                  <td className="td-muted mono">{c.email}</td>
-                  <td className="td-muted">{c.city}, {c.country}</td>
-                  <td className="mono">{c.orders}</td>
-                  <td className="mono td-strong" style={{ textAlign: 'right' }}>{money(c.spend)}</td>
-                  <td className="td-muted">{c.lastOrder}</td>
-                  <td><span className={`badge ${c.subscribed ? 'ok' : 'muted'}`}><span className="dot" />{c.subscribed ? 'Oui' : 'Non'}</span></td>
-                  <td>{c.tags.map(t => <span key={t} className="tag">{t}</span>)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        {/* Mobile cards */}
-        <div className="mobile-cards" style={{ display: 'none' }}>
-          {list.map(c => (
-            <div key={c.id} className="mobile-card" onClick={() => router.push('/customers/' + c.id)}>
-              <div className="mobile-card-row">
-                <div className="row" style={{ gap: 8 }}>
-                  <NameAvatar name={c.name} className="sm" />
-                  <span style={{ fontWeight: 500 }}>{c.name}</span>
-                </div>
-                <span className={`badge ${c.subscribed ? 'ok' : 'muted'}`}><span className="dot" />{c.subscribed ? 'Abonné' : 'Non abonné'}</span>
-              </div>
-              <div className="mobile-card-row">
-                <span className="td-muted">{c.city} · {c.orders} commandes</span>
-                <span className="mono td-strong">{money(c.spend)}</span>
-              </div>
-            </div>
+    <Page
+      title="Clients"
+      primaryAction={{ content: 'Ajouter un client', icon: PlusIcon }}
+      secondaryActions={[
+        { content: 'Exporter', icon: ExportIcon },
+        { content: 'Importer', icon: ImportIcon },
+      ]}
+    >
+      <BlockStack gap="500">
+        <InlineGrid columns={5} gap="300">
+          {[
+            { l: 'Total clients', v: '3 248', d: '+12%' },
+            { l: 'Abonnés', v: '1 842', d: '+8%' },
+            { l: 'Valeur vie · moyenne', v: '189,20 €' },
+            { l: 'Taux de retour', v: '26 %', d: '+2 pts' },
+            { l: 'Segments actifs', v: '8' },
+          ].map((k, i) => (
+            <Card key={i}>
+              <BlockStack gap="100">
+                <Text as="p" variant="bodySm" tone="subdued">{k.l}</Text>
+                <InlineStack gap="100" blockAlign="center">
+                  <Text as="p" variant="headingMd" fontWeight="bold">{k.v}</Text>
+                  {k.d && k.d}
+                </InlineStack>
+              </BlockStack>
+            </Card>
           ))}
-        </div>
-        <Pager total={customers.length} perPage={26} />
-      </div>
-    </div>
+        </InlineGrid>
+
+        <Card padding="0">
+          <Tabs tabs={tabs} selected={selectedTab} onSelect={setSelectedTab}>
+            <IndexTable
+              resourceName={{ singular: 'client', plural: 'clients' }}
+              itemCount={list.length}
+              selectedItemsCount={allResourcesSelected ? 'All' : selectedResources.length}
+              onSelectionChange={handleSelectionChange}
+              headings={[
+                { title: 'Nom' },
+                { title: 'E-mail' },
+                { title: 'Ville' },
+                { title: 'Commandes', alignment: 'end' },
+                { title: 'Dépensé', alignment: 'end' },
+                { title: 'Dernière commande' },
+                { title: 'Abonné' },
+                { title: 'Balises' },
+              ]}
+            >
+              {rowMarkup}
+            </IndexTable>
+          </Tabs>
+        </Card>
+      </BlockStack>
+    </Page>
   )
 }

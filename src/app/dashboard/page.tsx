@@ -59,14 +59,12 @@ export default function DashboardPage() {
   ]
 
   const orderRows = allOrders.slice(0, 6).map(o => [
-    <Button variant="plain" onClick={() => router.push('/orders/' + o.id.slice(1))} key={o.id}>
-      <span style={{ fontFamily: 'monospace' }}>{o.id}</span>
-    </Button>,
-    <Text as="span" tone="subdued" key={'d' + o.id}>{o.date}</Text>,
+    o.id,
+    o.date,
     o.customer,
-    <Text as="span" fontWeight="semibold" key={'t' + o.id}>{money(o.total)}</Text>,
-    paymentBadge(o.payment.tone, o.payment.label),
-    paymentBadge(o.fulfill.tone, o.fulfill.label),
+    money(o.total),
+    o.payment.label,
+    o.fulfill.label,
   ])
 
   return (
@@ -87,7 +85,7 @@ export default function DashboardPage() {
                 <Text as="p" variant="bodySm" tone="subdued">{k.l}</Text>
                 <InlineStack gap="200" align="start" blockAlign="center">
                   <Text as="p" variant="headingMd" fontWeight="bold">{k.v}</Text>
-                  <Text as="span" variant="bodySm" tone={k.up ? 'success' : 'critical'}>{k.d}</Text>
+                  k.d
                 </InlineStack>
                 <Sparkline data={k.sk} w={200} h={26} />
               </BlockStack>
@@ -204,7 +202,7 @@ export default function DashboardPage() {
                       {i > 0 && <Divider />}
                       <Box paddingBlockStart={i > 0 ? '300' : '0'}>
                         <InlineStack gap="200" blockAlign="start">
-                          <Badge tone={x.tone}>{i + 1}</Badge>
+                          <Badge tone={x.tone}>{String(i + 1)}</Badge>
                           <BlockStack gap="050">
                             <Text as="p" variant="bodySm" fontWeight="semibold">{x.t}</Text>
                             <Text as="p" variant="bodySm" tone="subdued">{x.sub}</Text>
@@ -257,7 +255,7 @@ export default function DashboardPage() {
                         <InlineStack key={i} gap="200" blockAlign="center" align="space-between">
                           <InlineStack gap="100" blockAlign="center">
                             <span style={{ width: 8, height: 8, borderRadius: 2, background: PALETTE[i], display: 'inline-block', flexShrink: 0 }} />
-                            <Text as="span" variant="bodySm">{c.name}</Text>
+                            c.name
                           </InlineStack>
                           <Text as="span" variant="bodySm" fontWeight="semibold">{c.share}%</Text>
                         </InlineStack>
