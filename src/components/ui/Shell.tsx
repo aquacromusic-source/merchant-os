@@ -66,27 +66,20 @@ export function Shell({ children }: { children: React.ReactNode }) {
     if (typeof window === 'undefined') return NOTIFICATIONS
     try {
       const saved = localStorage.getItem('mos_notifications')
-      if (saved) {
-        const savedData = JSON.parse(saved)
-        // Merge avec NOTIFICATIONS pour garder les nouvelles notifs
-        return NOTIFICATIONS.map(n => {
-          const s = savedData.find((x: any) => x.id === n.id)
-          return s ? { ...n, read: s.read } : n
-        })
-      }
+      if (saved) return JSON.parse(saved)
     } catch {}
     return NOTIFICATIONS
   })
 
   const unreadCount = notifications.filter(n => !n.read).length
 
-  const markAllRead = () => setNotifications(prev => {
-    const updated = prev.map(n => ({ ...n, read: true }))
+  const markAllRead = () => {
+    setNotifications([])
     if (typeof window !== 'undefined') {
-      localStorage.setItem('mos_notifications', JSON.stringify(updated))
+      localStorage.setItem('mos_notifications_cleared', 'true')
+      localStorage.setItem('mos_notifications', JSON.stringify([]))
     }
-    return updated
-  })
+  }
 
   const active = pathname?.replace(/^\//, '') || 'dashboard'
 
@@ -224,7 +217,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
                   alignItems: 'flex-start',
                 }}
                 onClick={() => setNotifications(prev => {
-                    const updated = prev.map(x => x.id === n.id ? { ...x, read: true } : x)
+                    const updated = prev.filter(x => x.id !== n.id)
                     if (typeof window !== 'undefined') {
                       localStorage.setItem('mos_notifications', JSON.stringify(updated))
                     }
