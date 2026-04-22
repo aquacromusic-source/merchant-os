@@ -583,7 +583,7 @@ const fallbackProduct = products[4]
     <>
       <Page
         backAction={{ content: 'Produits', onAction: () => router.push('/products') }}
-        title={p.title}
+        title={title || productTitle}
         titleMetadata={<Badge tone={statusBadge[status] ?? 'attention'}>{status === 'live' ? 'Actif' : status === 'draft' ? 'Brouillon' : 'Non répertorié'}</Badge>}
         primaryAction={{ content: 'Enregistrer', loading: saving, onAction: handleSave }}
         secondaryActions={[
@@ -804,7 +804,7 @@ const fallbackProduct = products[4]
                   <Card>
                     <BlockStack gap="400">
                       <Text variant="headingMd" as="h2">Aperçu sur les moteurs de recherche</Text>
-                      <SEOPreview title={p.title} slug={slug} />
+                      <SEOPreview title={title || p.title} slug={slug} />
                     </BlockStack>
                   </Card>
                 )}
