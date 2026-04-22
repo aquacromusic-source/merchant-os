@@ -1,3 +1,24 @@
+export async function GET(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params
+    const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
+    const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY!
+    
+    const url = `${SUPABASE_URL}/rest/v1/posters?slug=eq.${id}&is_active=eq.true&limit=1`
+    const res = await fetch(url, {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+    })
+    const data = await res.json()
+    if (!data[0]) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    return NextResponse.json(data[0])
+  } catch (e: any) {
+    return NextResponse.json({ error: e.message }, { status: 500 })
+  }
+}
+
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { put } from '@vercel/blob'
