@@ -411,7 +411,6 @@ Réponds en français, de manière directe et actionnable. Utilise du markdown p
                     onChange={setNewFeature}
                     placeholder="Ajouter une fonctionnalité…"
                     autoComplete="off"
-                    onKeyDown={(e: any) => { if (e.key === 'Enter') addFeature() }}
                   />
                 </div>
                 <Button icon={PlusIcon} onClick={addFeature} />
