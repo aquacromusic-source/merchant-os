@@ -73,6 +73,22 @@ export function Shell({ children }: { children: React.ReactNode }) {
     return NOTIFICATIONS
   })
 
+  // Synchroniser les notifs depuis localStorage à chaque montage
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return
+    try {
+      if (localStorage.getItem('mos_notifications_cleared') === 'true') {
+        setNotifications([])
+        return
+      }
+      const saved = localStorage.getItem('mos_notifications')
+      if (saved !== null) {
+        const parsed = JSON.parse(saved)
+        setNotifications(parsed)
+      }
+    } catch {}
+  }, [])
+
   const unreadCount = (notifications as any[]).length
 
   const markAllRead = () => {
