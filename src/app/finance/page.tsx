@@ -142,7 +142,7 @@ export default function FinancePage() {
                             <InlineStack key={i} align="space-between">
                               <Text as="p" variant="bodySm">{p.method}</Text>
                               <InlineStack gap="200">
-                                p.share
+                                {p.share}
                                 money(p.amount)
                               </InlineStack>
                             </InlineStack>
@@ -235,11 +235,11 @@ export default function FinancePage() {
                       </Text>
                     </IndexTable.Cell>
                     <IndexTable.Cell>
-                      t.date
+                      {t.date}
                     </IndexTable.Cell>
                     <IndexTable.Cell>{txBadge(t.type)}</IndexTable.Cell>
                     <IndexTable.Cell>
-                      t.description
+                      {t.description}
                     </IndexTable.Cell>
                     <IndexTable.Cell>
                       <Text as="span" numeric tone={t.amount >= 0 ? 'success' : 'subdued'} fontWeight="semibold">

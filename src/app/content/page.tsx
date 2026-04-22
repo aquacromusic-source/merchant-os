@@ -64,7 +64,7 @@ export default function ContentPage() {
                   position={index}
                 >
                   <IndexTable.Cell>
-                    p.title
+                    {p.title}
                   </IndexTable.Cell>
                   <IndexTable.Cell>
                     <Text as="span" tone="subdued">
@@ -73,7 +73,7 @@ export default function ContentPage() {
                   </IndexTable.Cell>
                   <IndexTable.Cell>{statusBadge(p.status)}</IndexTable.Cell>
                   <IndexTable.Cell>
-                    p.updated
+                    {p.updated}
                   </IndexTable.Cell>
                 </IndexTable.Row>
               ))}
@@ -102,17 +102,17 @@ export default function ContentPage() {
                   position={index}
                 >
                   <IndexTable.Cell>
-                    a.title
+                    {a.title}
                   </IndexTable.Cell>
                   <IndexTable.Cell>
-                    a.author
+                    {a.author}
                   </IndexTable.Cell>
                   <IndexTable.Cell>{statusBadge(a.status)}</IndexTable.Cell>
                   <IndexTable.Cell>
-                    a.date
+                    {a.date}
                   </IndexTable.Cell>
                   <IndexTable.Cell>
-                    a.read
+                    {a.read}
                   </IndexTable.Cell>
                 </IndexTable.Row>
               ))}

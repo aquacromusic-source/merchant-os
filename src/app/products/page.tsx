@@ -84,7 +84,7 @@ export default function ProductsPage() {
         </div>
       </IndexTable.Cell>
       <IndexTable.Cell>
-        p.title
+        {p.title}
       </IndexTable.Cell>
       <IndexTable.Cell>{statusBadge(p.status)}</IndexTable.Cell>
       <IndexTable.Cell>
@@ -93,13 +93,13 @@ export default function ProductsPage() {
         </Text>
       </IndexTable.Cell>
       <IndexTable.Cell>
-        p.category
+        {p.category}
       </IndexTable.Cell>
       <IndexTable.Cell>
-        p.channels
+        {p.channels}
       </IndexTable.Cell>
       <IndexTable.Cell>
-        p.vendor
+        {p.vendor}
       </IndexTable.Cell>
     </IndexTable.Row>
   ))

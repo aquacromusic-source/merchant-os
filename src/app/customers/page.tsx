@@ -61,7 +61,7 @@ export default function CustomersPage() {
       <IndexTable.Cell>
         <InlineStack gap="200" blockAlign="center">
           <Avatar customer name={c.name} size="sm" />
-          c.name
+          {c.name}
         </InlineStack>
       </IndexTable.Cell>
       <IndexTable.Cell>
@@ -73,13 +73,13 @@ export default function CustomersPage() {
         <Text as="span" tone="subdued" variant="bodySm">{c.city}, {c.country}</Text>
       </IndexTable.Cell>
       <IndexTable.Cell>
-        c.orders
+        {String(c.orders)}
       </IndexTable.Cell>
       <IndexTable.Cell>
-        money(c.spend)
+        {money(c.spend)}
       </IndexTable.Cell>
       <IndexTable.Cell>
-        c.lastOrder
+        {c.lastOrder}
       </IndexTable.Cell>
       <IndexTable.Cell>
         <Badge tone={c.subscribed ? 'success' : undefined}>{c.subscribed ? 'Oui' : 'Non'}</Badge>

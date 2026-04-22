@@ -369,7 +369,7 @@ function VariantsTable({ onSelectVariant }: { onSelectVariant: (v: VariantRow) =
                 <InlineStack gap="200" blockAlign="center">
                   <ImagePlaceholder label={v.size[0]} size="sm" />
                   <BlockStack gap="0">
-                    v.frame
+                    {v.frame}
                     v.sku
                   </BlockStack>
                 </InlineStack>

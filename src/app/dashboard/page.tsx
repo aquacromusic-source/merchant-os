@@ -85,7 +85,7 @@ export default function DashboardPage() {
                 <Text as="p" variant="bodySm" tone="subdued">{k.l}</Text>
                 <InlineStack gap="200" align="start" blockAlign="center">
                   <Text as="p" variant="headingMd" fontWeight="bold">{k.v}</Text>
-                  k.d
+                  {k.d}
                 </InlineStack>
                 <Sparkline data={k.sk} w={200} h={26} />
               </BlockStack>
@@ -255,7 +255,7 @@ export default function DashboardPage() {
                         <InlineStack key={i} gap="200" blockAlign="center" align="space-between">
                           <InlineStack gap="100" blockAlign="center">
                             <span style={{ width: 8, height: 8, borderRadius: 2, background: PALETTE[i], display: 'inline-block', flexShrink: 0 }} />
-                            c.name
+                            {c.name}
                           </InlineStack>
                           <Text as="span" variant="bodySm" fontWeight="semibold">{c.share}%</Text>
                         </InlineStack>

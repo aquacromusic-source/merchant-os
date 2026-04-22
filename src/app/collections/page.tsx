@@ -69,17 +69,17 @@ export default function CollectionsPage() {
                 onClick={() => router.push('/collections/' + c.id)}
               >
                 <IndexTable.Cell>
-                  c.title
+                  {c.title}
                 </IndexTable.Cell>
                 <IndexTable.Cell>
-                  c.products
+                  {c.products}
                 </IndexTable.Cell>
                 <IndexTable.Cell>
-                  c.type
+                  {c.type}
                 </IndexTable.Cell>
                 <IndexTable.Cell>{statusBadge(c.status)}</IndexTable.Cell>
                 <IndexTable.Cell>
-                  c.updated
+                  {c.updated}
                 </IndexTable.Cell>
               </IndexTable.Row>
             ))}

@@ -83,7 +83,7 @@ export default function OrdersPage() {
         </Text>
       </IndexTable.Cell>
       <IndexTable.Cell>
-        o.date
+        {o.date}
       </IndexTable.Cell>
       <IndexTable.Cell>{o.customer}</IndexTable.Cell>
       <IndexTable.Cell>
@@ -95,7 +95,7 @@ export default function OrdersPage() {
         <Text as="span" tone="subdued" variant="bodySm">{o.items} article{o.items > 1 ? 's' : ''}</Text>
       </IndexTable.Cell>
       <IndexTable.Cell>
-        o.channel
+        {o.channel}
       </IndexTable.Cell>
     </IndexTable.Row>
   ))
@@ -123,7 +123,7 @@ export default function OrdersPage() {
                 <Text as="p" variant="bodySm" tone="subdued">{k.l}</Text>
                 <InlineStack gap="100" blockAlign="center">
                   <Text as="p" variant="headingMd" fontWeight="bold">{k.v}</Text>
-                  k.d
+                  {k.d}
                 </InlineStack>
                 <Sparkline data={k.sk} w={180} h={24} />
               </BlockStack>
