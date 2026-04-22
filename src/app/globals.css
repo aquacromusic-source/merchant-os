@@ -1131,3 +1131,9 @@ html, body {
     gap: 24px !important;
   }
 }
+
+/* Espace en bas des pages — cibler le bon élément */
+.Polaris-Frame__Content > div:last-child,
+.Polaris-Frame__Content {
+  padding-bottom: 60px;
+}

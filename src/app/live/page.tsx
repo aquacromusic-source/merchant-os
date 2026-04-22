@@ -44,8 +44,8 @@ function Globe3D({ visitors }: { visitors: typeof MOCK_VISITORS }) {
       globe
         .width(ref.current.offsetWidth || 500)
         .height(ref.current.offsetHeight || 500)
-        .backgroundColor('#a8d8ea')
-        .globeImageUrl('//unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
+        .backgroundColor('#ebebeb')
+        .globeImageUrl('//unpkg.com/three-globe/example/img/earth-night.jpg')
         .bumpImageUrl('//unpkg.com/three-globe/example/img/earth-topology.png')
         .atmosphereColor('#00e5ff')
         .atmosphereAltitude(0.15)
@@ -177,22 +177,8 @@ export default function LivePage() {
           ))}
         </InlineGrid>
 
-        <InlineGrid columns={{ xs: 1, lg: '2fr 1fr' }} gap="400">
-          {/* Globe */}
-          <Card>
-            <BlockStack gap="300">
-              <InlineStack align="space-between" blockAlign="center">
-                <Text as="h2" variant="headingSm" fontWeight="semibold">Visiteurs dans le monde</Text>
-                <Badge tone="success">{`${stats.online} en ligne`}</Badge>
-              </InlineStack>
-              <Globe3D visitors={visitors} />
-              <Text as="p" variant="bodySm" tone="subdued" alignment="center">
-                Données en temps réel — mise à jour toutes les 30 secondes
-              </Text>
-            </BlockStack>
-          </Card>
-
-          {/* Activité en direct */}
+        <InlineGrid columns={{ xs: 1, lg: '1fr 2fr' }} gap="400">
+          {/* Activité en direct — GAUCHE */}
           <BlockStack gap="400">
             {/* Visiteurs actifs */}
             <Card>
@@ -243,6 +229,20 @@ export default function LivePage() {
               </BlockStack>
             </Card>
           </BlockStack>
+
+          {/* Globe — DROITE */}
+          <Card>
+            <BlockStack gap="300">
+              <InlineStack align="space-between" blockAlign="center">
+                <Text as="h2" variant="headingSm" fontWeight="semibold">Visiteurs dans le monde</Text>
+                <Badge tone="success">{`${stats.online} en ligne`}</Badge>
+              </InlineStack>
+              <Globe3D visitors={visitors} />
+              <Text as="p" variant="bodySm" tone="subdued" alignment="center">
+                Données en temps réel — mise à jour toutes les 30 secondes
+              </Text>
+            </BlockStack>
+          </Card>
         </InlineGrid>
 
         {/* Comportement visiteurs */}
