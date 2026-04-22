@@ -216,8 +216,8 @@ export function Shell({ children }: { children: React.ReactNode }) {
                   gap: 10,
                   alignItems: 'flex-start',
                 }}
-                onClick={() => setNotifications(prev => {
-                    const updated = prev.filter(x => x.id !== n.id)
+                onClick={() => setNotifications((prev: any[]) => {
+                    const updated = prev.filter((x: any) => x.id !== n.id)
                     if (typeof window !== 'undefined') {
                       localStorage.setItem('mos_notifications', JSON.stringify(updated))
                     }
