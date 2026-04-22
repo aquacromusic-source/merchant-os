@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, use } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Page,
@@ -452,17 +452,18 @@ function SEOPreview({ title, slug }: { title: string; slug: string }) {
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
-export default function ProductDetailPage({ params }: { params: { id: string } }) {
+export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
+  const { id: productId } = use(params)
 const fallbackProduct = products[4]
-  const p = products.find(x => x.id === params.id) || fallbackProduct
+  const p = products.find(x => x.id === productId) || fallbackProduct
 
   const [images, setImages] = useState(MOCK_IMAGES)
   // Charger le vrai produit si c'est un slug Supabase
   const [realProduct, setRealProduct] = useState<any>(null)
   useEffect(() => {
-    if (params.id) {
-      fetch(`/api/products/${params.id}`)
+    if (productId) {
+      fetch(`/api/products/${productId}`)
         .then(r => r.json())
         .then(data => {
           if (data && data.title) {
@@ -476,13 +477,13 @@ const fallbackProduct = products[4]
         })
         .catch(() => {})
     }
-  }, [params.id])
+  }, [productId])
 
   const productTitle = realProduct?.title || p.title || '...'
   const productImage = realProduct?.image_url || null
   
   // Affichage de chargement si on attend le vrai produit
-  if (!realProduct && !title && params.id && !params.id.match(/^P-\d+$/)) {
+  if (!realProduct && !title && productId && !productId.match(/^P-\d+$/)) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
         <div style={{ textAlign: 'center' }}>
