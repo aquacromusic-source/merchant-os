@@ -77,6 +77,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
   const markAllRead = () => {
     setNotifications([])
+    setNotifOpen(false)
     if (typeof window !== 'undefined') {
       localStorage.setItem('mos_notifications_cleared', 'true')
       localStorage.setItem('mos_notifications', JSON.stringify([]))
@@ -151,7 +152,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
             position: 'absolute',
             top: 4,
             right: 4,
-            background: 'oklch(0.55 0.22 25)',
+            background: '#0263cc',
             color: 'white',
             borderRadius: '50%',
             width: 16,
@@ -218,13 +219,18 @@ export function Shell({ children }: { children: React.ReactNode }) {
                   gap: 10,
                   alignItems: 'flex-start',
                 }}
-                onClick={() => setNotifications((prev: any[]) => {
-                    const updated = prev.filter((x: any) => x.id !== n.id)
-                    if (typeof window !== 'undefined') {
-                      localStorage.setItem('mos_notifications', JSON.stringify(updated))
-                    }
-                    return updated
-                  })}
+                onClick={() => {
+                    // Naviguer vers la page liée
+                    if (n.link) router.push(n.link)
+                    setNotifOpen(false)
+                    setNotifications((prev: any[]) => {
+                      const updated = prev.filter((x: any) => x.id !== n.id)
+                      if (typeof window !== 'undefined') {
+                        localStorage.setItem('mos_notifications', JSON.stringify(updated))
+                      }
+                      return updated
+                    })
+                  }}
               >
                 <div style={{
                   width: 8, height: 8, borderRadius: '50%', marginTop: 6, flexShrink: 0,
