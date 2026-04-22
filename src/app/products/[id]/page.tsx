@@ -20,6 +20,7 @@ import {
   Tabs,
   DataTable,
   Checkbox,
+  Banner,
 } from '@shopify/polaris'
 import {
   DuplicateIcon,
@@ -455,6 +456,16 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
   const router = useRouter()
   const p = products.find(x => x.id === params.id) || products[4]
 
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const handleSave = async () => {
+    setSaving(true)
+    await new Promise(r => setTimeout(r, 800))
+    setSaving(false)
+    setSaved(true)
+    setTimeout(() => setSaved(false), 3000)
+  }
+
   const [status, setStatus] = useState('live')
   const [selectedVariant, setSelectedVariant] = useState<VariantRow | null>(null)
   const [selectedImage, setSelectedImage] = useState<typeof MOCK_IMAGES[0] | null>(null)
@@ -505,7 +516,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
         backAction={{ content: 'Produits', onAction: () => router.push('/products') }}
         title={p.title}
         titleMetadata={<Badge tone={statusBadge[status] ?? 'attention'}>{status === 'live' ? 'Actif' : status === 'draft' ? 'Brouillon' : 'Non répertorié'}</Badge>}
-        primaryAction={{ content: 'Enregistrer' }}
+        primaryAction={{ content: 'Enregistrer', loading: saving, onAction: handleSave }}
         secondaryActions={[
           { content: 'Dupliquer', icon: DuplicateIcon, onAction: () => {} },
           { content: 'Afficher', icon: ViewIcon, onAction: () => {} },
@@ -524,6 +535,11 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
       >
         <Tabs tabs={tabs} selected={activeTab} onSelect={setActiveTab} fitted={false}>
           <Layout>
+            {saved && (
+              <Layout.Section>
+                <Banner tone="success" onDismiss={() => setSaved(false)}>Modifications enregistrées ✓</Banner>
+              </Layout.Section>
+            )}
             {/* ── MAIN COLUMN ─────────────────────────────────────────────── */}
             <Layout.Section>
               <BlockStack gap="400">

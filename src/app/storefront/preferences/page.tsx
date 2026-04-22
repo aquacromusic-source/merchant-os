@@ -1,11 +1,26 @@
 'use client'
-import React from 'react'
-import { Page, Layout, Card, BlockStack, Text, TextField, Button, Checkbox } from '@shopify/polaris'
+import React, { useState } from 'react'
+import { Page, Layout, Card, BlockStack, Text, TextField, Button, Checkbox, Banner } from '@shopify/polaris'
 
 export default function StorefrontPreferencesPage() {
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const handleSave = async () => {
+    setSaving(true)
+    await new Promise(r => setTimeout(r, 800))
+    setSaving(false)
+    setSaved(true)
+    setTimeout(() => setSaved(false), 3000)
+  }
+
   return (
-    <Page title="Préférences" primaryAction={{ content: 'Enregistrer' }}>
+    <Page title="Préférences" primaryAction={{ content: 'Enregistrer', loading: saving, onAction: handleSave }}>
       <Layout>
+        {saved && (
+          <Layout.Section>
+            <Banner tone="success" onDismiss={() => setSaved(false)}>Modifications enregistrées ✓</Banner>
+          </Layout.Section>
+        )}
         <Layout.Section>
           <BlockStack gap="400">
             <Card>

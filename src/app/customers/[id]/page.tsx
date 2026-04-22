@@ -1,5 +1,5 @@
 'use client'
-import React from 'react'
+import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Page,
@@ -17,6 +17,7 @@ import {
   Avatar,
   DataTable,
   TextField,
+  Banner,
 } from '@shopify/polaris'
 import {
   EmailIcon,
@@ -39,6 +40,15 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
   const router = useRouter()
   const c = customers.find(x => x.id === params.id) || customers[0]
   const orders = allOrders.filter(o => o.customerId === c.id).concat(allOrders.slice(0, 3))
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const handleSave = async () => {
+    setSaving(true)
+    await new Promise(r => setTimeout(r, 800))
+    setSaving(false)
+    setSaved(true)
+    setTimeout(() => setSaved(false), 3000)
+  }
 
   const orderRows = orders.slice(0, 6).map(o => [
     o.id,
@@ -55,10 +65,18 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
       title={c.name}
       titleMetadata={c.tags.includes('VIP') ? <Badge tone="attention">VIP</Badge> : undefined}
       subtitle={c.email + ' · ' + c.city + ', ' + c.country}
-      primaryAction={{ content: 'Envoyer e-mail', icon: EmailIcon }}
-      secondaryActions={[{ content: 'Autres actions', icon: ChevronDownIcon }]}
+      primaryAction={{ content: 'Enregistrer', loading: saving, onAction: handleSave }}
+      secondaryActions={[
+        { content: 'Envoyer e-mail', icon: EmailIcon },
+        { content: 'Autres actions', icon: ChevronDownIcon },
+      ]}
     >
       <Layout>
+        {saved && (
+          <Layout.Section>
+            <Banner tone="success" onDismiss={() => setSaved(false)}>Modifications enregistrées ✓</Banner>
+          </Layout.Section>
+        )}
         <Layout.Section>
           <BlockStack gap="400">
             <Card>

@@ -1,5 +1,5 @@
 'use client'
-import React from 'react'
+import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Page,
@@ -13,6 +13,7 @@ import {
   Divider,
   Select,
   TextField,
+  Banner,
   Checkbox,
 } from '@shopify/polaris'
 import {
@@ -32,19 +33,34 @@ function statusBadge(status: string) {
 export default function DiscountDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter()
   const d = discounts.find(x => x.code === params.id) || discounts[0]
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+
+  const handleSave = async () => {
+    setSaving(true)
+    await new Promise(r => setTimeout(r, 800))
+    setSaving(false)
+    setSaved(true)
+    setTimeout(() => setSaved(false), 3000)
+  }
 
   return (
     <Page
       backAction={{ content: 'Réductions', onAction: () => router.push('/discounts') }}
       title={d.code}
       titleMetadata={statusBadge(d.status)}
-      primaryAction={{ content: 'Enregistrer' }}
+      primaryAction={{ content: 'Enregistrer', loading: saving, onAction: handleSave }}
       secondaryActions={[
         { content: 'Dupliquer' },
         { content: 'Désactiver' },
       ]}
     >
       <Layout>
+        {saved && (
+          <Layout.Section>
+            <Banner tone="success" onDismiss={() => setSaved(false)}>Modifications enregistrées ✓</Banner>
+          </Layout.Section>
+        )}
         <Layout.Section>
           <BlockStack gap="400">
             {/* Méthode */}
