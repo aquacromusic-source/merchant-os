@@ -115,3 +115,62 @@ export const I = {
 }
 
 export default I
+
+// ── Icônes PLEINES pour la sidebar ────────────────────────────
+export const IFilled = {
+  Home: (p: IconProps) => (
+    <svg width={p.size||16} height={p.size||16} viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+      <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+    </svg>
+  ),
+  Cart: (p: IconProps) => (
+    <svg width={p.size||16} height={p.size||16} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2zM5.21 4H3a1 1 0 000 2h1.5l2.55 5.59L6.25 14A1 1 0 007.1 15.5h11.4a1 1 0 000-2H8.42l.94-2h7.45a2 2 0 001.75-1.03l3-5.47A1 1 0 0020.69 4H5.21z"/>
+    </svg>
+  ),
+  Box: (p: IconProps) => (
+    <svg width={p.size||16} height={p.size||16} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+    </svg>
+  ),
+  Users: (p: IconProps) => (
+    <svg width={p.size||16} height={p.size||16} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+    </svg>
+  ),
+  FileText: (p: IconProps) => (
+    <svg width={p.size||16} height={p.size||16} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+    </svg>
+  ),
+  Megaphone: (p: IconProps) => (
+    <svg width={p.size||16} height={p.size||16} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M18 11v2h4v-2h-4zm-2 6.6l3.4 2 1-1.7-3.4-2-1 1.7zM19.4 6L16 8l1 1.7 3.4-2-1-1.7zM4 9a2 2 0 00-2 2v2a2 2 0 002 2h1l3 5h2v-5.5l5 3V6.5l-5 3V5H4V4a2 2 0 000 5z"/>
+    </svg>
+  ),
+  Percent: (p: IconProps) => (
+    <svg width={p.size||16} height={p.size||16} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M7.5 11C9.43 11 11 9.43 11 7.5S9.43 4 7.5 4 4 5.57 4 7.5 5.57 11 7.5 11zm0-5C8.33 6 9 6.67 9 7.5S8.33 9 7.5 9 6 8.33 6 7.5 6.67 6 7.5 6zm9 7c-1.93 0-3.5 1.57-3.5 3.5S14.57 20 16.5 20s3.5-1.57 3.5-3.5S18.43 13 16.5 13zm0 5c-.83 0-1.5-.67-1.5-1.5S15.67 15 16.5 15s1.5.67 1.5 1.5S17.33 18 16.5 18zM4.5 20h2l13-16h-2z"/>
+    </svg>
+  ),
+  Chart: (p: IconProps) => (
+    <svg width={p.size||16} height={p.size||16} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M5 9.2h3V19H5V9.2zm5.6-4.2H14V19h-3.4V5zm5.6 8H20V19h-3.8v-6z"/>
+    </svg>
+  ),
+  Store: (p: IconProps) => (
+    <svg width={p.size||16} height={p.size||16} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M20 4H4v2l8 5 8-5V4zm0 4.24l-8 5-8-5V20h16V8.24z"/>
+    </svg>
+  ),
+  Gear: (p: IconProps) => (
+    <svg width={p.size||16} height={p.size||16} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.5.5 0 00.12-.64l-1.92-3.32a.5.5 0 00-.61-.22l-2.39.96a7 7 0 00-1.62-.94l-.36-2.54a.48.48 0 00-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.49.49 0 00-.61.22L2.74 9.84a.48.48 0 00.12.64l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.5.5 0 00-.12.64l1.92 3.32c.12.22.37.29.61.22l2.39-.96c.5.37 1.04.69 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.57 1.62-.94l2.39.96c.23.09.49 0 .61-.22l1.92-3.32a.5.5 0 00-.12-.64l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+    </svg>
+  ),
+  Grid: (p: IconProps) => (
+    <svg width={p.size||16} height={p.size||16} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M4 11h5V5H4v6zm0 7h5v-6H4v6zm6 0h5v-6h-5v6zm6 0h5v-6h-5v6zm-6-7h5V5h-5v6zm6-6v6h5V5h-5z"/>
+    </svg>
+  ),
+}

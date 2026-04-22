@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { I } from '@/lib/icons'
+import { I, IFilled } from '@/lib/icons'
 
 const NAV_MAIN = [
   { key: 'dashboard', label: 'Accueil', icon: I.Home },
@@ -87,6 +87,21 @@ interface SidebarItemDef {
   sub?: { key: string; label: string }[]
 }
 
+
+// Mapping icône pleine → icône creuse (outline pour item actif)
+const ICON_FILLED: Record<string, React.FC<{size?: number}>> = {
+  dashboard: IFilled.Home,
+  orders: IFilled.Cart,
+  products: IFilled.Box,
+  customers: IFilled.Users,
+  content: IFilled.FileText,
+  marketing: IFilled.Megaphone,
+  discounts: IFilled.Percent,
+  analytics: IFilled.Chart,
+  storefront: IFilled.Store,
+  settings: IFilled.Gear,
+  apps: IFilled.Grid,
+}
 function SidebarItem({ item, active, onNav, iconOnly }: {
   item: SidebarItemDef
   active: string
@@ -105,15 +120,16 @@ function SidebarItem({ item, active, onNav, iconOnly }: {
         onClick={() => onNav(item.key)}
         title={iconOnly ? item.label : undefined}
       >
-        {item.icon && (
-          <span style={{ flexShrink: 0, display: 'inline-flex' }}>
-            <item.icon
-              size={16}
-              stroke={isActive ? 1.5 : 0}
-              fill={isActive ? undefined : 'currentColor'}
-            />
-          </span>
-        )}
+        {item.icon && (() => {
+          const FilledIcon = ICON_FILLED[item.key]
+          // Icône pleine si non actif + version filled dispo, outline si actif
+          const IconComp = (!isActive && FilledIcon) ? FilledIcon : item.icon
+          return (
+            <span style={{ flexShrink: 0, display: 'inline-flex', color: isActive ? '#2f2f2f' : '#2f2f2f' }}>
+              <IconComp size={16} />
+            </span>
+          )
+        })()}
         {!iconOnly && <span className="truncate">{item.label}</span>}
         {!iconOnly && item.count && <span className="count">{item.count}</span>}
       </button>
