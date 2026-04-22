@@ -247,12 +247,12 @@ input, textarea, select { outline: none; }
 .nav-item svg { color: #5c5c5c; flex-shrink: 0; }
 .nav-item:hover { background: #ebebeb; color: #303030; border-radius: 0 8px 8px 0; }
 .nav-item.active {
-  background: #ffffff;
-  color: #303030;
+  background: #ffffff !important;
+  color: #303030 !important;
   font-weight: 700;
   box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-  border-left: 3px solid #303030;
-  border-radius: 0 8px 8px 0;
+  border-left: 3px solid #303030 !important;
+  border-radius: 0 8px 8px 0 !important;
   padding-left: 10px;
 }
 .nav-item.active svg { color: #303030; }
@@ -274,8 +274,8 @@ input, textarea, select { outline: none; }
   margin: 0 0 2px;
 }
 .nav-sub .nav-item { height: 28px; font-size: 13px; font-weight: 400; color: #616161; }
-.nav-sub .nav-item:hover { color: #303030; }
-.nav-sub .nav-item.active { font-weight: 600; color: #303030; border-left: 3px solid #303030; }
+.nav-sub .nav-item:hover { color: #303030; background: #ebebeb; }
+.nav-sub .nav-item.active { font-weight: 700; color: #303030; background: #ffffff !important; border-left: 3px solid #303030 !important; border-radius: 0 8px 8px 0 !important; box-shadow: 0 1px 3px rgba(0,0,0,0.08); padding-left: 10px; }
 
 /* ─── Main area ─────────────────────────────────────────────── */
 .main {
