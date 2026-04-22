@@ -183,7 +183,7 @@ export default function LivePage() {
             <BlockStack gap="300">
               <InlineStack align="space-between" blockAlign="center">
                 <Text as="h2" variant="headingSm" fontWeight="semibold">Visiteurs dans le monde</Text>
-                <Badge tone="success">{String(stats.online)} en ligne</Badge>
+                <Badge tone="success">{`${stats.online} en ligne`}</Badge>
               </InlineStack>
               <Globe3D visitors={visitors} />
               <Text as="p" variant="bodySm" tone="subdued" alignment="center">
@@ -257,7 +257,7 @@ export default function LivePage() {
                 { label: 'En cours de paiement', value: Math.round(stats.online * 0.08), color: '#00c853', pct: 8 },
               ].map((step, i) => (
                 <div key={i} style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: 28, fontWeight: 700, color: step.color }}>{step.value}</div>
+                  <div style={{ fontSize: 28, fontWeight: 700, color: step.color }}>{String(step.value)}</div>
                   <div style={{ fontSize: 12, color: '#6d7175', marginBottom: 8 }}>{step.label}</div>
                   <div style={{ height: 4, background: '#f1f1f1', borderRadius: 2, overflow: 'hidden' }}>
                     <div style={{ height: '100%', width: `${step.pct}%`, background: step.color, borderRadius: 2, transition: 'width 0.6s ease' }} />
