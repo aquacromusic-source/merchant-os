@@ -281,6 +281,20 @@ export default function ProductsPage() {
               </IndexTable>
             ) : gridMarkup}
           </Tabs>
+          {/* Compteur + bouton Charger plus */}
+          <div style={{ padding: '12px 20px', borderTop: '1px solid #e5e5e5', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Text as="p" variant="bodySm" tone="subdued">
+              {list.length} produit{list.length > 1 ? 's' : ''} affichés sur {totalProducts}
+            </Text>
+            {allProducts.length < totalProducts && (
+              <Button
+                loading={loadingProducts}
+                onClick={() => fetchProducts(currentPage + 1, true)}
+              >
+                Charger {Math.min(PAGE_SIZE, totalProducts - allProducts.length)} de plus
+              </Button>
+            )}
+          </div>
         </Card>
       </BlockStack>
 

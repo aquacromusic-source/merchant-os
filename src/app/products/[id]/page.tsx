@@ -472,9 +472,21 @@ const fallbackProduct = products[4]
     }
   }, [params.id])
 
-  const productTitle = realProduct?.title || p.title
+  const productTitle = realProduct?.title || p.title || '...'
   const productImage = realProduct?.image_url || null
-  const [title, setTitle] = useState(productTitle)
+  
+  // Affichage de chargement si on attend le vrai produit
+  if (!realProduct && !title && params.id && !params.id.match(/^P-\d+$/)) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: 24, marginBottom: 8 }}>⏳</div>
+          <div style={{ color: '#666' }}>Chargement du produit...</div>
+        </div>
+      </div>
+    )
+  }
+  const [title, setTitle] = useState('')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const handleSave = async () => {
