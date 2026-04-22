@@ -61,12 +61,12 @@ const SIZE_OPTIONS = ['A4', 'A3', 'A2', 'A1']
 const FRAME_OPTIONS = ['Without Frame', 'With Black Frame', 'With White Frame']
 
 const MOCK_IMAGES: { id: string; label: string; alt: string; format: string; dims: string; size: string; date: string; url: string }[] = [
-  { id: 'img1', label: 'Hero', alt: 'Vue principale du poster', format: 'JPG', dims: '2400 × 3200', size: '1.2 MB', date: '12 avr. 2026' },
-  { id: 'img2', label: 'Détail 1', alt: 'Détail texture', format: 'JPG', dims: '1600 × 1600', size: '820 KB', date: '12 avr. 2026' },
-  { id: 'img3', label: 'Détail 2', alt: 'Vue encadrement noir', format: 'JPG', dims: '1600 × 2000', size: '940 KB', date: '12 avr. 2026' },
-  { id: 'img4', label: 'Lifestyle 1', alt: 'Posé dans salon', format: 'JPG', dims: '2400 × 1600', size: '1.1 MB', date: '10 avr. 2026' },
-  { id: 'img5', label: 'Lifestyle 2', alt: 'Mur galerie', format: 'JPG', dims: '2400 × 1600', size: '1.0 MB', date: '10 avr. 2026' },
-  { id: 'img6', label: 'Packaging', alt: 'Emballage poster', format: 'JPG', dims: '1600 × 1600', size: '720 KB', date: '8 avr. 2026' },
+  { id: 'img1', label: 'Hero', alt: 'Vue principale du poster', format: 'JPG', dims: '2400 × 3200', size: '1.2 MB', date: '12 avr. 2026', url: '', url: '' },
+  { id: 'img2', label: 'Détail 1', alt: 'Détail texture', format: 'JPG', dims: '1600 × 1600', size: '820 KB', date: '12 avr. 2026', url: '', url: '' },
+  { id: 'img3', label: 'Détail 2', alt: 'Vue encadrement noir', format: 'JPG', dims: '1600 × 2000', size: '940 KB', date: '12 avr. 2026', url: '', url: '' },
+  { id: 'img4', label: 'Lifestyle 1', alt: 'Posé dans salon', format: 'JPG', dims: '2400 × 1600', size: '1.1 MB', date: '10 avr. 2026', url: '', url: '' },
+  { id: 'img5', label: 'Lifestyle 2', alt: 'Mur galerie', format: 'JPG', dims: '2400 × 1600', size: '1.0 MB', date: '10 avr. 2026', url: '', url: '' },
+  { id: 'img6', label: 'Packaging', alt: 'Emballage poster', format: 'JPG', dims: '1600 × 1600', size: '720 KB', date: '8 avr. 2026', url: '', url: '' },
 ]
 
 const SALES_CHANNELS = ['Boutique en ligne', 'Point de vente', 'TikTok', 'Pinterest', 'Facebook']
