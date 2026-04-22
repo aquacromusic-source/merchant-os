@@ -42,34 +42,46 @@ function Globe3D({ visitors }: { visitors: typeof MOCK_VISITORS }) {
       globeRef.current = globe
 
       // Style Shopify : globe blanc avec points dotted cyan
+      // Style Shopify : hexagones cyan sur fond blanc
       globe
         .width(ref.current.offsetWidth || 500)
         .height(ref.current.offsetHeight || 500)
-        .backgroundColor('#0a1628')
-        .globeImageUrl('//unpkg.com/three-globe/example/img/earth-dark.jpg')
+        .backgroundColor('rgba(248,250,252,1)')
+        .globeImageUrl('')  // Pas de texture — on utilise les hexagones
+        .showGlobe(true)
         .showAtmosphere(true)
-        .atmosphereColor('rgba(0,180,255,0.6)')
-        .atmosphereAltitude(0.12)
-        // Points visiteurs violets pulsants
+        .atmosphereColor('rgba(150,230,220,0.4)')
+        .atmosphereAltitude(0.15)
+        // Hexagones style Shopify — points hexagonaux cyan
+        .hexBinPointsData(
+          (() => {
+            const pts = [];
+            for (let lat = -80; lat <= 80; lat += 4) {
+              for (let lng = -180; lng <= 180; lng += 4) {
+                pts.push({ lat, lng });
+              }
+            }
+            return pts;
+          })()
+        )
+        .hexBinPointLat('lat')
+        .hexBinPointLng('lng')
+        .hexBinResolution(3)
+        .hexTopColor(() => 'rgba(100,220,210,0.85)')
+        .hexSideColor(() => 'rgba(100,220,210,0.4)')
+        .hexAltitude(0.008)
+        // Points violets pour les visiteurs
         .pointsData(visitors)
         .pointLat('lat')
         .pointLng('lng')
-        .pointColor(() => '#00ff88')
-        .pointAltitude(0.03)
-        .pointRadius(0.7)
-        // Anneaux autour des visiteurs actifs
-        .ringsData(visitors.filter(v => v.value))
-        .ringLat('lat')
-        .ringLng('lng')
-        .ringColor(() => () => 'rgba(0,255,136,0.6)')
-        .ringMaxRadius(3)
-        .ringPropagationSpeed(3)
-        .ringRepeatPeriod(1200)
+        .pointColor(() => '#6366f1')
+        .pointAltitude(0.05)
+        .pointRadius(0.5)
 
       globe.controls().autoRotate = true
       globe.controls().autoRotateSpeed = 0.4
       globe.controls().enableZoom = false
-      globe.pointOfView({ lat: 25, lng: -10, altitude: 1.8 }, 0)
+      globe.pointOfView({ lat: 25, lng: -10, altitude: 1.6 }, 0)
     })
 
     return () => {
@@ -81,7 +93,7 @@ function Globe3D({ visitors }: { visitors: typeof MOCK_VISITORS }) {
   }, [visitors])
 
   return (
-    <div ref={ref} style={{ width: '100%', height: 520, borderRadius: 12, overflow: 'hidden', background: '#0a1628' }} />
+    <div ref={ref} style={{ width: '100%', height: 520, borderRadius: 12, overflow: 'hidden', background: '#f8fafc' }} />
   )
 }
 
