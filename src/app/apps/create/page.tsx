@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect, useCallback } from 'react'
 import {
   Page, Card, BlockStack, InlineStack, Text, TextField,
   Button, Badge, Divider, Banner, Spinner, Box,
@@ -11,12 +11,19 @@ import {
   EditIcon, CheckIcon, RefreshIcon,
 } from '@shopify/polaris-icons'
 import { useRouter } from 'next/navigation'
+import { MarkdownRenderer } from '@/components/ui/MarkdownRenderer'
+
+interface TokenUsage {
+  input_tokens: number
+  output_tokens: number
+}
 
 interface Message {
   role: 'user' | 'assistant'
   content: string
   timestamp: string
   attachments?: { name: string; url: string; type: string }[]
+  usage?: TokenUsage
 }
 
 interface AppSpec {
@@ -39,6 +46,32 @@ const CATEGORIES = [
   { label: 'Automatisation', value: 'automation' },
   { label: 'Autre', value: 'other' },
 ]
+
+/** Parse bullet features from a Claude response */
+function parseFeaturesFromContent(content: string): string[] {
+  const lines = content.split('\n')
+  const features: string[] = []
+  for (const line of lines) {
+    const match = line.match(/^[-*•]\s+(.+)/)
+    if (match) {
+      const f = match[1].replace(/\*\*/g, '').trim()
+      if (f.length > 3 && f.length < 120) features.push(f)
+    }
+  }
+  return features
+}
+
+/** Copy text to clipboard */
+function copyToClipboard(text: string) {
+  navigator.clipboard.writeText(text).catch(() => {
+    const el = document.createElement('textarea')
+    el.value = text
+    document.body.appendChild(el)
+    el.select()
+    document.execCommand('copy')
+    document.body.removeChild(el)
+  })
+}
 
 export default function CreateAppPage() {
   const router = useRouter()
@@ -74,9 +107,33 @@ Par quoi on commence ?`,
   const [saved, setSaved] = useState(false)
   const [saving, setSaving] = useState(false)
   const [deleteModal, setDeleteModal] = useState(false)
+  const [copiedIdx, setCopiedIdx] = useState<number | null>(null)
 
-  const scrollToBottom = () => {
-    setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
+  // Auto-scroll on new messages
+  const scrollToBottom = useCallback(() => {
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }, 80)
+  }, [])
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages, loading, scrollToBottom])
+
+  const handleCopy = (content: string, idx: number) => {
+    copyToClipboard(content)
+    setCopiedIdx(idx)
+    setTimeout(() => setCopiedIdx(null), 2000)
+  }
+
+  const handleAddAllFeatures = (content: string) => {
+    const parsed = parseFeaturesFromContent(content)
+    if (parsed.length === 0) return
+    setFeatures(prev => {
+      const existing = new Set(prev)
+      const newOnes = parsed.filter(f => !existing.has(f))
+      return [...prev, ...newOnes]
+    })
   }
 
   const handleSend = async () => {
@@ -94,20 +151,19 @@ Par quoi on commence ?`,
     setInput('')
     setAttachments([])
     setLoading(true)
-    scrollToBottom()
 
     try {
-      // Préparer le contexte pour Claude
-      const contextMsg = appName ? `[Contexte app : "${appName}" - Catégorie : ${appCategory}${appDescription ? ` - ${appDescription}` : ''}${features.length > 0 ? ` - Fonctionnalités : ${features.join(', ')}` : ''}]\n\n` : ''
-      
+      const contextMsg = appName
+        ? `[Contexte app : "${appName}" - Catégorie : ${appCategory}${appDescription ? ` - ${appDescription}` : ''}${features.length > 0 ? ` - Fonctionnalités : ${features.join(', ')}` : ''}]\n\n`
+        : ''
+
       const apiMessages = newMessages.map(m => ({
         role: m.role,
-        content: m.attachments 
+        content: m.attachments
           ? `${m.content}\n\n[L'utilisateur a joint ${m.attachments.length} fichier(s) : ${m.attachments.map(a => a.name).join(', ')}]`
           : m.content,
       }))
 
-      // Ajouter le contexte au premier message
       if (apiMessages[0] && contextMsg) {
         apiMessages[0] = { ...apiMessages[0], content: contextMsg + apiMessages[0].content }
       }
@@ -133,17 +189,16 @@ Réponds en français, de manière directe et actionnable. Utilise du markdown p
       })
 
       const data = await res.json()
-      
       if (data.error) throw new Error(data.error)
 
       const assistantMsg: Message = {
         role: 'assistant',
         content: data.content,
         timestamp: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+        usage: data.usage,
       }
 
       setMessages(prev => [...prev, assistantMsg])
-      scrollToBottom()
     } catch (err: any) {
       const errMsg: Message = {
         role: 'assistant',
@@ -184,6 +239,12 @@ Réponds en français, de manière directe et actionnable. Utilise du markdown p
     setInput(prompt)
   }
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+      handleSend()
+    }
+  }
+
   return (
     <Page
       title={appName || 'Nouvelle application'}
@@ -191,9 +252,7 @@ Réponds en français, de manière directe et actionnable. Utilise du markdown p
       primaryAction={{ content: 'Enregistrer', icon: CheckIcon, loading: saving, onAction: handleSave }}
       secondaryActions={[
         { content: 'Effacer la conversation', icon: DeleteIcon, onAction: () => setDeleteModal(true) },
-        { content: 'Regénérer', icon: RefreshIcon, onAction: () => {
-          setMessages(prev => prev.slice(0, 1))
-        }},
+        { content: 'Regénérer', icon: RefreshIcon, onAction: () => { setMessages(prev => prev.slice(0, 1)) } },
       ]}
     >
       {saved && <Banner tone="success" onDismiss={() => setSaved(false)}>Application enregistrée avec succès.</Banner>}
@@ -223,60 +282,127 @@ Réponds en français, de manière directe et actionnable. Utilise du markdown p
 
               {/* Messages */}
               <div style={{ height: 480, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 16, padding: '4px 0' }}>
-                {messages.map((msg, i) => (
-                  <div key={i} style={{
-                    display: 'flex',
-                    flexDirection: msg.role === 'user' ? 'row-reverse' : 'row',
-                    gap: 10,
-                    alignItems: 'flex-start',
-                  }}>
-                    {/* Avatar */}
-                    <div style={{
-                      width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
-                      background: msg.role === 'user' ? '#1a1a1a' : 'linear-gradient(135deg, #7c3aed, #2563eb)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      color: 'white', fontSize: 11, fontWeight: 700,
-                    }}>
-                      {msg.role === 'user' ? 'R' : 'C'}
-                    </div>
+                {messages.map((msg, i) => {
+                  const parsedFeatures = msg.role === 'assistant' ? parseFeaturesFromContent(msg.content) : []
+                  const hasFeatures = parsedFeatures.length >= 3
 
-                    {/* Bulle */}
-                    <div style={{
-                      maxWidth: '75%',
-                      background: msg.role === 'user' ? '#1a1a1a' : '#f6f6f7',
-                      color: msg.role === 'user' ? 'white' : '#1a1a1a',
-                      borderRadius: msg.role === 'user' ? '16px 4px 16px 16px' : '4px 16px 16px 16px',
-                      padding: '10px 14px',
+                  return (
+                    <div key={i} style={{
+                      display: 'flex',
+                      flexDirection: msg.role === 'user' ? 'row-reverse' : 'row',
+                      gap: 10,
+                      alignItems: 'flex-start',
                     }}>
-                      {msg.attachments && msg.attachments.length > 0 && (
-                        <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
-                          {msg.attachments.map((att, j) => (
-                            <div key={j} style={{
-                              display: 'flex', alignItems: 'center', gap: 4,
-                              background: 'rgba(255,255,255,0.15)', borderRadius: 6,
-                              padding: '2px 8px', fontSize: 12,
-                            }}>
-                              📎 {att.name}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                      <div style={{ fontSize: 13, lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>
-                        {msg.content}
+                      {/* Avatar */}
+                      <div style={{
+                        width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
+                        background: msg.role === 'user' ? '#1a1a1a' : 'linear-gradient(135deg, #7c3aed, #2563eb)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        color: 'white', fontSize: 11, fontWeight: 700,
+                      }}>
+                        {msg.role === 'user' ? 'R' : 'C'}
                       </div>
-                      <div style={{ fontSize: 11, opacity: 0.6, marginTop: 4, textAlign: msg.role === 'user' ? 'right' : 'left' }}>
-                        {msg.timestamp}
+
+                      {/* Bulle */}
+                      <div style={{
+                        maxWidth: '75%',
+                        background: msg.role === 'user' ? '#1a1a1a' : '#f6f6f7',
+                        color: msg.role === 'user' ? 'white' : '#1a1a1a',
+                        borderRadius: msg.role === 'user' ? '16px 4px 16px 16px' : '4px 16px 16px 16px',
+                        padding: '10px 14px',
+                      }}>
+                        {msg.attachments && msg.attachments.length > 0 && (
+                          <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
+                            {msg.attachments.map((att, j) => (
+                              <div key={j} style={{
+                                display: 'flex', alignItems: 'center', gap: 4,
+                                background: 'rgba(255,255,255,0.15)', borderRadius: 6,
+                                padding: '2px 8px', fontSize: 12,
+                              }}>
+                                📎 {att.name}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Markdown rendered content */}
+                        <MarkdownRenderer content={msg.content} isDark={msg.role === 'user'} />
+
+                        {/* Footer: timestamp + tokens + copy */}
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: msg.role === 'user' ? 'flex-end' : 'space-between',
+                          gap: 8,
+                          marginTop: 6,
+                        }}>
+                          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                            <span style={{ fontSize: 11, opacity: 0.6 }}>{msg.timestamp}</span>
+                            {msg.usage && (
+                              <span style={{
+                                fontSize: 10,
+                                background: 'rgba(124,58,237,0.12)',
+                                color: '#7c3aed',
+                                borderRadius: 4,
+                                padding: '1px 6px',
+                                fontVariantNumeric: 'tabular-nums',
+                              }}>
+                                ↑{msg.usage.input_tokens} ↓{msg.usage.output_tokens} tokens
+                              </span>
+                            )}
+                          </div>
+                          {msg.role === 'assistant' && (
+                            <button
+                              onClick={() => handleCopy(msg.content, i)}
+                              title="Copier"
+                              style={{
+                                background: 'none', border: '1px solid rgba(0,0,0,0.1)',
+                                borderRadius: 4, padding: '2px 8px',
+                                cursor: 'pointer', fontSize: 11,
+                                color: copiedIdx === i ? '#16a34a' : '#666',
+                                display: 'flex', alignItems: 'center', gap: 3,
+                                transition: 'color 0.2s',
+                              }}
+                            >
+                              {copiedIdx === i ? '✓ Copié' : '⎘ Copier'}
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Add all features button */}
+                        {hasFeatures && msg.role === 'assistant' && (
+                          <div style={{ marginTop: 8 }}>
+                            <button
+                              onClick={() => handleAddAllFeatures(msg.content)}
+                              style={{
+                                background: 'linear-gradient(135deg, #7c3aed22, #2563eb22)',
+                                border: '1px solid #7c3aed44',
+                                borderRadius: 6,
+                                padding: '5px 12px',
+                                fontSize: 12,
+                                cursor: 'pointer',
+                                color: '#7c3aed',
+                                fontWeight: 600,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 5,
+                              }}
+                            >
+                              ✨ Ajouter toutes les fonctionnalités ({parsedFeatures.length})
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
                 {loading && (
                   <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
                     <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'linear-gradient(135deg, #7c3aed, #2563eb)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 11, fontWeight: 700 }}>C</div>
                     <div style={{ background: '#f6f6f7', borderRadius: '4px 16px 16px 16px', padding: '12px 16px', display: 'flex', gap: 4, alignItems: 'center' }}>
-                      <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#7c3aed', animation: 'pulse 1s infinite' }}/>
-                      <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#7c3aed', animation: 'pulse 1s infinite 0.2s' }}/>
-                      <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#7c3aed', animation: 'pulse 1s infinite 0.4s' }}/>
+                      <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#7c3aed', animation: 'pulse 1s infinite' }} />
+                      <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#7c3aed', animation: 'pulse 1s infinite 0.2s' }} />
+                      <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#7c3aed', animation: 'pulse 1s infinite 0.4s' }} />
                     </div>
                   </div>
                 )}
@@ -307,7 +433,7 @@ Réponds en français, de manière directe et actionnable. Utilise du markdown p
               )}
 
               {/* Zone de saisie */}
-              <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }} onKeyDown={handleKeyDown}>
                 <input
                   type="file"
                   ref={fileInputRef}
@@ -327,10 +453,9 @@ Réponds en français, de manière directe et actionnable. Utilise du markdown p
                     labelHidden
                     value={input}
                     onChange={setInput}
-                    placeholder="Décris ce que tu veux créer, ou pose une question…"
+                    placeholder="Décris ce que tu veux créer… (⌘+Entrée pour envoyer)"
                     multiline={2}
                     autoComplete="off"
-
                   />
                 </div>
                 <Button
