@@ -456,6 +456,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
   const router = useRouter()
   const p = products.find(x => x.id === params.id) || products[4]
 
+  const [images, setImages] = useState(MOCK_IMAGES)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const handleSave = async () => {
@@ -582,14 +583,30 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                       <BlockStack gap="300">
                         <InlineStack align="space-between" blockAlign="center">
                           <Text variant="headingMd" as="h2">Supports multimédias</Text>
-                          <Button icon={PlusIcon} size="slim">Téléverser</Button>
+                          <div>
+                            <input
+                              type="file"
+                              id="media-upload"
+                              accept="image/*"
+                              multiple
+                              style={{ display: 'none' }}
+                              onChange={(e) => {
+                                const files = Array.from(e.target.files || [])
+                                files.forEach(file => {
+                                  const url = URL.createObjectURL(file)
+                                  setImages(prev => [...prev, { id: 'img-' + Date.now(), label: file.name, url, alt: '', format: 'JPEG', dims: '800×800', size: (file.size / 1024).toFixed(0) + ' Ko', date: "Aujourd'hui" }])
+                                })
+                              }}
+                            />
+                            <Button icon={PlusIcon} size="slim" onClick={() => document.getElementById('media-upload')?.click()}>Téléverser</Button>
+                          </div>
                         </InlineStack>
                         <div style={{
                           display: 'grid',
                           gridTemplateColumns: 'repeat(6, 1fr)',
                           gap: 8,
                         }}>
-                          {MOCK_IMAGES.map((img, idx) => (
+                          {images.map((img, idx) => (
                             <div
                               key={img.id}
                               style={{
@@ -847,6 +864,16 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                               <span style={{ maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>{c}</span>
                             </Tag>
                           ))}
+                          <input
+                            placeholder="Ajouter une collection…"
+                            style={{ border: 'none', outline: 'none', fontSize: 13, minWidth: 160, flex: 1 }}
+                            onKeyDown={e => {
+                              if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+                                setCollectionTags(t => [...t, e.currentTarget.value.trim()])
+                                e.currentTarget.value = ''
+                              }
+                            }}
+                          />
                         </div>
                       </div>
                     </BlockStack>
@@ -860,6 +887,16 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                               {t}
                             </Tag>
                           ))}
+                          <input
+                            placeholder="Ajouter un tag…"
+                            style={{ border: 'none', outline: 'none', fontSize: 13, minWidth: 120, flex: 1 }}
+                            onKeyDown={e => {
+                              if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+                                setProductTags(tags => [...tags, e.currentTarget.value.trim()])
+                                e.currentTarget.value = ''
+                              }
+                            }}
+                          />
                         </div>
                       </div>
                     </BlockStack>

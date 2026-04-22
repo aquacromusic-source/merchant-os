@@ -1,5 +1,5 @@
 'use client'
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Page,
@@ -50,11 +50,11 @@ export default function ProductsPage() {
 
   const tabId = tabs[selectedTab]?.id || 'all'
 
-  const list = products.filter(p => {
+  const list = useMemo(() => products.filter(p => {
     if (tabId !== 'all' && p.status !== tabId) return false
     if (searchValue && !p.title.toLowerCase().includes(searchValue.toLowerCase())) return false
     return true
-  })
+  }), [tabId, searchValue])
 
   const { selectedResources, allResourcesSelected, handleSelectionChange } = useIndexResourceState(
     list.map(p => ({ id: p.id }))
