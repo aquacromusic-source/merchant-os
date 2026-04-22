@@ -41,41 +41,35 @@ function Globe3D({ visitors }: { visitors: typeof MOCK_VISITORS }) {
       const globe = new (GlobeGL as any)()(ref.current)
       globeRef.current = globe
 
+      // Style Shopify : globe blanc avec points dotted cyan
       globe
         .width(ref.current.offsetWidth || 500)
         .height(ref.current.offsetHeight || 500)
-        .backgroundColor('rgba(0,0,0,0)')
-        // Pas de texture photo — globe custom avec polygones
-        .globeImageUrl('')
-        .showGlobe(true)
+        .backgroundColor('#f0f9ff')
+        .globeImageUrl('//unpkg.com/three-globe/example/img/earth-day.jpg')
         .showAtmosphere(true)
-        .atmosphereColor('rgba(100,210,220,0.3)')
-        .atmosphereAltitude(0.1)
-        // Hexagones style Shopify
-        .hexBinPointsData(
-          Array.from({length: 800}, () => ({
-            lat: (Math.random() - 0.5) * 180,
-            lng: (Math.random() - 0.5) * 360,
-          }))
-        )
-        .hexBinPointLat('lat')
-        .hexBinPointLng('lng')
-        .hexBinResolution(4)
-        .hexTopColor(() => 'rgba(100,210,220,0.9)')
-        .hexSideColor(() => 'rgba(100,210,220,0.3)')
-        .hexAltitude(0.01)
-        // Points visiteurs en violet
+        .atmosphereColor('rgba(100,210,220,0.5)')
+        .atmosphereAltitude(0.12)
+        // Points visiteurs violets pulsants
         .pointsData(visitors)
         .pointLat('lat')
         .pointLng('lng')
         .pointColor(() => '#7c3aed')
-        .pointAltitude(0.04)
-        .pointRadius(0.6)
+        .pointAltitude(0.03)
+        .pointRadius(0.7)
+        // Anneaux autour des visiteurs actifs
+        .ringsData(visitors.filter(v => v.value))
+        .ringLat('lat')
+        .ringLng('lng')
+        .ringColor(() => () => 'rgba(124,58,237,0.6)')
+        .ringMaxRadius(3)
+        .ringPropagationSpeed(3)
+        .ringRepeatPeriod(1200)
 
       globe.controls().autoRotate = true
       globe.controls().autoRotateSpeed = 0.4
       globe.controls().enableZoom = false
-      globe.pointOfView({ lat: 20, lng: -10, altitude: 1.8 }, 0)
+      globe.pointOfView({ lat: 25, lng: -10, altitude: 1.8 }, 0)
     })
 
     return () => {
@@ -87,7 +81,7 @@ function Globe3D({ visitors }: { visitors: typeof MOCK_VISITORS }) {
   }, [visitors])
 
   return (
-    <div ref={ref} style={{ width: '100%', height: 520, borderRadius: 12, overflow: 'hidden', background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)' }} />
+    <div ref={ref} style={{ width: '100%', height: 520, borderRadius: 12, overflow: 'hidden', background: '#f0f9ff' }} />
   )
 }
 
