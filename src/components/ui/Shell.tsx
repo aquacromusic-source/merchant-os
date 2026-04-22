@@ -35,6 +35,8 @@ const NAV_CHANNELS = [
       { key: 'storefront', label: 'Thèmes' },
       { key: 'storefront/pages', label: 'Pages' },
       { key: 'storefront/blog', label: 'Articles de blog' },
+      { key: 'storefront/navigation', label: 'Navigation' },
+      { key: 'storefront/preferences', label: 'Préférences' },
     ]},
   { key: 'channels/meta', label: 'Meta (IG & FB)', icon: I.Instagram },
   { key: 'channels/google', label: 'Google & YouTube', icon: I.Youtube },
@@ -92,27 +94,52 @@ function SidebarItem({ item, active, onNav, iconOnly }: {
   iconOnly?: boolean
 }) {
   const isActive = active === item.key || active.startsWith(item.key + '/')
+  const isExactActive = active === item.key
   const hasSub = item.sub && item.sub.length > 0
   const subOpen = hasSub && isActive
+
+  // Icône pleine par défaut, creuse quand la section est active (sous-page ouverte)
+  const iconStyle: React.CSSProperties = {
+    flexShrink: 0,
+    opacity: isActive ? 0.9 : 1,
+    strokeWidth: isActive ? 1.5 : 2.5,  // creuse = strokeWidth faible, pleine = fort
+    fill: isActive ? 'none' : 'currentColor',
+    stroke: 'currentColor',
+  }
 
   return (
     <>
       <button
-        className={`nav-item ${isActive && !hasSub ? 'active' : isActive && !item.sub?.length ? 'active' : ''} ${active === item.key ? 'active' : ''}`}
+        className={`nav-item ${isExactActive && !hasSub ? 'active' : isExactActive ? 'active' : ''}`}
         onClick={() => onNav(item.key)}
         title={iconOnly ? item.label : undefined}
       >
-        {item.icon && <item.icon size={16} />}
+        {item.icon && (
+          <span style={iconStyle}>
+            <item.icon size={16} />
+          </span>
+        )}
         {!iconOnly && <span className="truncate">{item.label}</span>}
         {!iconOnly && item.count && <span className="count">{item.count}</span>}
       </button>
       {!iconOnly && subOpen && hasSub && (
-        <div className="nav-sub">
+        <div className="nav-sub" style={{ position: 'relative' }}>
+          {/* Ligne verticale reliant parent aux sous-items */}
+          <span style={{
+            position: 'absolute',
+            left: 12,
+            top: 0,
+            bottom: 8,
+            width: 1,
+            background: '#c8c8c8',
+            borderRadius: 1,
+          }}/>
           {item.sub!.map(s => (
             <button
               key={s.key}
               className={`nav-item ${active === s.key ? 'active' : ''}`}
               onClick={() => onNav(s.key)}
+              style={{ paddingLeft: 28 }}
             >
               <span className="truncate">{s.label}</span>
             </button>
@@ -216,6 +243,20 @@ export function Shell({ children }: { children: React.ReactNode }) {
           ))}
         </div>
         <div style={{ marginTop: 12, paddingTop: 8, borderTop: '1px solid var(--nav-border)' }}>
+          <button
+            className={`nav-item ${active === 'markets' ? 'active' : ''}`}
+            onClick={() => onNav('markets')}
+          >
+            <I.Globe size={16} />
+            <span>Marchés</span>
+          </button>
+          <button
+            className={`nav-item ${active === 'finance' ? 'active' : ''}`}
+            onClick={() => onNav('finance')}
+          >
+            <I.Receipt size={16} />
+            <span>Finances</span>
+          </button>
           <button
             className={`nav-item ${active.startsWith('settings') ? 'active' : ''}`}
             onClick={() => onNav('settings')}
