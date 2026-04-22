@@ -204,7 +204,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
                 </button>
               )}
             </div>
-            {notifications.map(n => (
+            {(notifications as any[]).map((n: any) => (
               <div
                 key={n.id}
                 style={{
