@@ -1071,16 +1071,20 @@ input, textarea, select { outline: none; }
   .kpi:first-child { border-top: 0 !important; }
 }
 
-/* === Style Shopify exact ===
-   La topbar est un rectangle plein.
-   La sidebar + zone contenu ont des coins arrondis en HAUT
-   ce qui crée l'effet d'encoche dans la topbar. */
-.sidebar {
-  border-top-right-radius: 12px !important;
-  overflow-y: auto;
-  overflow-x: hidden;
+
+
+
+
+/* === Vrai effet Shopify Admin ===
+   Le corps de la page est sombre (couleur topbar)
+   Le shell entier (topbar + sidebar + contenu) a des coins arrondis en HAUT
+   Donnant l'effet de "feuille flottante" */
+body {
+  background: var(--topbar-bg) !important;
 }
-.main {
-  border-top-left-radius: 12px !important;
-  overflow: auto;
+.shell-wrapper {
+  border-radius: 12px 12px 0 0;
+  overflow: hidden;
+  min-height: 100vh;
+  background: var(--bg);
 }
