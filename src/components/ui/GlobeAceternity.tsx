@@ -78,12 +78,13 @@ function drawGlobe(canvas: HTMLCanvasElement, markers: Marker[], phi: number) {
     ctx.stroke()
   }
 
-  // Continents comme nuage de points
+  // Continents — grille dense de points
   for (const path of CONTINENT_PATHS) {
+    // Dessiner les bordures avec des points
     for (let i = 0; i < path.length - 1; i++) {
       const [lng1, lat1] = path[i]
       const [lng2, lat2] = path[i + 1]
-      for (let t = 0; t <= 1; t += 0.05) {
+      for (let t = 0; t <= 1; t += 0.03) {
         const lng = lng1 + (lng2 - lng1) * t
         const lat = lat1 + (lat2 - lat1) * t
         const angle = (lng + phi * 180 / Math.PI) * Math.PI / 180
@@ -92,13 +93,38 @@ function drawGlobe(canvas: HTMLCanvasElement, markers: Marker[], phi: number) {
         const x3d = cosLat * Math.sin(angle)
         const y3d = sinLat
         const z3d = cosLat * Math.cos(angle)
-        if (z3d > 0) {
+        if (z3d > -0.05) {
           const px = cx + r * x3d
           const py = cy - r * y3d
-          const brightness = 0.4 + z3d * 0.6
+          const alpha = Math.max(0, z3d * 0.9 + 0.4)
           ctx.beginPath()
-          ctx.arc(px, py, 2.5, 0, Math.PI * 2)
-          ctx.fillStyle = `rgba(180,220,255,${brightness * 0.85})`
+          ctx.arc(px, py, 3, 0, Math.PI * 2)
+          ctx.fillStyle = `rgba(150,210,255,${alpha})`
+          ctx.fill()
+        }
+      }
+    }
+    // Remplir l'intérieur des continents avec une grille
+    const lngs = path.map(p => p[0])
+    const lats = path.map(p => p[1])
+    const minLng = Math.min(...lngs) - 2
+    const maxLng = Math.max(...lngs) + 2
+    const minLat = Math.min(...lats) - 2
+    const maxLat = Math.max(...lats) + 2
+    for (let lat = minLat; lat <= maxLat; lat += 4) {
+      for (let lng = minLng; lng <= maxLng; lng += 4) {
+        const angle = (lng + phi * 180 / Math.PI) * Math.PI / 180
+        const cosLat = Math.cos(lat * Math.PI / 180)
+        const sinLat = Math.sin(lat * Math.PI / 180)
+        const x3d = cosLat * Math.sin(angle)
+        const y3d = sinLat
+        const z3d = cosLat * Math.cos(angle)
+        if (z3d > 0.05) {
+          const px = cx + r * x3d
+          const py = cy - r * y3d
+          ctx.beginPath()
+          ctx.arc(px, py, 1.5, 0, Math.PI * 2)
+          ctx.fillStyle = `rgba(120,190,255,${z3d * 0.5})`
           ctx.fill()
         }
       }
