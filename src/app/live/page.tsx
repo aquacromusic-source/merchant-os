@@ -163,7 +163,7 @@ export default function LivePage() {
         </div>
 
         {/* DROITE — Globe Cobe */}
-        <div style={{ background: 'white', borderRadius: 12, padding: '20px 20px 16px', border: '1px solid #e5e5e5', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', position: 'sticky', top: 80 }}>
+        <div style={{ background: 'white', borderRadius: 12, padding: '20px', border: '1px solid #e5e5e5', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', position: 'sticky', top: 16, maxHeight: 'calc(100vh - 32px)', overflow: 'hidden' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
             <Text as="h2" variant="headingSm" fontWeight="semibold">Visiteurs dans le monde</Text>
             <Badge tone="success">{`${stats.online} en ligne`}</Badge>

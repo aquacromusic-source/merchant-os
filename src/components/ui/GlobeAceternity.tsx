@@ -48,8 +48,8 @@ function drawGlobe(canvas: HTMLCanvasElement, markers: Marker[], phi: number) {
   // Fond globe
   const grad = ctx.createRadialGradient(cx - r * 0.3, cy - r * 0.3, r * 0.1, cx, cy, r)
   grad.addColorStop(0, '#1a2a6c')
-  grad.addColorStop(0.5, '#0d1b4b')
-  grad.addColorStop(1, '#060d2b')
+  grad.addColorStop(0.5, '#0a1540')
+  grad.addColorStop(1, '#040a20')
   ctx.beginPath()
   ctx.arc(cx, cy, r, 0, Math.PI * 2)
   ctx.fillStyle = grad
@@ -97,8 +97,8 @@ function drawGlobe(canvas: HTMLCanvasElement, markers: Marker[], phi: number) {
           const py = cy - r * y3d
           const brightness = 0.4 + z3d * 0.6
           ctx.beginPath()
-          ctx.arc(px, py, 1.5, 0, Math.PI * 2)
-          ctx.fillStyle = `rgba(150,200,255,${brightness * 0.6})`
+          ctx.arc(px, py, 2.5, 0, Math.PI * 2)
+          ctx.fillStyle = `rgba(180,220,255,${brightness * 0.85})`
           ctx.fill()
         }
       }
