@@ -1,7 +1,21 @@
 'use client'
 
 import React, { useEffect, useRef, useState, useCallback } from 'react'
+import dynamic from 'next/dynamic'
 import { Page, Badge, Text } from '@shopify/polaris'
+
+const GlobeAceternity = dynamic(
+  () => import('@/components/ui/GlobeAceternity').then(m => ({ default: m.GlobeAceternity })),
+  {
+    ssr: false,
+    loading: () => (
+      <div style={{ width: '100%', height: 500, background: '#0a1628', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#00e5ff', fontSize: 12 }}>
+        Chargement du globe...
+      </div>
+    )
+  }
+)
+
 
 // Visiteurs en ligne (vert)
 const ONLINE_VISITORS = [
