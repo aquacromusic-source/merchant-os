@@ -154,15 +154,12 @@ export default function LivePage() {
             <Text as="h2" variant="headingSm" fontWeight="semibold">Visiteurs dans le monde</Text>
             <Badge tone="success">{`${stats.online} en ligne`}</Badge>
           </div>
-          <div style={{ width: '100%', height: 500, borderRadius: 12, overflow: 'hidden', background: '#000' }}>
-            <iframe
-              src="https://my.spline.design/6be70c79-514c-4bd8-abcf-a56398a26493/"
-              frameBorder="0"
-              width="100%"
-              height="100%"
-              style={{ border: 'none' }}
-              allow="autoplay"
-              loading="lazy"
+          <div style={{ width: '100%', height: 500, borderRadius: 12, overflow: 'hidden', background: 'transparent' }}>
+            <GlobeAceternity
+              markers={[
+                ...ONLINE_VISITORS.map(v => ({ location: [v.lat, v.lng] as [number,number], size: 0.12, color: [0.2, 1.0, 0.4] as [number,number,number] })),
+                ...ORDER_CITIES.map(o => ({ location: [o.lat, o.lng] as [number,number], size: 0.09, color: [0.2, 0.55, 1.0] as [number,number,number] })),
+              ]}
             />
           </div>
           {/* Activité en cours */}
