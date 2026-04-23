@@ -1,14 +1,26 @@
 'use client'
-import React, { useEffect, useRef, useState } from 'react'
-import { Page, Badge, Text, Divider } from '@shopify/polaris'
+import React, { useEffect, useRef, useState, useCallback } from 'react'
+import createGlobe from 'cobe'
+import { Page, Badge, Text } from '@shopify/polaris'
 
-const MOCK_VISITORS = [
-  { lat: 48.85, lng: 2.35, city: 'Paris', country: 'France', flag: '🇫🇷' },
-  { lat: 51.50, lng: -0.12, city: 'Londres', country: 'UK', flag: '🇬🇧' },
-  { lat: 40.71, lng: -74.00, city: 'New York', country: 'USA', flag: '🇺🇸' },
-  { lat: 35.68, lng: 139.69, city: 'Tokyo', country: 'Japon', flag: '🇯🇵' },
-  { lat: 52.52, lng: 13.40, city: 'Berlin', country: 'Allemagne', flag: '🇩🇪' },
-  { lat: 1.35, lng: 103.82, city: 'Singapour', country: 'Singapour', flag: '🇸🇬' },
+// Visiteurs en ligne (vert)
+const ONLINE_VISITORS = [
+  { lat: 48.85, lng: 2.35, city: 'Paris', flag: '🇫🇷', action: 'Consulte GTA V Poster' },
+  { lat: 51.50, lng: -0.12, city: 'Londres', flag: '🇬🇧', action: 'Ajoute au panier' },
+  { lat: 40.71, lng: -74.00, city: 'New York', flag: '🇺🇸', action: 'Consulte Forza Horizon' },
+  { lat: 35.68, lng: 139.69, city: 'Tokyo', flag: '🇯🇵', action: 'Consulte FIFA 22' },
+  { lat: 52.52, lng: 13.40, city: 'Berlin', flag: '🇩🇪', action: 'En cours de paiement' },
+  { lat: 1.35, lng: 103.82, city: 'Singapour', flag: '🇸🇬', action: 'Consulte Minecraft' },
+]
+
+// Villes avec commandes récentes (bleu)
+const ORDER_CITIES = [
+  { lat: 48.85, lng: 2.35 },   // Paris
+  { lat: 41.90, lng: 12.49 },  // Rome
+  { lat: -33.86, lng: 151.20 }, // Sydney
+  { lat: 19.43, lng: -99.13 }, // Mexico
+  { lat: 55.75, lng: 37.61 },  // Moscou
+  { lat: 25.20, lng: 55.27 },  // Dubai
 ]
 
 const MOCK_TOP_LOCATIONS = [
@@ -18,122 +30,137 @@ const MOCK_TOP_LOCATIONS = [
   { city: 'Tokyo, Japon', sessions: 1, pct: 25 },
 ]
 
-function GlobeShopify({ visitors }: { visitors: typeof MOCK_VISITORS }) {
-  const ref = useRef<HTMLDivElement>(null)
+function CobeGlobe({ online, orders }: { online: typeof ONLINE_VISITORS; orders: typeof ORDER_CITIES }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
   const globeRef = useRef<any>(null)
+  const phiRef = useRef(0)
+  const widthRef = useRef(0)
+
+  // Convertir lat/lng en coordonnées cobe [φ, λ]
+  const toMarkers = () => {
+    const markers: { location: [number, number]; size: number; color: [number, number, number] }[] = []
+    
+    // Visiteurs en ligne — verts
+    online.forEach(v => {
+      markers.push({
+        location: [v.lat, v.lng],
+        size: 0.08,
+        color: [0.2, 0.9, 0.4], // vert
+      })
+    })
+    
+    // Commandes — bleus
+    orders.forEach(o => {
+      markers.push({
+        location: [o.lat, o.lng],
+        size: 0.06,
+        color: [0.2, 0.5, 1.0], // bleu
+      })
+    })
+    
+    return markers
+  }
 
   useEffect(() => {
-    if (!ref.current) return
-    let cancelled = false
+    let frameId: number
+    if (!canvasRef.current) return
 
-    import('globe.gl').then(({ default: GlobeGL }) => {
-      if (cancelled || !ref.current) return
+    const onResize = () => {
+      if (canvasRef.current) widthRef.current = canvasRef.current.offsetWidth
+    }
+    window.addEventListener('resize', onResize)
+    onResize()
 
-      const globe = new (GlobeGL as any)()(ref.current)
-      globeRef.current = globe
-
-      globe
-        .width(ref.current.offsetWidth || 600)
-        .height(ref.current.offsetHeight || 600)
-        .backgroundColor('rgba(0,0,0,0)')
-        .showGlobe(true)
-        .showAtmosphere(true)
-        .atmosphereColor('rgba(150,230,220,0.5)')
-        .atmosphereAltitude(0.18)
-        // Pas de texture — globe blanc
-        .globeImageUrl('')
-        // Hexagones turquoise style Shopify
-        .hexBinPointsData(
-          (() => {
-            const pts: {lat: number, lng: number}[] = []
-            for (let lat = -85; lat <= 85; lat += 3.5) {
-              for (let lng = -180; lng <= 180; lng += 3.5) {
-                pts.push({ lat, lng })
-              }
-            }
-            return pts
-          })()
-        )
-        .hexBinPointLat('lat')
-        .hexBinPointLng('lng')
-        .hexBinResolution(3)
-        .hexTopColor(() => 'rgba(80,200,190,0.95)')
-        .hexSideColor(() => 'rgba(80,200,190,0.4)')
-        .hexAltitude(0.006)
-        // Pins visiteurs violets
-        .pointsData(visitors)
-        .pointLat('lat')
-        .pointLng('lng')
-        .pointColor(() => '#7c3aed')
-        .pointAltitude(0.06)
-        .pointRadius(0.5)
-
-      globe.controls().autoRotate = true
-      globe.controls().autoRotateSpeed = 0.35
-      globe.controls().enableZoom = false
-      globe.pointOfView({ lat: 25, lng: -15, altitude: 1.6 }, 0)
+    globeRef.current = (createGlobe as any)(canvasRef.current, {
+      devicePixelRatio: 2,
+      width: widthRef.current * 2,
+      height: widthRef.current * 2,
+      phi: 0,
+      theta: 0.15,
+      dark: 0,          // 0 = fond clair, 1 = fond sombre
+      diffuse: 1.2,
+      mapSamples: 16000,
+      mapBrightness: 6,
+      baseColor: [0.95, 0.98, 1],         // blanc légèrement bleuté
+      markerColor: [0.2, 0.9, 0.4],        // vert par défaut
+      glowColor: [0.8, 0.95, 1],           // halo bleu clair
+      markers: toMarkers(),
+      onRender: (state: Record<string, any>) => {
+        state.phi = phiRef.current
+        phiRef.current += 0.003
+        state.width = widthRef.current * 2
+        state.height = widthRef.current * 2
+        // Mettre à jour les markers dynamiquement
+        state.markers = toMarkers()
+      },
     })
 
     return () => {
-      cancelled = true
-      if (globeRef.current) { try { globeRef.current._destructor?.() } catch {} }
+      globeRef.current?.destroy()
+      window.removeEventListener('resize', onResize)
     }
-  }, [visitors])
+  }, [])
 
-  return <div ref={ref} style={{ width: '100%', height: '100%' }} />
-}
-
-// Cercle animé style Shopify (Customer behavior)
-function PulseCircle({ color }: { color: string }) {
   return (
-    <div style={{ position: 'relative', width: 52, height: 52 }}>
-      <div style={{
-        position: 'absolute', inset: 0, borderRadius: '50%',
-        border: `2px solid ${color}`, opacity: 0.3,
-        animation: 'ping 1.5s cubic-bezier(0,0,0.2,1) infinite',
-      }}/>
-      <div style={{
-        position: 'absolute', inset: 6, borderRadius: '50%',
-        border: `2px solid ${color}`, opacity: 0.5,
-      }}/>
-      <div style={{
-        position: 'absolute', inset: 14, borderRadius: '50%',
-        background: color, opacity: 0.8,
-      }}/>
+    <div style={{ width: '100%', aspectRatio: '1/1', maxWidth: 600, margin: '0 auto', position: 'relative' }}>
+      <canvas
+        ref={canvasRef}
+        style={{ width: '100%', height: '100%', contain: 'layout paint size', opacity: 1, transition: 'opacity 1s ease' }}
+      />
+      {/* Légende */}
+      <div style={{ position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 16, background: 'rgba(255,255,255,0.9)', padding: '6px 14px', borderRadius: 20, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12 }}>
+          <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#33e66a' }}/>
+          <span>En ligne</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12 }}>
+          <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#3380ff' }}/>
+          <span>Commandes</span>
+        </div>
+      </div>
     </div>
   )
 }
 
-function StatCard({ label, value, sub }: { label: string; value: string | number; sub?: React.ReactNode }) {
+function PulseCircle({ color }: { color: string }) {
   return (
-    <div style={{
-      background: 'white', borderRadius: 10, padding: '14px 16px',
-      border: '1px solid #e5e5e5', boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-    }}>
+    <div style={{ position: 'relative', width: 52, height: 52, flexShrink: 0 }}>
+      <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: `2px solid ${color}`, opacity: 0.3, animation: 'ping 1.5s cubic-bezier(0,0,0.2,1) infinite' }}/>
+      <div style={{ position: 'absolute', inset: 6, borderRadius: '50%', border: `2px solid ${color}`, opacity: 0.5 }}/>
+      <div style={{ position: 'absolute', inset: 14, borderRadius: '50%', background: color, opacity: 0.9 }}/>
+    </div>
+  )
+}
+
+function StatCard({ label, value, color = '#1a1a1a' }: { label: string; value: string | number; color?: string }) {
+  return (
+    <div style={{ background: 'white', borderRadius: 10, padding: '14px 16px', border: '1px solid #e5e5e5', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
       <div style={{ fontSize: 12, color: '#6d7175', marginBottom: 4 }}>{label}</div>
-      <div style={{ fontSize: 22, fontWeight: 700, color: '#1a1a1a' }}>{value}</div>
-      {sub && <div style={{ marginTop: 6 }}>{sub}</div>}
+      <div style={{ fontSize: 22, fontWeight: 700, color }}>{value}</div>
     </div>
   )
 }
 
 export default function LivePage() {
   const [stats, setStats] = useState({ online: 12, sessions: 46820, revenue: 30580, orders: 518 })
-  const [tick, setTick] = useState(0)
   const [carts, setCarts] = useState({ active: 3, checkout: 1, purchased: 2 })
+  const [recentOrders] = useState([
+    { product: 'Grand Theft Auto V', city: 'Paris', flag: '🇫🇷', price: '29,95 €', ago: '2 min' },
+    { product: 'Forza Horizon 5', city: 'Rome', flag: '🇮🇹', price: '39,95 €', ago: '5 min' },
+    { product: 'FIFA 22', city: 'Sydney', flag: '🇦🇺', price: '11,95 €', ago: '9 min' },
+  ])
 
   useEffect(() => {
     const iv = setInterval(() => {
-      setTick(t => t + 1)
       setStats(prev => ({
         online: Math.max(8, prev.online + Math.round((Math.random() - 0.4) * 2)),
         sessions: prev.sessions + Math.round(Math.random() * 3),
-        revenue: prev.revenue + Math.round(Math.random() * 30),
+        revenue: prev.revenue + Math.round(Math.random() * 40),
         orders: prev.orders + (Math.random() > 0.8 ? 1 : 0),
       }))
       setCarts(prev => ({
         active: Math.max(0, prev.active + Math.round((Math.random() - 0.4) * 2)),
-        checkout: Math.max(0, prev.checkout + Math.round((Math.random() - 0.5))),
+        checkout: Math.max(0, prev.checkout + Math.round(Math.random() - 0.6)),
         purchased: Math.max(0, prev.purchased + (Math.random() > 0.7 ? 1 : 0)),
       }))
     }, 5000)
@@ -141,113 +168,98 @@ export default function LivePage() {
   }, [])
 
   return (
-    <Page title="Vue en direct" titleMetadata={<Badge tone="success">Live</Badge>}>
+    <Page title="Vue en direct" titleMetadata={<Badge tone="success">● Live</Badge>}>
       <style>{`
-        @keyframes ping {
-          75%, 100% { transform: scale(1.8); opacity: 0; }
-        }
+        @keyframes ping { 75%,100%{ transform:scale(1.8);opacity:0; } }
       `}</style>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '360px 1fr', gap: 20, alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '340px 1fr', gap: 20, alignItems: 'start' }}>
 
-        {/* GAUCHE — Données */}
+        {/* GAUCHE */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-
-          {/* En-tête légende */}
-          <div style={{ display: 'flex', gap: 16, alignItems: 'center', padding: '4px 0' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#7c3aed' }}/>
-              <span style={{ fontSize: 13, color: '#6d7175' }}>Commandes</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#2563eb' }}/>
-              <span style={{ fontSize: 13, color: '#6d7175' }}>Visiteurs</span>
-            </div>
-          </div>
-
-          {/* KPIs 2x2 */}
+          {/* KPIs */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            <StatCard label="Visiteurs en ce moment" value={stats.online} />
+            <StatCard label="Visiteurs en ligne" value={stats.online} color="#00c853" />
             <StatCard label="Ventes totales" value={`${stats.revenue.toLocaleString('fr-FR')} €`} />
-            <StatCard label="Sessions totales" value={stats.sessions.toLocaleString('fr-FR')}
-              sub={<div style={{ height: 3, background: '#e5e5e5', borderRadius: 2 }}><div style={{ width: '60%', height: '100%', background: '#2563eb', borderRadius: 2 }}/></div>}
-            />
-            <StatCard label="Commandes totales" value={stats.orders}
-              sub={<div style={{ height: 3, background: '#e5e5e5', borderRadius: 2 }}><div style={{ width: '40%', height: '100%', background: '#7c3aed', borderRadius: 2 }}/></div>}
-            />
+            <StatCard label="Sessions" value={stats.sessions.toLocaleString('fr-FR')} />
+            <StatCard label="Commandes" value={stats.orders} />
           </div>
 
           {/* Top locations */}
-          <div style={{ background: 'white', borderRadius: 10, padding: 16, border: '1px solid #e5e5e5', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
-              <span style={{ fontSize: 13, fontWeight: 600, color: '#1a1a1a' }}>Top emplacements</span>
-            </div>
+          <div style={{ background: 'white', borderRadius: 10, padding: 16, border: '1px solid #e5e5e5', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+            <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12 }}>Top emplacements</div>
             {MOCK_TOP_LOCATIONS.map((loc, i) => (
               <div key={i} style={{ marginBottom: 10 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#1a1a1a', marginBottom: 4 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 3 }}>
                   <span>{loc.city}</span>
-                  <span style={{ color: '#6d7175' }}>{loc.sessions} session{loc.sessions > 1 ? 's' : ''}</span>
+                  <span style={{ color: '#6d7175' }}>{loc.sessions} sessions</span>
                 </div>
                 <div style={{ height: 4, background: '#f1f1f1', borderRadius: 2 }}>
-                  <div style={{ width: `${loc.pct}%`, height: '100%', background: '#2563eb', borderRadius: 2 }}/>
+                  <div style={{ width: `${loc.pct}%`, height: '100%', background: '#3380ff', borderRadius: 2 }}/>
                 </div>
               </div>
             ))}
           </div>
 
-          {/* Customers */}
-          <div style={{ background: 'white', borderRadius: 10, padding: 16, border: '1px solid #e5e5e5', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: '#1a1a1a', marginBottom: 8 }}>Clients</div>
-            {MOCK_VISITORS.slice(0, 3).map((v, i) => (
-              <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'center', padding: '6px 0', borderBottom: i < 2 ? '1px solid #f1f1f1' : 'none' }}>
-                <span style={{ fontSize: 18 }}>{v.flag}</span>
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 500 }}>{v.city}</div>
-                  <div style={{ fontSize: 11, color: '#8c9196' }}>Consulte un produit</div>
+          {/* Commandes récentes */}
+          <div style={{ background: 'white', borderRadius: 10, padding: 16, border: '1px solid #e5e5e5', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+            <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 12 }}>Commandes récentes</div>
+            {recentOrders.map((o, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 0', borderBottom: i < recentOrders.length - 1 ? '1px solid #f1f1f1' : 'none' }}>
+                <span style={{ fontSize: 18 }}>{o.flag}</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 12, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{o.product}</div>
+                  <div style={{ fontSize: 11, color: '#8c9196' }}>{o.city} · il y a {o.ago}</div>
                 </div>
+                <span style={{ fontSize: 12, fontWeight: 700, color: '#00c853' }}>{o.price}</span>
               </div>
             ))}
           </div>
 
           {/* Customer behavior */}
-          <div style={{ background: 'white', borderRadius: 10, padding: 16, border: '1px solid #e5e5e5', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+          <div style={{ background: 'white', borderRadius: 10, padding: 16, border: '1px solid #e5e5e5', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <span style={{ fontSize: 13, fontWeight: 600, color: '#1a1a1a' }}>Comportement clients</span>
-              <span style={{ fontSize: 12, color: '#8c9196', background: '#f1f1f1', padding: '2px 8px', borderRadius: 10 }}>10 min</span>
+              <span style={{ fontSize: 13, fontWeight: 600 }}>Comportement clients</span>
+              <span style={{ fontSize: 11, color: '#8c9196', background: '#f1f1f1', padding: '2px 8px', borderRadius: 10 }}>en direct</span>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, textAlign: 'center' }}>
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
-                  <PulseCircle color="#2563eb" />
+              {[
+                { count: carts.active, label: 'Paniers actifs', color: '#3380ff' },
+                { count: carts.checkout, label: 'En paiement', color: '#7c3aed' },
+                { count: carts.purchased, label: 'Achetés', color: '#00c853' },
+              ].map((item, i) => (
+                <div key={i}>
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
+                    <PulseCircle color={item.color} />
+                  </div>
+                  <div style={{ fontSize: 20, fontWeight: 700 }}>{item.count}</div>
+                  <div style={{ fontSize: 11, color: '#8c9196' }}>{item.label}</div>
                 </div>
-                <div style={{ fontSize: 20, fontWeight: 700 }}>{carts.active}</div>
-                <div style={{ fontSize: 11, color: '#8c9196' }}>Paniers actifs</div>
-              </div>
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
-                  <PulseCircle color="#7c3aed" />
-                </div>
-                <div style={{ fontSize: 20, fontWeight: 700 }}>{carts.checkout}</div>
-                <div style={{ fontSize: 11, color: '#8c9196' }}>En paiement</div>
-              </div>
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
-                  <PulseCircle color="#00c853" />
-                </div>
-                <div style={{ fontSize: 20, fontWeight: 700 }}>{carts.purchased}</div>
-                <div style={{ fontSize: 11, color: '#8c9196' }}>Achetés</div>
-              </div>
+              ))}
             </div>
           </div>
         </div>
 
-        {/* DROITE — Globe */}
-        <div style={{
-          background: '#f8f9fa', borderRadius: 12, overflow: 'hidden',
-          height: 700, position: 'sticky', top: 80,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
-          <GlobeShopify visitors={MOCK_VISITORS} />
+        {/* DROITE — Globe Cobe */}
+        <div style={{ background: 'white', borderRadius: 12, padding: 24, border: '1px solid #e5e5e5', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', position: 'sticky', top: 80 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <Text as="h2" variant="headingSm" fontWeight="semibold">Visiteurs dans le monde</Text>
+            <Badge tone="success">{`${stats.online} en ligne`}</Badge>
+          </div>
+          <CobeGlobe online={ONLINE_VISITORS} orders={ORDER_CITIES} />
+          {/* Activité en cours */}
+          <div style={{ marginTop: 16, borderTop: '1px solid #f1f1f1', paddingTop: 12 }}>
+            <div style={{ fontSize: 12, color: '#6d7175', marginBottom: 8 }}>Activité en cours</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {ONLINE_VISITORS.slice(0, 4).map((v, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12 }}>
+                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#33e66a', flexShrink: 0 }}/>
+                  <span style={{ color: '#6d7175' }}>{v.flag} {v.city}</span>
+                  <span style={{ color: '#1a1a1a', marginLeft: 'auto' }}>{v.action}</span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </Page>
