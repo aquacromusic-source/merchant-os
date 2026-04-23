@@ -216,7 +216,7 @@ export function GlobeAceternity({ markers = [] }: GlobeProps) {
   }, [markers])
 
   return (
-    <div style={{ width: '100%', aspectRatio: '1/1', position: 'relative', maxWidth: 600, margin: '0 auto' }}>
+    <div style={{ width: '100%', aspectRatio: '1/1', position: 'relative', maxWidth: 600, margin: '0 auto', borderRadius: '50%', overflow: 'hidden' }}>
       <canvas
         ref={canvasRef}
         style={{ width: '100%', height: '100%', cursor: 'grab', display: 'block' }}

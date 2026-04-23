@@ -168,7 +168,7 @@ export default function LivePage() {
             <Text as="h2" variant="headingSm" fontWeight="semibold">Visiteurs dans le monde</Text>
             <Badge tone="success">{`${stats.online} en ligne`}</Badge>
           </div>
-          <div style={{ width: '100%', aspectRatio: '1/1', maxHeight: 600, borderRadius: 12, overflow: 'hidden', background: '#080b1a' }}>
+          <div style={{ width: '100%', aspectRatio: '1/1', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <GlobeAceternity
               markers={[
                 ...ONLINE_VISITORS.map(v => ({ location: [v.lat, v.lng] as [number,number], size: 0.12, color: [0.2, 1.0, 0.4] as [number,number,number] })),
