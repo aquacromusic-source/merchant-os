@@ -44,7 +44,7 @@ function CobeGlobe({ online, orders }: { online: typeof ONLINE_VISITORS; orders:
     online.forEach(v => {
       markers.push({
         location: [v.lat, v.lng],
-        size: 0.08,
+        size: 0.12,
         color: [0.2, 0.9, 0.4], // vert
       })
     })
@@ -53,7 +53,7 @@ function CobeGlobe({ online, orders }: { online: typeof ONLINE_VISITORS; orders:
     orders.forEach(o => {
       markers.push({
         location: [o.lat, o.lng],
-        size: 0.06,
+        size: 0.10,
         color: [0.2, 0.5, 1.0], // bleu
       })
     })
@@ -102,7 +102,7 @@ function CobeGlobe({ online, orders }: { online: typeof ONLINE_VISITORS; orders:
   }, [])
 
   return (
-    <div style={{ width: '100%', aspectRatio: '1/1', maxWidth: 600, margin: '0 auto', position: 'relative' }}>
+    <div style={{ width: '100%', aspectRatio: '1/1', margin: '0 auto', position: 'relative' }}>
       <canvas
         ref={canvasRef}
         style={{ width: '100%', height: '100%', contain: 'layout paint size', opacity: 1, transition: 'opacity 1s ease' }}
@@ -241,7 +241,7 @@ export default function LivePage() {
         </div>
 
         {/* DROITE — Globe Cobe */}
-        <div style={{ background: 'white', borderRadius: 12, padding: 24, border: '1px solid #e5e5e5', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', position: 'sticky', top: 80 }}>
+        <div style={{ background: 'white', borderRadius: 12, padding: '20px 20px 16px', border: '1px solid #e5e5e5', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', position: 'sticky', top: 80 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
             <Text as="h2" variant="headingSm" fontWeight="semibold">Visiteurs dans le monde</Text>
             <Badge tone="success">{`${stats.online} en ligne`}</Badge>
