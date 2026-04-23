@@ -17,20 +17,30 @@ export function GlobeAceternity({ markers = [] }: GlobeProps) {
   useEffect(() => {
     if (!canvasRef.current) return
 
-    const onResize = () => {
-      if (canvasRef.current) {
-        widthRef.current = canvasRef.current.offsetWidth
-      }
-    }
-    window.addEventListener('resize', onResize)
-    onResize()
+    // Attendre que le DOM soit prêt et que le canvas ait des dimensions
+    const initGlobe = () => {
+      if (!canvasRef.current) return
+      const w = canvasRef.current.parentElement?.clientWidth || 600
+      widthRef.current = w
+      canvasRef.current.width = w * 2
+      canvasRef.current.height = w * 2
+      canvasRef.current.style.width = w + 'px'
+      canvasRef.current.style.height = w + 'px'
 
-    let globe: any
-    try {
-      globe = (createGlobe as any)(canvasRef.current, {
-        devicePixelRatio: 2,
-        width: widthRef.current * 2,
-        height: widthRef.current * 2,
+      const onResize = () => {
+        if (canvasRef.current) {
+          const newW = canvasRef.current.parentElement?.clientWidth || 600
+          widthRef.current = newW
+        }
+      }
+      window.addEventListener('resize', onResize)
+
+      let globe: any
+      try {
+        globe = (createGlobe as any)(canvasRef.current, {
+          devicePixelRatio: 2,
+          width: w * 2,
+          height: w * 2,
         phi: 0.6,
         theta: 0.15,
         dark: 1,
@@ -51,17 +61,22 @@ export function GlobeAceternity({ markers = [] }: GlobeProps) {
         },
       })
 
-      setTimeout(() => {
-        if (canvasRef.current) canvasRef.current.style.opacity = '1'
-      }, 200)
-    } catch (e) {
-      console.error('Globe error:', e)
+        setTimeout(() => {
+          if (canvasRef.current) canvasRef.current.style.opacity = '1'
+        }, 200)
+      } catch (e) {
+        console.error('Globe error:', e)
+      }
+
+      return () => {
+        globe?.destroy()
+        window.removeEventListener('resize', onResize)
+      }
     }
 
-    return () => {
-      globe?.destroy()
-      window.removeEventListener('resize', onResize)
-    }
+    // Init après un frame pour que le DOM soit peint
+    const timeout = setTimeout(initGlobe, 100)
+    return () => clearTimeout(timeout)
   }, []) // eslint-disable-line
 
   return (
