@@ -48,6 +48,8 @@ export function GlobeAceternity({ markers = [] }: GlobeProps) {
         mapSamples: 16000,
         mapBrightness: 6,
         baseColor: [0.05, 0.08, 0.28],
+        mapSamples: 20000,
+        mapBrightness: 8,
         markerColor: [0.1, 0.8, 1],
         glowColor: [0.05, 0.15, 0.6],
         markers,
@@ -80,7 +82,7 @@ export function GlobeAceternity({ markers = [] }: GlobeProps) {
   }, []) // eslint-disable-line
 
   return (
-    <div style={{ width: '100%', aspectRatio: '1/1', position: 'relative', maxWidth: 700, margin: '0 auto' }}>
+    <div style={{ width: '100%', aspectRatio: '1/1', position: 'relative', maxWidth: 600, margin: '0 auto', overflow: 'visible' }}>
       <canvas
         ref={canvasRef}
         onPointerDown={(e) => {
