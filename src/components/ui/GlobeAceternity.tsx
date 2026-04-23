@@ -34,7 +34,21 @@ function latLngToXY(lat: number, lng: number, w: number, h: number): [number, nu
   return [x, y]
 }
 
-function drawGlobe(canvas: HTMLCanvasElement, markers: Marker[], phi: number) {
+// Cache de la texture
+let earthImageCache: HTMLImageElement | null = null
+
+function loadEarthImage(): Promise<HTMLImageElement> {
+  return new Promise((resolve) => {
+    if (earthImageCache) { resolve(earthImageCache); return }
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    img.onload = () => { earthImageCache = img; resolve(img) }
+    img.onerror = () => resolve(img) // fallback silencieux
+    img.src = '/earth-night.jpg'
+  })
+}
+
+function drawGlobe(canvas: HTMLCanvasElement, markers: Marker[], phi: number, earthImg?: HTMLImageElement | null) {
   const ctx = canvas.getContext('2d')
   if (!ctx) return
   const w = canvas.width
@@ -45,15 +59,30 @@ function drawGlobe(canvas: HTMLCanvasElement, markers: Marker[], phi: number) {
 
   ctx.clearRect(0, 0, w, h)
 
-  // Fond globe
-  const grad = ctx.createRadialGradient(cx - r * 0.3, cy - r * 0.3, r * 0.1, cx, cy, r)
-  grad.addColorStop(0, '#1a2a6c')
-  grad.addColorStop(0.5, '#0a1540')
-  grad.addColorStop(1, '#040a20')
+  // Fond globe avec texture de la terre
+  ctx.save()
   ctx.beginPath()
   ctx.arc(cx, cy, r, 0, Math.PI * 2)
-  ctx.fillStyle = grad
-  ctx.fill()
+  ctx.clip()
+
+  if (earthImg && earthImg.complete && earthImg.naturalWidth > 0) {
+    // Dessiner la texture avec rotation phi
+    const imgW = earthImg.naturalWidth
+    const offsetX = ((phi / (Math.PI * 2)) % 1) * r * 2
+    // Deux copies pour le défilement
+    ctx.drawImage(earthImg, cx - r - offsetX, cy - r, r * 2, r * 2)
+    ctx.drawImage(earthImg, cx - r - offsetX + r * 2, cy - r, r * 2, r * 2)
+    ctx.drawImage(earthImg, cx - r - offsetX - r * 2, cy - r, r * 2, r * 2)
+  } else {
+    // Fallback : fond bleu marine
+    const grad = ctx.createRadialGradient(cx - r * 0.3, cy - r * 0.3, r * 0.1, cx, cy, r)
+    grad.addColorStop(0, '#1a2a6c')
+    grad.addColorStop(0.5, '#0a1540')
+    grad.addColorStop(1, '#040a20')
+    ctx.fillStyle = grad
+    ctx.fillRect(cx - r, cy - r, r * 2, r * 2)
+  }
+  ctx.restore()
 
   // Halo
   const halo = ctx.createRadialGradient(cx, cy, r * 0.9, cx, cy, r * 1.15)
@@ -228,9 +257,12 @@ export function GlobeAceternity({ markers = [] }: GlobeProps) {
     resize()
     window.addEventListener('resize', resize)
 
+    let earthImg: HTMLImageElement | null = null
+    loadEarthImage().then(img => { earthImg = img })
+
     const animate = () => {
       if (!isDragging.current) phiRef.current += 0.003
-      drawGlobe(canvas, markers, phiRef.current)
+      drawGlobe(canvas, markers, phiRef.current, earthImg)
       animRef.current = requestAnimationFrame(animate)
     }
     animRef.current = requestAnimationFrame(animate)
