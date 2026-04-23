@@ -1,6 +1,6 @@
 'use client'
+import { GlobeAceternity } from '@/components/ui/GlobeAceternity'
 import React, { useEffect, useRef, useState, useCallback } from 'react'
-import createGlobe from 'cobe'
 import { Page, Badge, Text } from '@shopify/polaris'
 
 // Visiteurs en ligne (vert)
@@ -30,7 +30,7 @@ const MOCK_TOP_LOCATIONS = [
   { city: 'Tokyo, Japon', sessions: 1, pct: 25 },
 ]
 
-function CobeGlobe({ online, orders }: { online: typeof ONLINE_VISITORS; orders: typeof ORDER_CITIES }) {
+: { online: typeof ONLINE_VISITORS; orders: typeof ORDER_CITIES }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const globeRef = useRef<any>(null)
   const phiRef = useRef(0)
@@ -246,7 +246,12 @@ export default function LivePage() {
             <Text as="h2" variant="headingSm" fontWeight="semibold">Visiteurs dans le monde</Text>
             <Badge tone="success">{`${stats.online} en ligne`}</Badge>
           </div>
-          <CobeGlobe online={ONLINE_VISITORS} orders={ORDER_CITIES} />
+          <GlobeAceternity
+            markers={[
+              ...ONLINE_VISITORS.map(v => ({ location: [v.lat, v.lng] as [number,number], size: 0.1, color: [0.2, 1, 0.4] as [number,number,number] })),
+              ...ORDER_CITIES.map(o => ({ location: [o.lat, o.lng] as [number,number], size: 0.08, color: [0.2, 0.6, 1] as [number,number,number] })),
+            ]}
+          />
           {/* Activité en cours */}
           <div style={{ marginTop: 16, borderTop: '1px solid #f1f1f1', paddingTop: 12 }}>
             <div style={{ fontSize: 12, color: '#6d7175', marginBottom: 8 }}>Activité en cours</div>
