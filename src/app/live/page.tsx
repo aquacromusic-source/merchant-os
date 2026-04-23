@@ -1,5 +1,5 @@
 'use client'
-import { GlobeAceternity } from '@/components/ui/GlobeAceternity'
+import Spline from '@splinetool/react-spline'
 import React, { useEffect, useRef, useState, useCallback } from 'react'
 import { Page, Badge, Text } from '@shopify/polaris'
 
@@ -154,12 +154,12 @@ export default function LivePage() {
             <Text as="h2" variant="headingSm" fontWeight="semibold">Visiteurs dans le monde</Text>
             <Badge tone="success">{`${stats.online} en ligne`}</Badge>
           </div>
-          <GlobeAceternity
-            markers={[
-              ...ONLINE_VISITORS.map(v => ({ location: [v.lat, v.lng] as [number,number], size: 0.1, color: [0.2, 1, 0.4] as [number,number,number] })),
-              ...ORDER_CITIES.map(o => ({ location: [o.lat, o.lng] as [number,number], size: 0.08, color: [0.2, 0.6, 1] as [number,number,number] })),
-            ]}
-          />
+          <div style={{ width: '100%', height: 500, borderRadius: 12, overflow: 'hidden' }}>
+            <Spline
+              scene="https://prod.spline.design/6be70c79-514c-4bd8-abcf-a56398a26493/scene.splinecode"
+              style={{ width: '100%', height: '100%' }}
+            />
+          </div>
           {/* Activité en cours */}
           <div style={{ marginTop: 16, borderTop: '1px solid #f1f1f1', paddingTop: 12 }}>
             <div style={{ fontSize: 12, color: '#6d7175', marginBottom: 8 }}>Activité en cours</div>
