@@ -168,25 +168,13 @@ export default function LivePage() {
             <Text as="h2" variant="headingSm" fontWeight="semibold">Visiteurs dans le monde</Text>
             <Badge tone="success">{`${stats.online} en ligne`}</Badge>
           </div>
-          <div style={{ width: '100%', height: 520, borderRadius: 12, overflow: 'hidden', position: 'relative', background: '#0a1628' }}>
-            <iframe
-              src="https://my.spline.design/PtFPMZcnsWRiCbzJ/"
-              width="100%"
-              height="100%"
-              style={{ border: 'none', borderRadius: 12 }}
-              allow="autoplay; fullscreen"
-              loading="eager"
-              title="Globe Live View"
+          <div style={{ width: '100%', height: 520, borderRadius: 12, overflow: 'hidden', background: 'transparent' }}>
+            <GlobeAceternity
+              markers={[
+                ...ONLINE_VISITORS.map(v => ({ location: [v.lat, v.lng] as [number,number], size: 0.12, color: [0.2, 1.0, 0.4] as [number,number,number] })),
+                ...ORDER_CITIES.map(o => ({ location: [o.lat, o.lng] as [number,number], size: 0.09, color: [0.2, 0.55, 1.0] as [number,number,number] })),
+              ]}
             />
-            {/* Points visiteurs superposés */}
-            <div style={{ position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 14, background: 'rgba(0,0,0,0.7)', padding: '6px 16px', borderRadius: 20, backdropFilter: 'blur(4px)', zIndex: 10 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: 'white' }}>
-                <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#33e66a' }}/> En ligne
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: 'white' }}>
-                <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#3380ff' }}/> Commandes
-              </div>
-            </div>
           </div>
           {/* Activité en cours */}
           <div style={{ marginTop: 16, borderTop: '1px solid #f1f1f1', paddingTop: 12 }}>
