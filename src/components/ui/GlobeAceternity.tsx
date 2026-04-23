@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useEffect, useRef, useState } from 'react'
-import createGlobe from 'cobe'
+// globe.gl pour les arcs et rings
 
 interface GlobeProps {
   markers?: { location: [number, number]; size: number; color?: [number, number, number] }[]
@@ -37,29 +37,6 @@ export function GlobeAceternity({ markers = [] }: GlobeProps) {
 
       let globe: any
       try {
-        globe = (createGlobe as any)(canvasRef.current, {
-          devicePixelRatio: 2,
-          width: w * 2,
-          height: w * 2,
-        phi: 0.6,
-        theta: 0.15,
-        dark: 1,
-        diffuse: 1.2,
-        mapSamples: 20000,
-        mapBrightness: 8,
-        baseColor: [0.05, 0.08, 0.28],
-        markerColor: [0.1, 0.8, 1],
-        glowColor: [0.05, 0.15, 0.6],
-        markers,
-        onRender: (state: Record<string, any>) => {
-          if (!pointerInteracting.current) {
-            phiRef.current += 0.003
-          }
-          state.phi = phiRef.current + rotationRef.current
-          state.width = widthRef.current * 2
-          state.height = widthRef.current * 2
-        },
-      })
 
         setTimeout(() => {
           if (canvasRef.current) canvasRef.current.style.opacity = '1'
