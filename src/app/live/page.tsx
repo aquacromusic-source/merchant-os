@@ -170,7 +170,7 @@ export default function LivePage() {
           </div>
           <div style={{ width: '100%', height: 520, borderRadius: 12, overflow: 'hidden', position: 'relative', background: '#0a1628' }}>
             <iframe
-              src="https://my.spline.design/6be70c79-514c-4bd8-abcf-a56398a26493/"
+              src="https://my.spline.design/PtFPMZcnsWRiCbzJ/"
               width="100%"
               height="100%"
               style={{ border: 'none', borderRadius: 12 }}
