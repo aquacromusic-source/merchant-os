@@ -1,5 +1,5 @@
 'use client'
-import Spline from '@splinetool/react-spline'
+
 import React, { useEffect, useRef, useState, useCallback } from 'react'
 import { Page, Badge, Text } from '@shopify/polaris'
 
@@ -154,10 +154,15 @@ export default function LivePage() {
             <Text as="h2" variant="headingSm" fontWeight="semibold">Visiteurs dans le monde</Text>
             <Badge tone="success">{`${stats.online} en ligne`}</Badge>
           </div>
-          <div style={{ width: '100%', height: 500, borderRadius: 12, overflow: 'hidden' }}>
-            <Spline
-              scene="https://prod.spline.design/6be70c79-514c-4bd8-abcf-a56398a26493/scene.splinecode"
-              style={{ width: '100%', height: '100%' }}
+          <div style={{ width: '100%', height: 500, borderRadius: 12, overflow: 'hidden', background: '#000' }}>
+            <iframe
+              src="https://my.spline.design/6be70c79-514c-4bd8-abcf-a56398a26493/"
+              frameBorder="0"
+              width="100%"
+              height="100%"
+              style={{ border: 'none' }}
+              allow="autoplay"
+              loading="lazy"
             />
           </div>
           {/* Activité en cours */}
