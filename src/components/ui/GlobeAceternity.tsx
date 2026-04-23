@@ -1,82 +1,75 @@
 'use client'
 
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import createGlobe from 'cobe'
-import { useSpring } from 'react-spring'
 
 interface GlobeProps {
   markers?: { location: [number, number]; size: number; color?: [number, number, number] }[]
-  className?: string
 }
 
-export function GlobeAceternity({ markers = [], className }: GlobeProps) {
+export function GlobeAceternity({ markers = [] }: GlobeProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const pointerInteracting = useRef<number | null>(null)
-  const pointerInteractionMovement = useRef(0)
   const phiRef = useRef(0)
   const widthRef = useRef(0)
-
-  const [{ r }, api] = useSpring(() => ({
-    r: 0,
-    config: { mass: 1, tension: 280, friction: 40, precision: 0.001 },
-  }))
+  const rotationRef = useRef(0)
 
   useEffect(() => {
+    if (!canvasRef.current) return
+
     const onResize = () => {
-      if (canvasRef.current) widthRef.current = canvasRef.current.offsetWidth
+      if (canvasRef.current) {
+        widthRef.current = canvasRef.current.offsetWidth
+      }
     }
     window.addEventListener('resize', onResize)
     onResize()
 
-    const globe = (createGlobe as any)(canvasRef.current, {
-      devicePixelRatio: 2,
-      width: widthRef.current * 2,
-      height: widthRef.current * 2,
-      phi: 0.6,
-      theta: 0.15,
-      dark: 1,
-      diffuse: 1.2,
-      mapSamples: 16000,
-      mapBrightness: 6,
-      baseColor: [0.05, 0.08, 0.28],      // bleu marine foncé
-      markerColor: [0.2, 0.85, 0.95],      // cyan
-      glowColor: [0.05, 0.15, 0.6],         // halo bleu
-      markers,
-      onRender: (state: Record<string, any>) => {
-        if (!pointerInteracting.current) phiRef.current += 0.003
-        state.phi = phiRef.current + r.get()
-        state.width = widthRef.current * 2
-        state.height = widthRef.current * 2
-      },
-    })
+    let globe: any
+    try {
+      globe = (createGlobe as any)(canvasRef.current, {
+        devicePixelRatio: 2,
+        width: widthRef.current * 2,
+        height: widthRef.current * 2,
+        phi: 0.6,
+        theta: 0.15,
+        dark: 1,
+        diffuse: 1.2,
+        mapSamples: 16000,
+        mapBrightness: 6,
+        baseColor: [0.05, 0.08, 0.28],
+        markerColor: [0.1, 0.8, 1],
+        glowColor: [0.05, 0.15, 0.6],
+        markers,
+        onRender: (state: Record<string, any>) => {
+          if (!pointerInteracting.current) {
+            phiRef.current += 0.003
+          }
+          state.phi = phiRef.current + rotationRef.current
+          state.width = widthRef.current * 2
+          state.height = widthRef.current * 2
+        },
+      })
 
-    setTimeout(() => {
-      if (canvasRef.current) canvasRef.current.style.opacity = '1'
-    }, 100)
+      setTimeout(() => {
+        if (canvasRef.current) canvasRef.current.style.opacity = '1'
+      }, 200)
+    } catch (e) {
+      console.error('Globe error:', e)
+    }
 
     return () => {
-      globe.destroy()
+      globe?.destroy()
       window.removeEventListener('resize', onResize)
     }
-  }, [markers])
+  }, []) // eslint-disable-line
 
   return (
-    <div
-      style={{
-        width: '100%',
-        maxWidth: 800,
-        aspectRatio: '1/1',
-        margin: '0 auto',
-        position: 'relative',
-        background: 'black',
-        borderRadius: '50%',
-        overflow: 'hidden',
-      }}
-    >
+    <div style={{ width: '100%', aspectRatio: '1/1', position: 'relative', maxWidth: 700, margin: '0 auto' }}>
       <canvas
         ref={canvasRef}
         onPointerDown={(e) => {
-          pointerInteracting.current = e.clientX - pointerInteractionMovement.current
+          pointerInteracting.current = e.clientX
           if (canvasRef.current) canvasRef.current.style.cursor = 'grabbing'
         }}
         onPointerUp={() => {
@@ -85,31 +78,36 @@ export function GlobeAceternity({ markers = [], className }: GlobeProps) {
         }}
         onPointerOut={() => {
           pointerInteracting.current = null
-          if (canvasRef.current) canvasRef.current.style.cursor = 'grab'
         }}
         onMouseMove={(e) => {
           if (pointerInteracting.current !== null) {
-            const delta = e.clientX - pointerInteracting.current
-            pointerInteractionMovement.current = delta
-            api.start({ r: delta / 200 })
-          }
-        }}
-        onTouchMove={(e) => {
-          if (pointerInteracting.current !== null && e.touches[0]) {
-            const delta = e.touches[0].clientX - pointerInteracting.current
-            pointerInteractionMovement.current = delta
-            api.start({ r: delta / 100 })
+            const delta = (e.clientX - pointerInteracting.current) / 200
+            rotationRef.current = delta
           }
         }}
         style={{
           width: '100%',
           height: '100%',
           cursor: 'grab',
-          contain: 'layout paint size',
           opacity: 0,
           transition: 'opacity 1s ease',
         }}
       />
+      {/* Légende */}
+      <div style={{
+        position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)',
+        display: 'flex', gap: 14, background: 'rgba(0,0,0,0.6)',
+        padding: '5px 14px', borderRadius: 20, backdropFilter: 'blur(4px)',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: 'white' }}>
+          <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#33e66a' }}/>
+          En ligne
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: 'white' }}>
+          <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#3380ff' }}/>
+          Commandes
+        </div>
+      </div>
     </div>
   )
 }
