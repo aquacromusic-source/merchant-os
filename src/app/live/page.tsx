@@ -158,8 +158,7 @@ export default function LivePage() {
         {/* DROITE — Globe Cobe */}
         <div style={{ background: '#000000', borderRadius: 12, overflow: 'hidden', position: 'sticky', top: 16, padding: 0, border: 'none' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <span style={{ fontSize: 14, fontWeight: 600, color: 'white' }}>Visiteurs dans le monde</span>
-            <span style={{ background: 'rgba(57,255,20,0.15)', color: '#39ff14', border: '1px solid rgba(57,255,20,0.4)', borderRadius: 20, padding: '3px 12px', fontSize: 12, fontWeight: 600 }}>● {stats.online} en ligne</span>
+
           </div>
           <div style={{ width: '100%', background: 'transparent' }}>
             <div style={{ position: 'relative', width: '100%', aspectRatio: '1/1', overflow: 'hidden' }}>
