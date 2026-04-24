@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Page,
@@ -32,8 +32,9 @@ import {
   PersonIcon,
   ChevronRightIcon,
 } from '@shopify/polaris-icons'
-import { analytics, orders as allOrders } from '@/lib/data'
+import { analytics, orders as rawOrders } from '@/lib/data'
 import { money } from '@/lib/utils'
+import { useSite } from '@/contexts/SiteContext'
 import { Sparkline } from '@/components/ui/Sparkline'
 import { AreaChart } from '@/components/ui/AreaChart'
 import { Donut } from '@/components/ui/Donut'
@@ -95,6 +96,8 @@ const DATE_RANGES = DATE_GROUPS.flatMap(g => g.items)
 
 export default function DashboardPage() {
   const router = useRouter()
+  const { activeSite } = useSite()
+  const allOrders = useMemo(() => rawOrders.filter(o => o.site_id === activeSite), [activeSite])
   const A = analytics
 
   const [dateRange, setDateRange] = useState('30d')

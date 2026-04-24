@@ -2,6 +2,7 @@
 
 import React, { useState, useCallback } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
+import { useSite, SiteId } from '@/contexts/SiteContext'
 import {
   Frame,
   Navigation,
@@ -54,7 +55,7 @@ const NOTIFICATIONS = [
   { id: '6', title: 'Nouveau message client', body: 'Dawid B. — question sur la livraison', time: 'il y a 5 h', tone: undefined, read: true },
 ]
 
-const SITES = [
+const SITES: { label: string; value: SiteId }[] = [
   { label: 'Gaming Posters', value: 'gaming-posters' },
   { label: 'STRAP.', value: 'strap' },
   { label: 'PDF Guide Store', value: 'pdf-guide-store' },
@@ -63,12 +64,12 @@ const SITES = [
 export function Shell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
+  const { activeSite, setActiveSite, activeSiteLabel } = useSite()
   const [mobileNavigationActive, setMobileNavigationActive] = useState(false)
   const [searchActive, setSearchActive] = useState(false)
   const [searchValue, setSearchValue] = useState('')
   const [userMenuActive, setUserMenuActive] = useState(false)
   const [notifOpen, setNotifOpen] = useState(false)
-  const [activeSite, setActiveSite] = useState('gaming-posters')
   // Toujours partir de vide — le useEffect charge depuis localStorage
   const [notifications, setNotifications] = useState<any[]>([])
 
@@ -274,8 +275,6 @@ export function Shell({ children }: { children: React.ReactNode }) {
     </div>
   )
 
-  const activeSiteLabel = SITES.find(s => s.value === activeSite)?.label ?? 'Gaming Posters'
-
   const contextControlMarkup = (
     <div
       className="mos-context-control"
@@ -327,7 +326,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
       <select
         value={activeSite}
         onChange={(e) => {
-          setActiveSite(e.target.value)
+          setActiveSite(e.target.value as SiteId)
         }}
         style={{
           appearance: 'none',

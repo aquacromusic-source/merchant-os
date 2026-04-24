@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Page,
@@ -24,20 +24,25 @@ import {
   PlusIcon,
   SearchIcon,
 } from '@shopify/polaris-icons'
-import { customers } from '@/lib/data'
+import { customers as allCustomers } from '@/lib/data'
 import { money } from '@/lib/utils'
+import { useSite } from '@/contexts/SiteContext'
 
 export default function CustomersPage() {
   const router = useRouter()
+  const { activeSite } = useSite()
+  const customers = useMemo(() => allCustomers.filter(c => c.site_id === activeSite), [activeSite])
   const [selectedTab, setSelectedTab] = useState(0)
   const [searchValue, setSearchValue] = useState('')
 
-  const tabs = [
+  useEffect(() => { setSelectedTab(0) }, [activeSite])
+
+  const tabs = useMemo(() => [
     { id: 'all', content: `Tous (${customers.length})` },
     { id: 'subscribed', content: `Abonnés (${customers.filter(c => c.subscribed).length})` },
     { id: 'vip', content: `VIP (${customers.filter(c => c.tags.includes('VIP')).length})` },
     { id: 'risk', content: `À risque (${customers.filter(c => c.status === 'À risque').length})` },
-  ]
+  ], [customers])
 
   const tabId = tabs[selectedTab]?.id || 'all'
 

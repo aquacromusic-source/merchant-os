@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useCallback, useMemo } from 'react'
+import React, { useState, useCallback, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Page,
@@ -31,17 +31,20 @@ import {
   SearchIcon,
   FilterIcon,
 } from '@shopify/polaris-icons'
-import { orders } from '@/lib/data'
+import { orders as allOrders } from '@/lib/data'
 import { money } from '@/lib/utils'
 import { Sparkline } from '@/components/ui/Sparkline'
+import { useSite } from '@/contexts/SiteContext'
 
-const TABS = [
-  { id: 'all', content: `Toutes (${orders.length})` },
-  { id: 'unfulfilled', content: `Non traitées (${orders.filter(o => o.fulfill.key === 'unfulfilled').length})` },
-  { id: 'unpaid', content: `Non payées (${orders.filter(o => ['pending', 'authorized'].includes(o.payment.key)).length})` },
-  { id: 'open', content: 'Ouvertes (18)' },
-  { id: 'closed', content: 'Fermées (426)' },
-]
+function buildTabs(orders: typeof allOrders) {
+  return [
+    { id: 'all', content: `Toutes (${orders.length})` },
+    { id: 'unfulfilled', content: `Non traitées (${orders.filter(o => o.fulfill.key === 'unfulfilled').length})` },
+    { id: 'unpaid', content: `Non payées (${orders.filter(o => ['pending', 'authorized'].includes(o.payment.key)).length})` },
+    { id: 'open', content: 'Ouvertes (18)' },
+    { id: 'closed', content: 'Fermées (426)' },
+  ]
+}
 
 function paymentBadge(tone: string, label: string) {
   const toneMap: Record<string, 'success' | 'warning' | 'critical' | 'info' | 'attention'> = {
@@ -52,8 +55,14 @@ function paymentBadge(tone: string, label: string) {
 
 export default function OrdersPage() {
   const router = useRouter()
+  const { activeSite } = useSite()
+  const orders = useMemo(() => allOrders.filter(o => o.site_id === activeSite), [activeSite])
+  const TABS = useMemo(() => buildTabs(orders), [orders])
   const [selectedTab, setSelectedTab] = useState(0)
   const [searchValue, setSearchValue] = useState('')
+
+  // Reset tab on site change
+  useEffect(() => { setSelectedTab(0) }, [activeSite])
 
   // Advanced filters state
   const [filterModalOpen, setFilterModalOpen] = useState(false)

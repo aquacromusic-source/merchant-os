@@ -1,5 +1,9 @@
 // Merchant OS — Mock Data (TypeScript)
 
+export type SiteId = 'gaming-posters' | 'strap' | 'pdf-guide-store'
+
+const SITE_IDS: SiteId[] = ['gaming-posters', 'strap', 'pdf-guide-store']
+
 export interface Product {
   id: string
   title: string
@@ -15,6 +19,7 @@ export interface Product {
   type: string
   collections: number
   updated: string
+  site_id: SiteId
 }
 
 export interface Customer {
@@ -29,6 +34,7 @@ export interface Customer {
   tags: string[]
   subscribed: boolean
   status: string
+  site_id: SiteId
 }
 
 export interface OrderStatus {
@@ -53,6 +59,7 @@ export interface Order {
   tags: string[]
   risk: 'low' | 'medium' | 'high'
   location: string
+  site_id: SiteId
 }
 
 export interface Collection {
@@ -195,6 +202,7 @@ export const products: Product[] = productSeeds.map((s, i) => ({
   type: s[1],
   collections: i % 5 === 0 ? 2 : 1,
   updated: `Il y a ${1 + (i%22)} jours`,
+  site_id: SITE_IDS[i % 3],
 }))
 
 export const customers: Customer[] = Array.from({ length: 26 }, (_, i) => {
@@ -214,6 +222,7 @@ export const customers: Customer[] = Array.from({ length: 26 }, (_, i) => {
     tags: i % 4 === 0 ? ["VIP","Abonné"] : (i % 3 === 0 ? ["Gros panier"] : (i % 2 === 0 ? ["Nouveau"] : [])),
     subscribed: i % 3 !== 0,
     status: i % 11 === 0 ? "À risque" : "Actif",
+    site_id: SITE_IDS[i % 3],
   }
 })
 
@@ -265,6 +274,7 @@ export const orders: Order[] = Array.from({ length: 32 }, (_, i) => {
     tags: i % 9 === 0 ? ["Abonnement"] : (i % 5 === 0 ? ["Cadeau"] : []),
     risk: i % 13 === 0 ? "high" : (i % 7 === 0 ? "medium" : "low"),
     location: i % 3 === 0 ? "Valencia" : (i % 2 === 0 ? "Lille · Entrepôt A" : "Lyon · Studio"),
+    site_id: SITE_IDS[i % 3],
   }
 })
 

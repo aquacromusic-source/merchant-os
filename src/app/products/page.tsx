@@ -33,8 +33,9 @@ import {
   LayoutPopupIcon,
   ListBulletedIcon,
 } from '@shopify/polaris-icons'
-import { products } from '@/lib/data'
+import { products as mockProducts } from '@/lib/data'
 import { money } from '@/lib/utils'
+import { useSite } from '@/contexts/SiteContext'
 
 function statusBadge(status: string) {
   const toneMap: Record<string, 'success' | 'warning' | undefined> = {
@@ -46,6 +47,7 @@ function statusBadge(status: string) {
 
 export default function ProductsPage() {
   const router = useRouter()
+  const { activeSite } = useSite()
   const [allProducts, setAllProducts] = useState<any[]>([])
   const [totalProducts, setTotalProducts] = useState(0)
   const [loadingProducts, setLoadingProducts] = useState(true)
@@ -53,25 +55,35 @@ export default function ProductsPage() {
   const [currentPage, setCurrentPage] = useState(0)
   const PAGE_SIZE = 100
 
-  const fetchProducts = (page: number, append = false) => {
+  const fetchProducts = useCallback((page: number, append = false) => {
     setLoadingProducts(true)
-    fetch(`/api/products?limit=${PAGE_SIZE}&offset=${page * PAGE_SIZE}`)
-      .then(r => r.json())
-      .then(data => {
-        if (append) {
-          setAllProducts(prev => [...prev, ...(data.products || [])])
-        } else {
-          setAllProducts(data.products || [])
-        }
-        setTotalProducts(data.total || 0)
-        setCurrentPage(page)
-      })
-      .finally(() => setLoadingProducts(false))
-  }
+    if (activeSite === 'gaming-posters') {
+      fetch(`/api/products?limit=${PAGE_SIZE}&offset=${page * PAGE_SIZE}&site=${activeSite}`)
+        .then(r => r.json())
+        .then(data => {
+          if (append) {
+            setAllProducts(prev => [...prev, ...(data.products || [])])
+          } else {
+            setAllProducts(data.products || [])
+          }
+          setTotalProducts(data.total || 0)
+          setCurrentPage(page)
+        })
+        .finally(() => setLoadingProducts(false))
+    } else {
+      const filtered = mockProducts.filter(p => p.site_id === activeSite)
+      setAllProducts(filtered)
+      setTotalProducts(filtered.length)
+      setCurrentPage(0)
+      setLoadingProducts(false)
+    }
+  }, [activeSite])
 
   useEffect(() => {
+    setAllProducts([])
+    setCurrentPage(0)
     fetchProducts(0)
-  }, [])
+  }, [activeSite, fetchProducts])
   const [selectedTab, setSelectedTab] = useState(0)
   const [searchValue, setSearchValue] = useState('')
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')

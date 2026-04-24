@@ -1144,19 +1144,32 @@ html, body {
 .Polaris-TopBar {
   height: 60px !important;
   min-height: 60px !important;
+  max-height: 60px !important;
   box-sizing: border-box !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  display: flex !important;
+  align-items: center !important;
 }
 
 /* Forcer le Frame à respecter la hauteur 60px de la topbar */
 .Polaris-Frame__TopBar {
   height: 60px !important;
   min-height: 60px !important;
+  max-height: 60px !important;
 }
 .Polaris-Frame__Content {
   top: 60px !important;
 }
 .Polaris-Frame__Navigation {
   top: 60px !important;
+}
+
+/* Force all direct children of TopBar to respect 60px */
+.Polaris-TopBar > * {
+  height: 60px !important;
+  display: flex !important;
+  align-items: center !important;
 }
 
 /* Logo hover effect */
@@ -1177,7 +1190,8 @@ html, body {
   margin: 0 auto;
 }
 
-/* Espacement uniforme dans la zone droite */
+/* Gap 20px entre dropdown et bell dans la zone droite */
 .Polaris-TopBar__SecondaryMenu {
   margin-right: 4px;
+  gap: 20px !important;
 }
