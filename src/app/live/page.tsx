@@ -89,7 +89,7 @@ export default function LivePage() {
         @keyframes ping { 75%,100%{ transform:scale(1.8);opacity:0; } }
       `}</style>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '340px 1fr', gap: 20, alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '340px 1fr', gap: 20, alignItems: 'stretch' }}>
 
         {/* GAUCHE */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -157,7 +157,7 @@ export default function LivePage() {
         </div>
 
         {/* DROITE — Globe */}
-        <div style={{ background: '#000000', borderRadius: 12, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+        <div style={{ background: '#000000', borderRadius: 12, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', minHeight: 0 }}>
           {/* Blue glow behind globe */}
           <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '70%', height: '70%', borderRadius: '50%', background: 'radial-gradient(circle, rgba(51,128,255,0.35) 0%, rgba(51,128,255,0.12) 40%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
           <GlobeAceternity

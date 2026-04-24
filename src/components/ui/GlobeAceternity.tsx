@@ -16,8 +16,12 @@ export function GlobeAceternity({ markers = [] }: GlobeProps) {
 
     import('globe.gl').then(({ default: GlobeGL }) => {
       if (cancelled || !containerRef.current) return
-      const w = containerRef.current.clientWidth || 600
-      const h = containerRef.current.clientHeight || 600
+      const cw = containerRef.current.clientWidth || 600
+      const ch = containerRef.current.clientHeight || 600
+      // Use ~80% of available space, keep square (proportional)
+      const size = Math.round(Math.min(cw, ch) * 0.82)
+      const w = size
+      const h = size
 
       globe = new (GlobeGL as any)()(containerRef.current)
       globe
