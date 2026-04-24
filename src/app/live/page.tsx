@@ -157,7 +157,7 @@ export default function LivePage() {
         </div>
 
         {/* DROITE — Globe Cobe */}
-        <div style={{ background: '#000000', borderRadius: 12, overflow: 'hidden', position: 'sticky', top: 16, padding: '16px 0', border: 'none', height: 600, maxHeight: 600, aspectRatio: '1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ background: '#000000', borderRadius: 12, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '70vh', maxHeight: 700, minHeight: 500, aspectRatio: '1' }}>
           <GlobeAceternity
             markers={[
               ...ONLINE_VISITORS.map(v => ({ location: [v.lat, v.lng] as [number,number], size: 0.12, color: [0.2, 1.0, 0.4] as [number,number,number] })),
