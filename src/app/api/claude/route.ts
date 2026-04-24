@@ -1,4 +1,4 @@
-import { rateLimit, getClientIP } from '../../lib/rateLimit'
+import { rateLimit, getClientIP } from '@/lib/rateLimit'
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 
