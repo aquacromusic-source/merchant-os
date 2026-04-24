@@ -1,20 +1,8 @@
 'use client'
 
 import React, { useEffect, useRef, useState, useCallback } from 'react'
-import dynamic from 'next/dynamic'
 import { Page, Badge, Text } from '@shopify/polaris'
 
-const GlobeAceternity = dynamic(
-  () => import('@/components/ui/GlobeAceternity').then(m => ({ default: m.GlobeAceternity })),
-  {
-    ssr: false,
-    loading: () => (
-      <div style={{ width: '100%', height: 500, background: '#0a1628', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#00e5ff', fontSize: 12 }}>
-        Chargement du globe...
-      </div>
-    )
-  }
-)
 
 
 // Visiteurs en ligne (vert)
@@ -169,20 +157,28 @@ export default function LivePage() {
             <Badge tone="success">{`${stats.online} en ligne`}</Badge>
           </div>
           <div style={{ width: '100%', height: 500, borderRadius: 12, overflow: 'hidden', background: 'transparent' }}>
-            <div style={{ position: 'relative' }}>
-            <div style={{
-              position: 'absolute', inset: 0,
-              borderRadius: '50%',
-              boxShadow: '0 0 60px rgba(0,150,255,0.3), 0 0 120px rgba(0,100,200,0.15)',
-              pointerEvents: 'none', zIndex: 2,
-              top: '10%', left: '10%', right: '10%', bottom: '10%',
-            }}/>
-            <GlobeAceternity
-              markers={[
-                ...ONLINE_VISITORS.map(v => ({ location: [v.lat, v.lng] as [number,number], size: 0.12, color: [0.2, 1.0, 0.4] as [number,number,number] })),
-                ...ORDER_CITIES.map(o => ({ location: [o.lat, o.lng] as [number,number], size: 0.09, color: [0.2, 0.55, 1.0] as [number,number,number] })),
-              ]}
+            <div style={{ position: 'relative', width: '100%', aspectRatio: '1/1', overflow: 'hidden', borderRadius: 12 }}>
+            <iframe
+              src="https://my.spline.design/earthdayandnight-38KV2ZqAuqxAkELteeQEQPBo/"
+              style={{ width: '100%', height: '100%', border: 'none', display: 'block', position: 'absolute', inset: 0 }}
+              allow="autoplay"
+              loading="lazy"
+              title="Globe Terre"
             />
+            {/* Légende */}
+            <div style={{
+              position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)',
+              display: 'flex', gap: 14, background: 'rgba(0,0,0,0.7)',
+              padding: '5px 14px', borderRadius: 20, zIndex: 10,
+              backdropFilter: 'blur(4px)',
+            }}>
+              {[['#33e66a', 'En ligne'], ['#3380ff', 'Commandes']].map(([color, label]) => (
+                <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: 'white' }}>
+                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: color }}/>
+                  {label}
+                </div>
+              ))}
+            </div>
             </div>
           </div>
           {/* Activité en cours */}
