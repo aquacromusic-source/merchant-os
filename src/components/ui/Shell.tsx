@@ -146,12 +146,14 @@ export function Shell({ children }: { children: React.ReactNode }) {
   )
 
   const searchFieldMarkup = (
-    <TopBar.SearchField
-      onChange={handleSearchChange}
-      value={searchValue}
-      placeholder="Rechercher produits, commandes, clients…"
-      showFocusBorder
-    />
+    <div style={{ maxWidth: 450, width: '100%' }}>
+      <TopBar.SearchField
+        onChange={handleSearchChange}
+        value={searchValue}
+        placeholder="Rechercher produits, commandes, clients…"
+        showFocusBorder
+      />
+    </div>
   )
 
   const notifBellMarkup = (

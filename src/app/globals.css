@@ -1181,13 +1181,18 @@ html, body {
   box-shadow: 0 2px 8px rgba(99,102,241,0.35), inset 0 0 0 1px rgba(255,255,255,0.2) !important;
 }
 
-/* Centrer la search pill Polaris */
+/* Centrer la search pill Polaris — force 450px max */
 .Polaris-TopBar__SearchField {
-  flex: 1;
+  flex: 0 1 450px !important;
   display: flex;
   justify-content: center;
   max-width: 450px !important;
+  width: 450px !important;
   margin: 0 auto;
+}
+.Polaris-TopBar__SearchField > div,
+.Polaris-TopBar__SearchField input {
+  max-width: 450px !important;
 }
 
 /* Gap 20px entre dropdown et bell dans la zone droite */
