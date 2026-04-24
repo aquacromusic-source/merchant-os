@@ -41,6 +41,10 @@ export function SiteProvider({ children }: { children: React.ReactNode }) {
 
   const activeSiteLabel = SITE_LABELS[activeSite]
 
+  // Don't render children until we've read the saved site from localStorage
+  // to prevent a flash-fetch with the wrong default site
+  if (!hydrated) return null
+
   return (
     <SiteContext.Provider value={{ activeSite, setActiveSite, activeSiteLabel }}>
       {children}
