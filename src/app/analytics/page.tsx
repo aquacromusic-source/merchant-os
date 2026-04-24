@@ -1,5 +1,5 @@
 'use client'
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Page,
   Layout,
@@ -28,19 +28,29 @@ import { money } from '@/lib/utils'
 import { Sparkline } from '@/components/ui/Sparkline'
 import { AreaChart } from '@/components/ui/AreaChart'
 import { Donut } from '@/components/ui/Donut'
+import { useSite } from '@/contexts/SiteContext'
 
 const PALETTE = ['oklch(0.58 0.15 45)', 'oklch(0.62 0.14 195)', 'oklch(0.72 0.12 85)', 'oklch(0.60 0.14 155)', 'oklch(0.65 0.16 25)', 'oklch(0.55 0.10 320)']
 
 export default function AnalyticsPage() {
   const A = analytics
+  const { activeSite } = useSite()
+  const [stats, setStats] = useState<any>(null)
+
+  useEffect(() => {
+    fetch(`/api/stats?site=${activeSite}`)
+      .then(r => r.json())
+      .then(setStats)
+      .catch(() => {})
+  }, [activeSite])
 
   const kpis = [
-    { l: 'Ventes totales', v: '30 580 €', d: '+11%', up: true },
-    { l: 'Commandes', v: '518', d: '+9%', up: true },
-    { l: 'Taux de conversion', v: '0,77 %', d: '+8%', up: true },
-    { l: 'Panier moyen', v: '59,03 €', d: '−2%', up: false },
-    { l: 'Retours', v: '24', d: '+3', up: false },
-    { l: 'Sessions', v: '46 820', d: '+5%', up: true },
+    { l: 'Valeur catalogue', v: stats ? money(stats.totalValue) : '—' },
+    { l: 'Produits', v: stats ? String(stats.totalProducts) : '—' },
+    { l: 'Produits actifs', v: stats ? String(stats.activeCount) : '—' },
+    { l: 'Brouillons', v: stats ? String(stats.draftCount) : '—' },
+    { l: 'Commandes', v: stats ? String(stats.orderCount) : '0' },
+    ...(stats?.totalStock !== null && stats?.totalStock !== undefined ? [{ l: 'Stock total', v: String(stats.totalStock) }] : []),
   ]
 
   const topProductRows = A.topProducts.map((p, i) => [
@@ -59,16 +69,12 @@ export default function AnalyticsPage() {
       ]}
     >
       <BlockStack gap="500">
-        <InlineGrid columns={6} gap="300">
+        <InlineGrid columns={kpis.length} gap="300">
           {kpis.map((k, i) => (
             <Card key={i}>
               <BlockStack gap="100">
                 <Text as="p" variant="bodySm" tone="subdued">{k.l}</Text>
-                <InlineStack gap="100" blockAlign="center">
-                  <Text as="p" variant="headingMd" fontWeight="bold">{k.v}</Text>
-                  <Text as="span" variant="bodySm" tone={k.up ? 'success' : 'critical'}>{k.d}</Text>
-                </InlineStack>
-                <Sparkline data={A.timeseries.map(v => v + (i * 2))} w={180} />
+                <Text as="p" variant="headingMd" fontWeight="bold">{k.v}</Text>
               </BlockStack>
             </Card>
           ))}

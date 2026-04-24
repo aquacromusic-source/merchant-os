@@ -28,7 +28,8 @@ import {
   ShareIcon,
   ViewIcon,
 } from '@shopify/polaris-icons'
-import { products, collections as allCollections } from '@/lib/data'
+import { collections as allCollections } from '@/lib/data'
+import { useSite } from '@/contexts/SiteContext'
 
 // ─── Mock extended product data ──────────────────────────────────────────────
 
@@ -454,64 +455,96 @@ function SEOPreview({ title, slug }: { title: string; slug: string }) {
 
 export default function ProductDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter()
+  const { activeSite } = useSite()
   const productId = params.id
-const fallbackProduct = products[4]
-  const p = products.find(x => x.id === productId) || fallbackProduct
 
   const [images, setImages] = useState(MOCK_IMAGES)
-  // Charger le vrai produit si c'est un slug Supabase
   const [realProduct, setRealProduct] = useState<any>(null)
-  useEffect(() => {
-    if (productId) {
-      fetch(`/api/products/${productId}`)
-        .then(r => r.json())
-        .then(data => {
-          if (data && data.title) {
-            setRealProduct(data)
-            setTitle(data.title)  // Mettre à jour le titre immédiatement
-            if (data.image_url) {
-              const realImg = { id: 'real-main', label: data.title, alt: data.title, format: 'JPG', dims: 'Original', size: '—', date: 'En ligne', url: data.image_url }
-              setImages(prev => [realImg, ...prev.filter(x => x.id !== 'real-main')])
-            }
-          }
-        })
-        .catch(() => {})
-    }
-  }, [productId])
+  const [loading, setLoading] = useState(true)
 
-  const productTitle = realProduct?.title || p.title || '...'
-  const productImage = realProduct?.image_url || null
-  
-  // Hooks AVANT tout return conditionnel
+  // All state hooks declared before any conditional logic
   const [title, setTitle] = useState('')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const [status, setStatus] = useState('live')
+  const [selectedVariant, setSelectedVariant] = useState<VariantRow | null>(null)
+  const [selectedImage, setSelectedImage] = useState<typeof MOCK_IMAGES[0] | null>(null)
+  const [activeTab, setActiveTab] = useState(0)
+  const [description, setDescription] = useState('')
+  const [category, setCategory] = useState('')
+  const [vendor, setVendor] = useState('')
+  const [productType, setProductType] = useState('')
+  const [themeTemplate, setThemeTemplate] = useState('produits-postersbase')
+  const [channelTags, setChannelTags] = useState(SALES_CHANNELS)
+  const [collectionTags, setCollectionTags] = useState<string[]>([])
+  const [productTags, setProductTags] = useState(PRODUCT_TAGS)
+
+  // Load real product from Supabase
+  useEffect(() => {
+    if (!productId) return
+    setLoading(true)
+    fetch(`/api/products/${productId}?site=${activeSite}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data && !data.error) {
+          setRealProduct(data)
+          const t = data.title || data.name || ''
+          setTitle(t)
+          setVendor(data.vendor || '')
+          setProductType(data.category || '')
+          setCategory(data.category || '')
+          setStatus(data.is_active === false || data.is_published === false ? 'draft' : 'live')
+          setDescription(data.description || data.seo_desc || '')
+          if (data.image_url || data.cover_url) {
+            const imgUrl = data.image_url || data.cover_url
+            const realImg = { id: 'real-main', label: t, alt: t, format: 'JPG', dims: 'Original', size: '—', date: 'En ligne', url: imgUrl }
+            setImages(prev => [realImg, ...prev.filter(x => x.id !== 'real-main')])
+          }
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [productId, activeSite])
+
+  const productTitle = title || '...'
+
   const handleSave = async () => {
     setSaving(true)
+    setSaveError(null)
     try {
-      // 1. Sauvegarder les métadonnées en DB
-      const res = await fetch(`/api/products/${p.id}`, {
-        method: 'PATCH',
+      const body: any = {
+        site: activeSite,
+        title,
+        status,
+      }
+      if (realProduct?.price !== undefined) body.price = realProduct.price
+      if (description) body.description = description
+      if (category) body.category = category
+
+      const res = await fetch(`/api/products/${productId}`, {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title,
-          tags: productTags,
-          collections: collectionTags,
-          status,
-          price: p.price,
-        }),
+        body: JSON.stringify(body),
       })
 
-      // 2. Uploader les nouvelles images (celles avec une URL blob:// locale)
+      if (!res.ok) {
+        const err = await res.json()
+        setSaveError(err.error || 'Erreur lors de la sauvegarde')
+        return
+      }
+
+      // Upload new local images
       const newLocalImages = images.filter(img => img.url && img.url.startsWith('blob:'))
       if (newLocalImages.length > 0) {
         const formData = new FormData()
+        formData.append('site', activeSite)
         for (const img of newLocalImages) {
           const response = await fetch(img.url)
           const blob = await response.blob()
           formData.append('images', blob, img.label)
         }
-        await fetch(`/api/products/${p.id}`, {
+        await fetch(`/api/products/${productId}`, {
           method: 'POST',
           body: formData,
         })
@@ -519,30 +552,14 @@ const fallbackProduct = products[4]
 
       setSaved(true)
       setTimeout(() => setSaved(false), 4000)
-    } catch (err) {
-      console.error('Save error:', err)
+    } catch (err: any) {
+      setSaveError(err.message || 'Erreur réseau')
     } finally {
       setSaving(false)
     }
   }
 
-  const [status, setStatus] = useState('live')
-  const [selectedVariant, setSelectedVariant] = useState<VariantRow | null>(null)
-  const [selectedImage, setSelectedImage] = useState<typeof MOCK_IMAGES[0] | null>(null)
-  const [activeTab, setActiveTab] = useState(0)
-  const [titleVal, setTitleVal] = useState(p.title)
-  const [description, setDescription] = useState(
-    `${p.title} — édition limitée, impression musée. Chaque tirage est réalisé sur papier haut grammage et encadré en aluminium.\n\n(Aucune réimpression ne sera effectuée.)`
-  )
-  const [category, setCategory] = useState('Affiches dans Affiches, reproductions...')
-  const [vendor, setVendor] = useState(p.vendor)
-  const [productType, setProductType] = useState(p.type)
-  const [themeTemplate, setThemeTemplate] = useState('produits-postersbase')
-  const [channelTags, setChannelTags] = useState(SALES_CHANNELS)
-  const [collectionTags, setCollectionTags] = useState<string[]>([])
-  const [productTags, setProductTags] = useState(PRODUCT_TAGS)
-
-  const slug = p.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+  const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
 
   const statusOptions = [
     { label: 'Actif', value: 'live' },
@@ -597,7 +614,12 @@ const fallbackProduct = products[4]
           <Layout>
             {saved && (
               <Layout.Section>
-                <Banner tone="success" onDismiss={() => setSaved(false)}>Modifications enregistrées ✓</Banner>
+                <Banner tone="success" onDismiss={() => setSaved(false)}>Modifications enregistrées avec succès.</Banner>
+              </Layout.Section>
+            )}
+            {saveError && (
+              <Layout.Section>
+                <Banner tone="critical" onDismiss={() => setSaveError(null)}>Erreur : {saveError}</Banner>
               </Layout.Section>
             )}
             {/* ── MAIN COLUMN ─────────────────────────────────────────────── */}
@@ -611,8 +633,8 @@ const fallbackProduct = products[4]
                       <BlockStack gap="300">
                         <TextField
                           label="Titre"
-                          value={titleVal}
-                          onChange={setTitleVal}
+                          value={title}
+                          onChange={setTitle}
                           autoComplete="off"
                         />
                         <div>
@@ -795,7 +817,7 @@ const fallbackProduct = products[4]
                   <Card>
                     <BlockStack gap="400">
                       <Text variant="headingMd" as="h2">Aperçu sur les moteurs de recherche</Text>
-                      <SEOPreview title={title || p.title} slug={slug} />
+                      <SEOPreview title={title} slug={slug} />
                     </BlockStack>
                   </Card>
                 )}
@@ -870,28 +892,6 @@ const fallbackProduct = products[4]
                       ))}
                     </div>
                     <Button variant="plain" size="slim">{`+${MARKETS.length - 5} autres`}</Button>
-                  </BlockStack>
-                </Card>
-
-                {/* Ventes 90 jours */}
-                <Card>
-                  <BlockStack gap="300">
-                    <Text variant="headingMd" as="h2">Ventes des 90 derniers jours</Text>
-                    <BlockStack gap="100">
-                      <InlineStack align="space-between">
-                        <InlineStack gap="100"><Text as="span" variant="bodySm">•</Text><Text as="span" variant="bodySm">Unités vendues</Text></InlineStack>
-                        <Text as="span" variant="bodySm" fontWeight="semibold">3</Text>
-                      </InlineStack>
-                      <InlineStack align="space-between">
-                        <InlineStack gap="100"><Text as="span" variant="bodySm">•</Text><Text as="span" variant="bodySm">Acheteurs</Text></InlineStack>
-                        <Text as="span" variant="bodySm" fontWeight="semibold">2</Text>
-                      </InlineStack>
-                      <InlineStack align="space-between">
-                        <InlineStack gap="100"><Text as="span" variant="bodySm">•</Text><Text as="span" variant="bodySm">Ventes nettes</Text></InlineStack>
-                        <Text as="span" variant="bodySm" fontWeight="semibold">63,10 €</Text>
-                      </InlineStack>
-                    </BlockStack>
-                    <Button variant="plain" size="slim">Afficher les détails</Button>
                   </BlockStack>
                 </Card>
 

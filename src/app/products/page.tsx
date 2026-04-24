@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useMemo, useCallback, useEffect } from 'react'
+import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Page,
@@ -17,6 +17,7 @@ import {
   TextField,
   Box,
   Modal,
+  Banner,
   ActionList,
   Popover,
   Thumbnail,
@@ -51,6 +52,9 @@ export default function ProductsPage() {
   const [totalProducts, setTotalProducts] = useState(0)
   const [loadingProducts, setLoadingProducts] = useState(true)
 
+  // Real stats from Supabase
+  const [stats, setStats] = useState<any>(null)
+
   const [currentPage, setCurrentPage] = useState(0)
   const PAGE_SIZE = 100
 
@@ -74,6 +78,11 @@ export default function ProductsPage() {
     setAllProducts([])
     setCurrentPage(0)
     fetchProducts(0)
+    // Fetch real stats
+    fetch(`/api/stats?site=${activeSite}`)
+      .then(r => r.json())
+      .then(setStats)
+      .catch(() => {})
   }, [activeSite, fetchProducts])
   const [selectedTab, setSelectedTab] = useState(0)
   const [searchValue, setSearchValue] = useState('')
@@ -82,6 +91,9 @@ export default function ProductsPage() {
   // Import modal
   const [importModalOpen, setImportModalOpen] = useState(false)
   const [importFile, setImportFile] = useState('')
+  const [importLoading, setImportLoading] = useState(false)
+  const [importResult, setImportResult] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const tabs = [
     { id: 'all', content: `Tous (${totalProducts})` },
@@ -246,22 +258,36 @@ export default function ProductsPage() {
       ]}
     >
       <BlockStack gap="500">
-        <InlineGrid columns={5} gap="300">
-          {[
-            { l: 'Période', v: '30 jours' },
-            { l: 'Taux de vente moyen', v: '0,1 %' },
-            { l: 'Analyse ABC · A', v: '105 363 €' },
-            { l: 'Analyse ABC · B', v: '15 059 €' },
-            { l: 'Analyse ABC · C', v: '4 525 939 €' },
-          ].map((k, i) => (
-            <Card key={i}>
+        {stats && (
+          <InlineGrid columns={stats.totalStock !== null ? 4 : 3} gap="300">
+            <Card>
               <BlockStack gap="100">
-                <Text as="p" variant="bodySm" tone="subdued">{k.l}</Text>
-                <Text as="p" variant="headingMd" fontWeight="bold">{k.v}</Text>
+                <Text as="p" variant="bodySm" tone="subdued">Total produits</Text>
+                <Text as="p" variant="headingMd" fontWeight="bold">{stats.totalProducts}</Text>
               </BlockStack>
             </Card>
-          ))}
-        </InlineGrid>
+            <Card>
+              <BlockStack gap="100">
+                <Text as="p" variant="bodySm" tone="subdued">Produits actifs</Text>
+                <Text as="p" variant="headingMd" fontWeight="bold">{stats.activeCount}</Text>
+              </BlockStack>
+            </Card>
+            <Card>
+              <BlockStack gap="100">
+                <Text as="p" variant="bodySm" tone="subdued">Valeur catalogue</Text>
+                <Text as="p" variant="headingMd" fontWeight="bold">{money(stats.totalValue)}</Text>
+              </BlockStack>
+            </Card>
+            {stats.totalStock !== null && (
+              <Card>
+                <BlockStack gap="100">
+                  <Text as="p" variant="bodySm" tone="subdued">Stock total</Text>
+                  <Text as="p" variant="headingMd" fontWeight="bold">{stats.totalStock}</Text>
+                </BlockStack>
+              </Card>
+            )}
+          </InlineGrid>
+        )}
 
         <Card padding="0">
           <Tabs tabs={tabs} selected={selectedTab} onSelect={setSelectedTab}>
@@ -336,35 +362,91 @@ export default function ProductsPage() {
       </BlockStack>
 
       {/* Import Modal */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".csv"
+        style={{ display: 'none' }}
+        onChange={async (e) => {
+          const file = e.target.files?.[0]
+          if (!file) return
+          setImportFile(file.name)
+          setImportLoading(true)
+          setImportResult(null)
+          try {
+            const text = await file.text()
+            const lines = text.split('\n').filter(l => l.trim())
+            if (lines.length < 2) { setImportResult('Fichier vide ou invalide.'); setImportLoading(false); return }
+            const headers = lines[0].split(',').map(h => h.trim().toLowerCase())
+            const titleIdx = headers.findIndex(h => ['titre', 'title', 'name', 'nom'].includes(h))
+            const priceIdx = headers.findIndex(h => ['prix', 'price'].includes(h))
+            const statusIdx = headers.findIndex(h => ['statut', 'status'].includes(h))
+            const stockIdx = headers.findIndex(h => ['stock'].includes(h))
+            if (titleIdx === -1) { setImportResult('Colonne "Titre" introuvable dans le CSV.'); setImportLoading(false); return }
+
+            let created = 0, errors = 0
+            for (let i = 1; i < lines.length; i++) {
+              const cols = lines[i].split(',').map(c => c.trim())
+              const title = cols[titleIdx]
+              if (!title) continue
+              const body: any = { site: activeSite, title }
+              if (priceIdx !== -1 && cols[priceIdx]) body.price = parseFloat(cols[priceIdx]) || 0
+              if (statusIdx !== -1 && cols[statusIdx]) body.status = cols[statusIdx] === 'draft' ? 'draft' : 'live'
+              if (stockIdx !== -1 && cols[stockIdx]) body.stock = parseInt(cols[stockIdx]) || 0
+              try {
+                const res = await fetch('/api/products', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(body),
+                })
+                if (res.ok) created++; else errors++
+              } catch { errors++ }
+            }
+            setImportResult(`${created} produit(s) importé(s)${errors > 0 ? `, ${errors} erreur(s)` : ''}.`)
+            fetchProducts(0)
+          } catch (err) {
+            setImportResult('Erreur de lecture du fichier.')
+          } finally {
+            setImportLoading(false)
+          }
+        }}
+      />
       <Modal
         open={importModalOpen}
-        onClose={() => setImportModalOpen(false)}
+        onClose={() => { setImportModalOpen(false); setImportResult(null); setImportFile('') }}
         title="Importer des produits"
         primaryAction={{
-          content: 'Importer',
-          onAction: () => {
-            setImportModalOpen(false)
-            alert('Import simulé — 0 erreurs, 0 produits importés (mock).')
-          },
+          content: importLoading ? 'Import en cours…' : 'Choisir un fichier CSV',
+          loading: importLoading,
+          onAction: () => fileInputRef.current?.click(),
         }}
-        secondaryActions={[{ content: 'Annuler', onAction: () => setImportModalOpen(false) }]}
+        secondaryActions={[{ content: 'Fermer', onAction: () => { setImportModalOpen(false); setImportResult(null) } }]}
       >
         <Modal.Section>
           <BlockStack gap="400">
+            {importResult && (
+              <Banner tone={importResult.includes('erreur') ? 'warning' : 'success'} onDismiss={() => setImportResult(null)}>
+                {importResult}
+              </Banner>
+            )}
             <Text as="p" variant="bodySm">
-              Importez vos produits depuis un fichier CSV. Téléchargez d&apos;abord le modèle en exportant vos produits existants.
+              Importez vos produits depuis un fichier CSV. Le fichier doit contenir au minimum une colonne «Titre».
+              Colonnes reconnues : Titre, Prix, Statut, Stock.
             </Text>
-            <div style={{
-              border: '2px dashed var(--p-color-border)',
-              borderRadius: 8,
-              padding: 32,
-              textAlign: 'center',
-              cursor: 'pointer',
-            }}>
+            <div
+              style={{
+                border: '2px dashed var(--p-color-border)',
+                borderRadius: 8,
+                padding: 32,
+                textAlign: 'center',
+                cursor: 'pointer',
+              }}
+              onClick={() => fileInputRef.current?.click()}
+            >
               <BlockStack gap="200" inlineAlign="center">
                 <ImportIcon width={24} height={24} />
                 <Text as="p" variant="bodySm" tone="subdued">
-                  Glissez votre fichier CSV ici, ou cliquez pour parcourir
+                  {importFile || 'Cliquez pour sélectionner un fichier CSV'}
                 </Text>
               </BlockStack>
             </div>

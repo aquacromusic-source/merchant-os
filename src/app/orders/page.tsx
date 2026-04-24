@@ -41,8 +41,8 @@ function buildTabs(orders: typeof allOrders) {
     { id: 'all', content: `Toutes (${orders.length})` },
     { id: 'unfulfilled', content: `Non traitées (${orders.filter(o => o.fulfill.key === 'unfulfilled').length})` },
     { id: 'unpaid', content: `Non payées (${orders.filter(o => ['pending', 'authorized'].includes(o.payment.key)).length})` },
-    { id: 'open', content: 'Ouvertes (18)' },
-    { id: 'closed', content: 'Fermées (426)' },
+    { id: 'open', content: `Ouvertes (${orders.filter(o => o.fulfill.key !== 'fulfilled' || ['pending', 'authorized'].includes(o.payment.key)).length})` },
+    { id: 'closed', content: `Fermées (${orders.filter(o => o.fulfill.key === 'fulfilled' && !['pending', 'authorized'].includes(o.payment.key)).length})` },
   ]
 }
 
@@ -100,11 +100,11 @@ export default function OrdersPage() {
   const { selectedResources, allResourcesSelected, handleSelectionChange } = useIndexResourceState(filtered.map(o => ({ id: o.id })))
 
   const kpis = [
-    { l: "Aujourd'hui", v: '1', d: '+75 %', sk: [4, 6, 8, 7, 10, 12, 16, 18, 20] },
-    { l: 'Articles commandés', v: '3', d: '+73 %', sk: [3, 4, 6, 8, 10, 12, 14, 15] },
-    { l: 'Retours', v: '0 €', d: '—', sk: [2, 2, 3, 3, 2, 3, 2, 2] },
-    { l: 'Commandes traitées', v: '12', d: '—', sk: [12, 10, 14, 16, 14, 12, 18, 15] },
-    { l: 'Commandes livrées', v: '0', d: '+100 %', sk: [0, 1, 2, 4, 6, 6, 8, 10] },
+    { l: 'Total commandes', v: String(orders.length), d: '', sk: [0] },
+    { l: 'Non traitées', v: String(orders.filter(o => o.fulfill.key === 'unfulfilled').length), d: '', sk: [0] },
+    { l: 'Non payées', v: String(orders.filter(o => ['pending', 'authorized'].includes(o.payment.key)).length), d: '', sk: [0] },
+    { l: 'Retours', v: '0', d: '', sk: [0] },
+    { l: 'CA total', v: money(orders.reduce((s, o) => s + o.total, 0)), d: '', sk: [0] },
   ]
 
   const handleExportCSV = useCallback(() => {
@@ -197,11 +197,7 @@ export default function OrdersPage() {
             <Card key={i}>
               <BlockStack gap="100">
                 <Text as="p" variant="bodySm" tone="subdued">{k.l}</Text>
-                <InlineStack gap="100" blockAlign="center">
-                  <Text as="p" variant="headingMd" fontWeight="bold">{k.v}</Text>
-                  {k.d}
-                </InlineStack>
-                <Sparkline data={k.sk} w={180} h={24} />
+                <Text as="p" variant="headingMd" fontWeight="bold">{k.v}</Text>
               </BlockStack>
             </Card>
           ))}

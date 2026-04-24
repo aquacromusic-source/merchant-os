@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { useSite, SiteId } from '@/contexts/SiteContext'
 import {
@@ -70,8 +70,17 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const [searchValue, setSearchValue] = useState('')
   const [userMenuActive, setUserMenuActive] = useState(false)
   const [notifOpen, setNotifOpen] = useState(false)
+  const [orderCount, setOrderCount] = useState<number | null>(null)
   // Toujours partir de vide — le useEffect charge depuis localStorage
   const [notifications, setNotifications] = useState<any[]>([])
+
+  // Fetch real order count from stats API
+  useEffect(() => {
+    fetch(`/api/stats?site=${activeSite}`)
+      .then(r => r.json())
+      .then(data => setOrderCount(data.orderCount ?? 0))
+      .catch(() => setOrderCount(0))
+  }, [activeSite])
 
   // Charger les notifs depuis localStorage au montage
   React.useEffect(() => {
@@ -377,7 +386,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
             url: '/orders',
             label: 'Commandes',
             icon: OrderIcon,
-            badge: '9 999+',
+            badge: orderCount !== null && orderCount > 0 ? String(orderCount) : undefined,
             selected: active.startsWith('orders'),
             onClick: () => router.push('/orders'),
             subNavigationItems: [

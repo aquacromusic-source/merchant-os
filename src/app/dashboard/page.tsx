@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useCallback, useMemo } from 'react'
+import React, { useState, useCallback, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Page,
@@ -100,6 +100,15 @@ export default function DashboardPage() {
   const allOrders = useMemo(() => rawOrders.filter(o => o.site_id === activeSite), [activeSite])
   const A = analytics
 
+  const [stats, setStats] = useState<any>(null)
+
+  useEffect(() => {
+    fetch(`/api/stats?site=${activeSite}`)
+      .then(r => r.json())
+      .then(setStats)
+      .catch(() => {})
+  }, [activeSite])
+
   const [dateRange, setDateRange] = useState('30d')
   const [datePopoverOpen, setDatePopoverOpen] = useState(false)
   const [tooltipData, setTooltipData] = useState<{ x: number; y: number; value: string; label: string } | null>(null)
@@ -107,11 +116,11 @@ export default function DashboardPage() {
   const selectedLabel = DATE_RANGES.find(r => r.value === dateRange)?.label || '30 derniers jours'
 
   const kpis = [
-    { l: 'Visites', v: '46 820', d: '+5 %', up: true, sk: A.sessions },
-    { l: 'Ventes totales', v: '30 580 €', d: '+11 %', up: true, sk: A.timeseries },
-    { l: 'Commandes', v: '518', d: '+9 %', up: true, sk: A.orders },
-    { l: 'Panier moyen', v: '59,03 €', d: '−2 %', up: false, sk: A.aov },
-    { l: 'Taux de conversion', v: '0,77 %', d: '+8 %', up: true, sk: A.cvr },
+    { l: 'Produits', v: stats ? String(stats.totalProducts) : '—', d: '', up: true, sk: A.sessions },
+    { l: 'Produits actifs', v: stats ? String(stats.activeCount) : '—', d: '', up: true, sk: A.timeseries },
+    { l: 'Valeur catalogue', v: stats ? money(stats.totalValue) : '—', d: '', up: true, sk: A.orders },
+    { l: 'Commandes', v: stats ? String(stats.orderCount) : '—', d: '', up: true, sk: A.aov },
+    ...(stats?.totalStock !== null && stats?.totalStock !== undefined ? [{ l: 'Stock total', v: String(stats.totalStock), d: '', up: true, sk: A.cvr }] : []),
   ]
 
   const orderRows = allOrders.slice(0, 6).map(o => [
@@ -242,11 +251,11 @@ export default function DashboardPage() {
         {/* Action pills */}
         <InlineStack gap="200" wrap>
           <Button icon={OrderIcon} onClick={() => router.push('/orders')}>
-            7 commandes à traiter
+            Commandes
           </Button>
-          <Button icon={CreditCardIcon} onClick={() => router.push('/orders?tab=unpaid')}>1 paiement à saisir</Button>
-          <Button icon={AlertTriangleIcon} tone="critical" onClick={() => router.push('/finance')}>2 rétrofacturations</Button>
-          <Button icon={ProductIcon} onClick={() => router.push('/inventory')}>4 produits en rupture</Button>
+          <Button icon={ProductIcon} onClick={() => router.push('/products')}>
+            {stats ? `${stats.totalProducts} produits` : 'Produits'}
+          </Button>
         </InlineStack>
 
         <Layout>
@@ -266,10 +275,9 @@ export default function DashboardPage() {
                   <BlockStack gap="200">
                     <InlineStack align="space-between" blockAlign="center">
                       <BlockStack gap="050">
-                        <Text as="p" variant="headingXl" fontWeight="bold">30 580,12 €</Text>
+                        <Text as="p" variant="headingXl" fontWeight="bold">{stats ? money(stats.totalValue) : '—'}</Text>
                         <Text as="p" variant="bodySm" tone="subdued">
-                          vs. 27 418,90 € période précédente ·{' '}
-                          <Text as="span" variant="bodySm" tone="success">+11,5 %</Text>
+                          Valeur catalogue totale
                         </Text>
                       </BlockStack>
                       <InlineStack gap="200">
