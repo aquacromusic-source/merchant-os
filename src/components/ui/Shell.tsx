@@ -120,15 +120,26 @@ export function Shell({ children }: { children: React.ReactNode }) {
     <TopBar.UserMenu
       actions={[
         {
+          items: SITES.map(s => ({
+            content: s.label,
+            suffix: s.value === activeSite ? (
+              <span style={{ color: 'var(--p-color-icon-interactive)', display: 'inline-flex', alignItems: 'center' }}>
+                <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path d="M8.315 13.859l-3.182-3.417a.506.506 0 0 1 0-.684l.643-.683a.437.437 0 0 1 .642 0l2.22 2.393 4.942-5.327a.436.436 0 0 1 .643 0l.643.684a.504.504 0 0 1 0 .683l-5.91 6.35a.437.437 0 0 1-.642 0z"/></svg>
+              </span>
+            ) : undefined,
+            onAction: () => setActiveSite(s.value),
+          })),
+        },
+        {
           items: [
             { content: 'Tableau de bord', onAction: () => router.push('/dashboard') },
             { content: 'Paramètres', onAction: () => router.push('/settings') },
           ],
         },
       ]}
-      name="Studio Nord & Co"
-      detail="studionord.co"
-      initials="S"
+      name={activeSiteLabel}
+      detail=""
+      initials={activeSiteLabel.charAt(0)}
       open={userMenuActive}
       onToggle={() => setUserMenuActive((v) => !v)}
     />
@@ -321,42 +332,8 @@ export function Shell({ children }: { children: React.ReactNode }) {
     </div>
   )
 
-  const siteSelectMarkup = (
-    <div style={{ display: 'flex', alignItems: 'center' }}>
-      <select
-        value={activeSite}
-        onChange={(e) => {
-          setActiveSite(e.target.value as SiteId)
-        }}
-        style={{
-          appearance: 'none',
-          WebkitAppearance: 'none',
-          background: 'var(--p-color-bg-surface-secondary)',
-          border: '1px solid var(--p-color-border)',
-          borderRadius: 8,
-          padding: '6px 30px 6px 10px',
-          fontSize: 13,
-          fontWeight: 500,
-          color: 'var(--p-color-text)',
-          cursor: 'pointer',
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23637381' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
-          backgroundRepeat: 'no-repeat',
-          backgroundPosition: 'right 9px center',
-          lineHeight: '20px',
-          width: 180,
-          transition: 'border-color 0.15s ease',
-        }}
-      >
-        {SITES.map(s => (
-          <option key={s.value} value={s.value}>{s.label}</option>
-        ))}
-      </select>
-    </div>
-  )
-
   const secondaryMenuMarkup = (
     <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-      {siteSelectMarkup}
       {notifBellMarkup}
     </div>
   )

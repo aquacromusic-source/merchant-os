@@ -33,7 +33,6 @@ import {
   LayoutPopupIcon,
   ListBulletedIcon,
 } from '@shopify/polaris-icons'
-import { products as mockProducts } from '@/lib/data'
 import { money } from '@/lib/utils'
 import { useSite } from '@/contexts/SiteContext'
 
@@ -57,26 +56,18 @@ export default function ProductsPage() {
 
   const fetchProducts = useCallback((page: number, append = false) => {
     setLoadingProducts(true)
-    if (activeSite === 'gaming-posters') {
-      fetch(`/api/products?limit=${PAGE_SIZE}&offset=${page * PAGE_SIZE}&site=${activeSite}`)
-        .then(r => r.json())
-        .then(data => {
-          if (append) {
-            setAllProducts(prev => [...prev, ...(data.products || [])])
-          } else {
-            setAllProducts(data.products || [])
-          }
-          setTotalProducts(data.total || 0)
-          setCurrentPage(page)
-        })
-        .finally(() => setLoadingProducts(false))
-    } else {
-      const filtered = mockProducts.filter(p => p.site_id === activeSite)
-      setAllProducts(filtered)
-      setTotalProducts(filtered.length)
-      setCurrentPage(0)
-      setLoadingProducts(false)
-    }
+    fetch(`/api/products?limit=${PAGE_SIZE}&offset=${page * PAGE_SIZE}&site=${activeSite}`)
+      .then(r => r.json())
+      .then(data => {
+        if (append) {
+          setAllProducts(prev => [...prev, ...(data.products || [])])
+        } else {
+          setAllProducts(data.products || [])
+        }
+        setTotalProducts(data.total || 0)
+        setCurrentPage(page)
+      })
+      .finally(() => setLoadingProducts(false))
   }, [activeSite])
 
   useEffect(() => {
@@ -242,7 +233,7 @@ export default function ProductsPage() {
           <Tabs tabs={tabs} selected={selectedTab} onSelect={setSelectedTab}>
             <Box padding="300" paddingBlockEnd="0">
               <InlineStack gap="200" align="space-between">
-                <div style={{ flex: 1 }}>
+                <div style={{ maxWidth: 450, flex: 1 }}>
                   <TextField
                     label=""
                     labelHidden
