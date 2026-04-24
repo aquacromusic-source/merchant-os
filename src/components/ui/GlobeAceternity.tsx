@@ -51,7 +51,7 @@ export function GlobeAceternity({ markers = [] }: GlobeProps) {
       globe.controls().autoRotate = true
       globe.controls().autoRotateSpeed = 0.4
       globe.controls().enableZoom = false
-      globe.pointOfView({ lat: 25, lng: -10, altitude: 1.8 }, 0)
+      globe.pointOfView({ lat: 25, lng: -10, altitude: 2.5 }, 0)
     })
 
     return () => {
