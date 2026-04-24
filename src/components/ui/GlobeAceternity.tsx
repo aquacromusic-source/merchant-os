@@ -27,7 +27,7 @@ export function GlobeAceternity({ markers = [] }: GlobeProps) {
         .globeImageUrl('/earth-night.jpg')
         .bumpImageUrl('//unpkg.com/three-globe/example/img/earth-topology.png')
         .atmosphereColor('rgba(60,140,255,0.8)')
-        .atmosphereAltitude(0.3)
+        .atmosphereAltitude(0.18)
         .pointsData(markers)
         .pointLat((d: any) => d.location[0])
         .pointLng((d: any) => d.location[1])
