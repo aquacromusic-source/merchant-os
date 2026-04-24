@@ -10,12 +10,12 @@ export async function GET(req: NextRequest) {
   const offset = parseInt(searchParams.get('offset') || '0')
 
   const url = new URL(`${SUPABASE_URL}/rest/v1/posters`)
-  url.searchParams.set('select', 'id,name,image_url,price,stock')
+  url.searchParams.set('select', 'id,title,slug,image_url,price,is_active')
   url.searchParams.set('limit', String(limit))
   url.searchParams.set('offset', String(offset))
-  url.searchParams.set('order', 'name.asc')
+  url.searchParams.set('order', 'title.asc')
 
-  if (search) url.searchParams.set('name', `ilike.*${search}*`)
+  if (search) url.searchParams.set('title', `ilike.*${search}*`)
 
   const res = await fetch(url.toString(), {
     headers: {
@@ -28,10 +28,10 @@ export async function GET(req: NextRequest) {
   const data = await res.json()
   const total = parseInt(res.headers.get('content-range')?.split('/')[1] || '0')
 
-  // Dédupliquer par nom (évite les doublons comme GTA V x2)
+  // Dédupliquer par titre (évite les doublons comme GTA V x2)
   const seen = new Set<string>()
   const unique = (data || []).filter((p: any) => {
-    const key = (p.name || '').toLowerCase()
+    const key = (p.title || '').toLowerCase()
     if (seen.has(key)) return false
     seen.add(key)
     return true
@@ -40,12 +40,12 @@ export async function GET(req: NextRequest) {
   // Mapper vers le format attendu par le BO
   const products = unique.map((p: any) => ({
     id: String(p.id),
-    slug: String(p.id),
-    title: p.name,
+    slug: p.slug || String(p.id),
+    title: p.title,
     category: 'Poster',
     price: parseFloat(p.price) || 11.95,
-    stock: p.stock ?? 0,
-    status: (p.stock ?? 0) > 0 ? 'live' : 'draft',
+    stock: p.is_active ? 1 : 0,
+    status: p.is_active ? 'live' : 'draft',
     sku: `PX-${p.id}`,
     variants: 1,
     channels: 1,
