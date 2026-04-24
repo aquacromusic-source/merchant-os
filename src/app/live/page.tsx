@@ -156,32 +156,14 @@ export default function LivePage() {
         </div>
 
         {/* DROITE — Globe Cobe */}
-        <div style={{ background: '#000000', borderRadius: 12, overflow: 'hidden', position: 'sticky', top: 16, padding: 0, border: 'none' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-
-          </div>
-          <div style={{ width: '100%', background: 'transparent' }}>
-            <div style={{ position: 'relative', width: '100%', aspectRatio: '1/1', overflow: 'hidden' }}>
+        <div style={{ background: '#000000', borderRadius: 12, overflow: 'hidden', position: 'sticky', top: 16, padding: 0, border: 'none', height: 'calc(100vh - 100px)' }}>
+          <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
             <GlobeAceternity
               markers={[
                 ...ONLINE_VISITORS.map(v => ({ location: [v.lat, v.lng] as [number,number], size: 0.12, color: [0.2, 1.0, 0.4] as [number,number,number] })),
                 ...ORDER_CITIES.map(o => ({ location: [o.lat, o.lng] as [number,number], size: 0.09, color: [0.2, 0.55, 1.0] as [number,number,number] })),
               ]}
             />
-            </div>
-          </div>
-          {/* Activité en cours */}
-          <div style={{ marginTop: 16, borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 12 }}>
-            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>Activité en cours</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {ONLINE_VISITORS.slice(0, 4).map((v, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12 }}>
-                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#33e66a', flexShrink: 0 }}/>
-                  <span style={{ color: '#6d7175' }}>{v.flag} {v.city}</span>
-                  <span style={{ color: '#1a1a1a', marginLeft: 'auto' }}>{v.action}</span>
-                </div>
-              ))}
-            </div>
           </div>
         </div>
       </div>
