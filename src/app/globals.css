@@ -1144,6 +1144,19 @@ html, body {
 .Polaris-TopBar {
   height: 60px !important;
   min-height: 60px !important;
+  box-sizing: border-box !important;
+}
+
+/* Forcer le Frame à respecter la hauteur 60px de la topbar */
+.Polaris-Frame__TopBar {
+  height: 60px !important;
+  min-height: 60px !important;
+}
+.Polaris-Frame__Content {
+  top: 60px !important;
+}
+.Polaris-Frame__Navigation {
+  top: 60px !important;
 }
 
 /* Logo hover effect */

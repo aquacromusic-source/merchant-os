@@ -356,7 +356,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
   )
 
   const secondaryMenuMarkup = (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
       {siteSelectMarkup}
       {notifBellMarkup}
     </div>
