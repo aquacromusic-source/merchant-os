@@ -26,8 +26,8 @@ export function GlobeAceternity({ markers = [] }: GlobeProps) {
         .backgroundColor('#000000')
         .globeImageUrl('/earth-night.jpg')
         .bumpImageUrl('//unpkg.com/three-globe/example/img/earth-topology.png')
-        .atmosphereColor('rgba(60,130,255,0.4)')
-        .atmosphereAltitude(0.15)
+        .atmosphereColor('rgba(60,140,255,0.6)')
+        .atmosphereAltitude(0.25)
         .pointsData(markers)
         .pointLat((d: any) => d.location[0])
         .pointLng((d: any) => d.location[1])
@@ -61,6 +61,6 @@ export function GlobeAceternity({ markers = [] }: GlobeProps) {
   }, [markers.length])
 
   return (
-    <div ref={containerRef} style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }} />
+    <div ref={containerRef} style={{ width: '100%', height: '100%', position: 'relative', zIndex: 1 }} />
   )
 }
