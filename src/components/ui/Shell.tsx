@@ -277,38 +277,42 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const activeSiteLabel = SITES.find(s => s.value === activeSite)?.label ?? 'Gaming Posters'
 
   const contextControlMarkup = (
-    <div style={{
-      display: 'flex',
-      alignItems: 'center',
-      gap: 10,
-      paddingLeft: 16,
-      height: '100%',
-      whiteSpace: 'nowrap',
-    }}>
-      {/* Gamepad icon for Gaming Posters, generic store icon otherwise */}
-      <svg
-        width="28"
-        height="28"
-        viewBox="0 0 28 28"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        style={{ flexShrink: 0 }}
+    <div
+      className="mos-context-control"
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 10,
+        paddingLeft: 16,
+        height: '100%',
+        whiteSpace: 'nowrap',
+        cursor: 'pointer',
+      }}
+    >
+      {/* Logo icon — gradient with store/gaming motif */}
+      <div
+        className="mos-logo"
+        style={{
+          width: 30,
+          height: 30,
+          borderRadius: 8,
+          background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+          boxShadow: '0 1px 3px rgba(0,0,0,0.2), inset 0 0 0 1px rgba(255,255,255,0.15)',
+          transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+        }}
       >
-        <rect width="28" height="28" rx="6" fill="#1a1a1a" />
-        <text
-          x="14"
-          y="19"
-          textAnchor="middle"
-          fill="white"
-          fontSize="14"
-          fontWeight="700"
-          fontFamily="system-ui, sans-serif"
-        >
-          {activeSiteLabel.charAt(0)}
-        </text>
-      </svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M3 9.5L12 4L21 9.5V19C21 19.5523 20.5523 20 20 20H4C3.44772 20 3 19.5523 3 19V9.5Z" stroke="white" strokeWidth="1.8" strokeLinejoin="round" fill="none"/>
+          <path d="M9 20V13H15V20" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+          <circle cx="12" cy="9.5" r="1.5" fill="white" opacity="0.9"/>
+        </svg>
+      </div>
       <span style={{
-        fontWeight: 700,
+        fontWeight: 600,
         fontSize: 14,
         color: '#1a1a1a',
         letterSpacing: '-0.01em',
@@ -319,12 +323,11 @@ export function Shell({ children }: { children: React.ReactNode }) {
   )
 
   const siteSelectMarkup = (
-    <div style={{ display: 'flex', alignItems: 'center', marginRight: 4 }}>
+    <div style={{ display: 'flex', alignItems: 'center' }}>
       <select
         value={activeSite}
         onChange={(e) => {
           setActiveSite(e.target.value)
-          console.log('Site changed:', e.target.value)
         }}
         style={{
           appearance: 'none',
@@ -332,15 +335,17 @@ export function Shell({ children }: { children: React.ReactNode }) {
           background: 'var(--p-color-bg-surface-secondary)',
           border: '1px solid var(--p-color-border)',
           borderRadius: 8,
-          padding: '6px 28px 6px 10px',
+          padding: '6px 30px 6px 10px',
           fontSize: 13,
           fontWeight: 500,
           color: 'var(--p-color-text)',
           cursor: 'pointer',
           backgroundImage: `url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23637381' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
           backgroundRepeat: 'no-repeat',
-          backgroundPosition: 'right 8px center',
+          backgroundPosition: 'right 9px center',
           lineHeight: '20px',
+          width: 180,
+          transition: 'border-color 0.15s ease',
         }}
       >
         {SITES.map(s => (
@@ -351,7 +356,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
   )
 
   const secondaryMenuMarkup = (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
       {siteSelectMarkup}
       {notifBellMarkup}
     </div>

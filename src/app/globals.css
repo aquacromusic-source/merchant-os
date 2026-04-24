@@ -1137,3 +1137,34 @@ html, body {
 .Polaris-Frame__Content {
   padding-bottom: 60px;
 }
+
+/* ── Top bar polish ─────────────────────────────────────────── */
+
+/* Force hauteur 60px sur la topbar Polaris */
+.Polaris-TopBar {
+  height: 60px !important;
+  min-height: 60px !important;
+}
+
+/* Logo hover effect */
+.mos-logo {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.mos-context-control:hover .mos-logo {
+  transform: scale(1.06);
+  box-shadow: 0 2px 8px rgba(99,102,241,0.35), inset 0 0 0 1px rgba(255,255,255,0.2) !important;
+}
+
+/* Centrer la search pill Polaris */
+.Polaris-TopBar__SearchField {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+/* Espacement uniforme dans la zone droite */
+.Polaris-TopBar__SecondaryMenu {
+  margin-right: 4px;
+}
