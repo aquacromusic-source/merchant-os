@@ -27,7 +27,7 @@ export function SiteProvider({ children }: { children: React.ReactNode }) {
   const [hydrated, setHydrated] = useState(false)
 
   useEffect(() => {
-    const saved = localStorage.getItem('mos_active_site') as SiteId | null
+    const saved = localStorage.getItem('activeSite') as SiteId | null
     if (saved && saved in SITE_LABELS) {
       setActiveSiteState(saved)
     }
@@ -36,7 +36,7 @@ export function SiteProvider({ children }: { children: React.ReactNode }) {
 
   const setActiveSite = (site: SiteId) => {
     setActiveSiteState(site)
-    localStorage.setItem('mos_active_site', site)
+    localStorage.setItem('activeSite', site)
   }
 
   const activeSiteLabel = SITE_LABELS[activeSite]
