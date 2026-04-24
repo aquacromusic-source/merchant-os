@@ -18,15 +18,11 @@ export function GlobeAceternity({ markers = [] }: GlobeProps) {
       if (cancelled || !containerRef.current) return
       const w = containerRef.current.clientWidth || 600
       const h = containerRef.current.clientHeight || 600
-      // Shrink the globe to 40% — full sphere visible as a small blue ball with margin all around
-      const scale = 0.4
-      const gw = Math.round(w * scale)
-      const gh = Math.round(h * scale)
 
       globe = new (GlobeGL as any)()(containerRef.current)
       globe
-        .width(gw)
-        .height(gh)
+        .width(w)
+        .height(h)
         .backgroundColor('#000000')
         .globeImageUrl('/earth-night.jpg')
         .bumpImageUrl('//unpkg.com/three-globe/example/img/earth-topology.png')
@@ -55,14 +51,7 @@ export function GlobeAceternity({ markers = [] }: GlobeProps) {
       globe.controls().autoRotate = true
       globe.controls().autoRotateSpeed = 0.4
       globe.controls().enableZoom = false
-      globe.pointOfView({ lat: 20, lng: -10, altitude: 2.8 }, 0)
-
-      // Center the reduced-size canvas inside the container
-      const canvas = containerRef.current.querySelector('canvas')
-      if (canvas) {
-        canvas.style.display = 'block'
-        canvas.style.margin = 'auto'
-      }
+      globe.pointOfView({ lat: 20, lng: -10, altitude: 1.5 }, 0)
     })
 
     return () => {
