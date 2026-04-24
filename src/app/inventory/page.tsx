@@ -147,13 +147,13 @@ export default function InventoryPage() {
                     <Text as="span" tone="subdued">{p.category}</Text>
                   </IndexTable.Cell>
                   <IndexTable.Cell>
-                    <Text as="span" numeric tone={p.stock < 10 && p.stock > 0 ? 'critical' : 'subdued'}>
-                      {p.stock === 0 ? 'Non suivi' : String(p.stock)}
+                    <Text as="span" numeric tone={p.stock != null && p.stock < 10 && p.stock > 0 ? 'critical' : 'subdued'}>
+                      {p.stock == null ? 'Non suivi' : String(p.stock)}
                     </Text>
                   </IndexTable.Cell>
                   <IndexTable.Cell>
-                    <Badge tone={p.stock === 0 ? undefined : p.stock < 10 ? 'critical' : 'success'}>
-                      {p.stock === 0 ? 'Non suivi' : p.stock < 10 ? 'Rupture imminente' : 'En stock'}
+                    <Badge tone={p.stock == null ? undefined : p.stock < 10 ? 'critical' : 'success'}>
+                      {p.stock == null ? 'Non suivi' : p.stock < 10 ? 'Rupture imminente' : 'En stock'}
                     </Badge>
                   </IndexTable.Cell>
                 </IndexTable.Row>

@@ -104,7 +104,7 @@ export async function GET(req: NextRequest) {
       title: p[config.titleCol],
       category: p.category || config.category,
       price: parseFloat(p[config.priceCol]) || 0,
-      stock: p.stock !== undefined ? p.stock : (isActive ? 1 : 0),
+      stock: p.stock !== undefined ? p.stock : null,
       status: isActive ? 'live' as const : 'draft' as const,
       sku: `${config.skuPrefix}-${p.id}`,
       variants: 1,

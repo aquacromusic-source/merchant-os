@@ -96,9 +96,9 @@ export default function ProductsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const tabs = [
-    { id: 'all', content: `Tous (${totalProducts})` },
-    { id: 'live', content: `Actifs (${allProducts.filter((p: any) => p.status === 'live').length})` },
-    { id: 'draft', content: `Brouillons (${allProducts.filter((p: any) => p.status === 'draft').length})` },
+    { id: 'all', content: `Tous (${stats ? stats.totalProducts : totalProducts})` },
+    { id: 'live', content: `Actifs (${stats ? stats.activeCount : allProducts.filter((p: any) => p.status === 'live').length})` },
+    { id: 'draft', content: `Brouillons (${stats ? stats.draftCount : allProducts.filter((p: any) => p.status === 'draft').length})` },
     { id: 'archived', content: `Archivés (${allProducts.filter((p: any) => p.status === 'archived').length})` },
   ]
 
@@ -181,8 +181,8 @@ export default function ProductsPage() {
       </IndexTable.Cell>
       <IndexTable.Cell>{statusBadge(p.status)}</IndexTable.Cell>
       <IndexTable.Cell>
-        <Text as="span" tone={p.stock < 10 && p.stock > 0 ? 'critical' : 'subdued'} variant="bodySm">
-          {p.stock === 0 ? 'Stock non suivi' : `${p.stock} en stock`}
+        <Text as="span" tone={p.stock != null && p.stock < 10 && p.stock > 0 ? 'critical' : 'subdued'} variant="bodySm">
+          {p.stock == null ? 'Stock non suivi' : `${p.stock} en stock`}
         </Text>
       </IndexTable.Cell>
       <IndexTable.Cell><Text as="span" tone="subdued" variant="bodySm">{p.category}</Text></IndexTable.Cell>
@@ -223,7 +223,7 @@ export default function ProductsPage() {
                 <Text as="p" variant="bodySm" fontWeight="semibold" truncate>{p.title}</Text>
                 {statusBadge(p.status)}
                 <Text as="p" variant="bodySm" tone="subdued">
-                  {p.stock === 0 ? 'Non suivi' : `${p.stock} en stock`}
+                  {p.stock == null ? 'Non suivi' : `${p.stock} en stock`}
                 </Text>
                 <Text as="p" variant="bodySm" fontWeight="semibold">{money(p.price)}</Text>
               </BlockStack>
