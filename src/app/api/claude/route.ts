@@ -6,6 +6,12 @@ const client = new Anthropic({
 })
 
 export async function POST(req: NextRequest) {
+  // Auth basique — vérifier header secret
+  const authHeader = req.headers.get('x-internal-secret')
+  const expectedSecret = process.env.INTERNAL_API_SECRET || 'merchant-os-internal'
+  if (authHeader !== expectedSecret) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
   try {
     const { messages, systemPrompt } = await req.json()
 
