@@ -92,6 +92,12 @@ export default function LivePage() {
   return (
     <Page title="Vue en direct" titleMetadata={<Badge tone="success">● Live</Badge>}>
       <style>{`
+        @keyframes twinkle {
+          0%,100% { opacity: 0.3; transform: scale(1); }
+          50% { opacity: 1; transform: scale(1.3); }
+        }
+      `}</style>
+      <style>{`
         @keyframes ping { 75%,100%{ transform:scale(1.8);opacity:0; } }
       `}</style>
 
@@ -165,10 +171,25 @@ export default function LivePage() {
         {/* DROITE — Globe Cobe */}
         <div style={{ background: 'white', borderRadius: 12, padding: '20px 20px 16px', border: '1px solid #e5e5e5', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', position: 'sticky', top: 80 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <Text as="h2" variant="headingSm" fontWeight="semibold">Visiteurs dans le monde</Text>
+            <span style={{ fontFamily: 'var(--font-pixel, monospace)', fontSize: 13, fontWeight: 600, color: 'white', letterSpacing: '0.04em' }}>Visiteurs dans le monde</span>
             <Badge tone="success">{`${stats.online} en ligne`}</Badge>
           </div>
           <div style={{ width: '100%', height: 500, borderRadius: 12, overflow: 'hidden', background: 'transparent' }}>
+            <div style={{ position: 'relative', display: 'inline-block', width: '100%' }}>
+            {/* Halo néon */}
+            <div style={{
+              position: 'absolute', inset: -20,
+              borderRadius: '50%',
+              background: 'radial-gradient(ellipse at center, transparent 45%, rgba(0,100,255,0.12) 60%, rgba(0,200,255,0.06) 75%, transparent 85%)',
+              pointerEvents: 'none', zIndex: 1,
+            }}/>
+            {/* Second halo plus vif */}
+            <div style={{
+              position: 'absolute', inset: -8,
+              borderRadius: '50%',
+              boxShadow: '0 0 40px rgba(0,150,255,0.25), 0 0 80px rgba(0,100,200,0.12)',
+              pointerEvents: 'none', zIndex: 1,
+            }}/>
             <GlobeAceternity
               markers={[
                 ...ONLINE_VISITORS.map(v => ({ location: [v.lat, v.lng] as [number,number], size: 0.12, color: [0.2, 1.0, 0.4] as [number,number,number] })),
@@ -177,14 +198,14 @@ export default function LivePage() {
             />
           </div>
           {/* Activité en cours */}
-          <div style={{ marginTop: 16, borderTop: '1px solid #f1f1f1', paddingTop: 12 }}>
-            <div style={{ fontSize: 12, color: '#6d7175', marginBottom: 8 }}>Activité en cours</div>
+          <div style={{ marginTop: 16, borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 12 }}>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>Activité en cours</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {ONLINE_VISITORS.slice(0, 4).map((v, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12 }}>
                   <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#33e66a', flexShrink: 0 }}/>
                   <span style={{ color: '#6d7175' }}>{v.flag} {v.city}</span>
-                  <span style={{ color: '#1a1a1a', marginLeft: 'auto' }}>{v.action}</span>
+                  <span style={{ color: 'rgba(255,255,255,0.9)', marginLeft: 'auto' }}>{v.action}</span>
                 </div>
               ))}
             </div>
