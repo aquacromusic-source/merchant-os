@@ -32,13 +32,9 @@ export async function GET(req: NextRequest) {
   const config = SITE_CONFIG[siteId] || SITE_CONFIG['gaming-posters']
 
   try {
-    // Fetch all products with price and stock
-    const selectCols = ['id', config.priceCol]
-    if (config.activeCol) selectCols.push(config.activeCol)
-    if (siteId === 'strap') selectCols.push('stock')
-
+    // Fetch all products
     const { data: products, total: totalProducts } = await supabaseGet(
-      `${config.table}?select=${selectCols.join(',')}&limit=10000`
+      `${config.table}?select=*&limit=10000`
     )
 
     const arr = products || []

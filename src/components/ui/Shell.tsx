@@ -333,8 +333,8 @@ export function Shell({ children }: { children: React.ReactNode }) {
         </svg>
       </div>
       <span style={{
-        fontWeight: 500,
-        fontSize: 16,
+        fontWeight: 600,
+        fontSize: 18,
         color: '#1a1a1a',
         letterSpacing: '-0.01em',
       }}>

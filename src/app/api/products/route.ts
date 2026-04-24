@@ -59,16 +59,8 @@ export async function GET(req: NextRequest) {
 
   const config = SITE_CONFIG[siteId] || SITE_CONFIG['gaming-posters']
 
-  // Build select columns — only request columns that exist
-  const selectCols = ['id', config.titleCol, config.imageCol, config.priceCol]
-  if (config.slugCol) selectCols.push(config.slugCol)
-  if (config.activeCol) selectCols.push(config.activeCol)
-  // Extra columns per site
-  if (siteId === 'strap') { selectCols.push('category', 'stock') }
-  if (siteId === 'pdf-guide-store') { selectCols.push('category', 'description') }
-
   const url = new URL(`${SUPABASE_URL}/rest/v1/${config.table}`)
-  url.searchParams.set('select', selectCols.join(','))
+  url.searchParams.set('select', '*')
   url.searchParams.set('limit', String(limit))
   url.searchParams.set('offset', String(offset))
   url.searchParams.set('order', `${config.titleCol}.asc`)

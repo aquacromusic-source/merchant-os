@@ -458,7 +458,9 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
   const { activeSite } = useSite()
   const productId = params.id
 
-  const [images, setImages] = useState(MOCK_IMAGES)
+  const [images, setImages] = useState<typeof MOCK_IMAGES>([])
+  const [price, setPrice] = useState('')
+  const [stock, setStock] = useState<number | null>(null)
   const [realProduct, setRealProduct] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 
@@ -496,10 +498,12 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
           setCategory(data.category || '')
           setStatus(data.is_active === false || data.is_published === false ? 'draft' : 'live')
           setDescription(data.description || data.seo_desc || '')
+          setPrice(String(data.price ?? ''))
+          setStock(data.stock !== undefined ? data.stock : null)
           if (data.image_url || data.cover_url) {
             const imgUrl = data.image_url || data.cover_url
             const realImg = { id: 'real-main', label: t, alt: t, format: 'JPG', dims: 'Original', size: '—', date: 'En ligne', url: imgUrl }
-            setImages(prev => [realImg, ...prev.filter(x => x.id !== 'real-main')])
+            setImages([realImg])
           }
         }
       })
@@ -518,7 +522,8 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
         title,
         status,
       }
-      if (realProduct?.price !== undefined) body.price = realProduct.price
+      if (price !== '') body.price = parseFloat(price) || 0
+      if (stock !== null) body.stock = stock
       if (description) body.description = description
       if (category) body.category = category
 
@@ -656,6 +661,36 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                             </div>
                           </Box>
                         </div>
+                      </BlockStack>
+                    </Card>
+
+                    {/* Tarification & Stock */}
+                    <Card>
+                      <BlockStack gap="300">
+                        <Text variant="headingMd" as="h2">Tarification</Text>
+                        <InlineStack gap="300">
+                          <div style={{ flex: 1 }}>
+                            <TextField
+                              label="Prix"
+                              value={price}
+                              onChange={setPrice}
+                              autoComplete="off"
+                              prefix="€"
+                              type="number"
+                            />
+                          </div>
+                          {stock !== null && (
+                            <div style={{ flex: 1 }}>
+                              <TextField
+                                label="Stock"
+                                value={String(stock)}
+                                onChange={(v) => setStock(parseInt(v) || 0)}
+                                autoComplete="off"
+                                type="number"
+                              />
+                            </div>
+                          )}
+                        </InlineStack>
                       </BlockStack>
                     </Card>
 
