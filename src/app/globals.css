@@ -1181,17 +1181,20 @@ html, body {
   box-shadow: 0 2px 8px rgba(99,102,241,0.35), inset 0 0 0 1px rgba(255,255,255,0.2) !important;
 }
 
-/* Centrer la search pill Polaris — force 450px max */
+/* Centrer la search pill Polaris — force exactement 450px */
 .Polaris-TopBar__SearchField {
-  flex: 0 1 450px !important;
+  flex: 0 0 450px !important;
   display: flex;
   justify-content: center;
-  max-width: 450px !important;
   width: 450px !important;
+  min-width: 450px !important;
+  max-width: 450px !important;
   margin: 0 auto;
 }
 .Polaris-TopBar__SearchField > div,
 .Polaris-TopBar__SearchField input {
+  width: 450px !important;
+  min-width: 450px !important;
   max-width: 450px !important;
 }
 

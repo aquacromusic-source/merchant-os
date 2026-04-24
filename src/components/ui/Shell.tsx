@@ -146,7 +146,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
   )
 
   const searchFieldMarkup = (
-    <div style={{ maxWidth: 450, width: '100%' }}>
+    <div style={{ width: 450, minWidth: 450, maxWidth: 450 }}>
       <TopBar.SearchField
         onChange={handleSearchChange}
         value={searchValue}
