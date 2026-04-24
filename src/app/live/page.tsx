@@ -156,13 +156,13 @@ export default function LivePage() {
         </div>
 
         {/* DROITE — Globe Cobe */}
-        <div style={{ background: 'linear-gradient(160deg, #010b18 0%, #030e20 50%, #050f25 100%)', borderRadius: 20, padding: '20px', border: '1px solid #1a2d4a', position: 'sticky', top: 16 }}>
+        <div style={{ background: '#000000', borderRadius: 12, overflow: 'hidden', position: 'sticky', top: 16, padding: 0, border: 'none' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
             <span style={{ fontSize: 14, fontWeight: 600, color: 'white' }}>Visiteurs dans le monde</span>
             <span style={{ background: 'rgba(57,255,20,0.15)', color: '#39ff14', border: '1px solid rgba(57,255,20,0.4)', borderRadius: 20, padding: '3px 12px', fontSize: 12, fontWeight: 600 }}>● {stats.online} en ligne</span>
           </div>
-          <div style={{ width: '100%', borderRadius: 12, overflow: 'hidden', background: 'transparent' }}>
-            <div style={{ position: 'relative', width: '100%', aspectRatio: '1/1', overflow: 'hidden', borderRadius: 16 }}>
+          <div style={{ width: '100%', background: 'transparent' }}>
+            <div style={{ position: 'relative', width: '100%', aspectRatio: '1/1', overflow: 'hidden' }}>
             <GlobeAceternity
               markers={[
                 ...ONLINE_VISITORS.map(v => ({ location: [v.lat, v.lng] as [number,number], size: 0.12, color: [0.2, 1.0, 0.4] as [number,number,number] })),
