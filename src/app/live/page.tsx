@@ -1,12 +1,12 @@
 'use client'
 
-import React, { useEffect, useRef, useState, useCallback } from 'react'
+import React, { useEffect, useState } from 'react'
 import dynamic from 'next/dynamic'
 const GlobeAceternity = dynamic(
   () => import('@/components/ui/GlobeAceternity').then(m => ({ default: m.GlobeAceternity })),
   { ssr: false }
 )
-import { Page, Badge, Text } from '@shopify/polaris'
+import { Page } from '@shopify/polaris'
 
 
 
@@ -83,7 +83,8 @@ export default function LivePage() {
   }, [])
 
   return (
-    <Page title="Vue en direct" titleMetadata={<Badge tone="success">● Live</Badge>}>
+    <Page title="">
+
       <style>{`
         @keyframes ping { 75%,100%{ transform:scale(1.8);opacity:0; } }
       `}</style>
@@ -157,14 +158,12 @@ export default function LivePage() {
 
         {/* DROITE — Globe Cobe */}
         <div style={{ background: '#000000', borderRadius: 12, overflow: 'hidden', position: 'sticky', top: 16, padding: 0, border: 'none', height: 'calc(100vh - 100px)' }}>
-          <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
-            <GlobeAceternity
-              markers={[
-                ...ONLINE_VISITORS.map(v => ({ location: [v.lat, v.lng] as [number,number], size: 0.12, color: [0.2, 1.0, 0.4] as [number,number,number] })),
-                ...ORDER_CITIES.map(o => ({ location: [o.lat, o.lng] as [number,number], size: 0.09, color: [0.2, 0.55, 1.0] as [number,number,number] })),
-              ]}
-            />
-          </div>
+          <GlobeAceternity
+            markers={[
+              ...ONLINE_VISITORS.map(v => ({ location: [v.lat, v.lng] as [number,number], size: 0.12, color: [0.2, 1.0, 0.4] as [number,number,number] })),
+              ...ORDER_CITIES.map(o => ({ location: [o.lat, o.lng] as [number,number], size: 0.09, color: [0.2, 0.55, 1.0] as [number,number,number] })),
+            ]}
+          />
         </div>
       </div>
     </Page>
