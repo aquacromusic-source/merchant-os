@@ -1186,7 +1186,7 @@ html, body {
   flex: 1;
   display: flex;
   justify-content: center;
-  max-width: 560px;
+  max-width: 450px !important;
   margin: 0 auto;
 }
 
