@@ -64,6 +64,6 @@ export function GlobeAceternity({ markers = [] }: GlobeProps) {
   }, [markers.length])
 
   return (
-    <div ref={containerRef} style={{ width: '100%', height: '100%', position: 'relative', zIndex: 1 }} />
+    <div ref={containerRef} style={{ width: '100%', height: '100%', position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }} />
   )
 }
