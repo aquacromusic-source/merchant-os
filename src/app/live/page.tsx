@@ -156,13 +156,13 @@ export default function LivePage() {
         </div>
 
         {/* DROITE — Globe Cobe */}
-        <div style={{ background: 'white', borderRadius: 12, padding: '20px 20px 16px', border: '1px solid #e5e5e5', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', position: 'sticky', top: 80 }}>
+        <div style={{ background: 'linear-gradient(160deg, #010b18 0%, #030e20 50%, #050f25 100%)', borderRadius: 20, padding: '20px', border: '1px solid #1a2d4a', position: 'sticky', top: 16 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <Text as="h2" variant="headingSm" fontWeight="semibold"><span style={{color:"white"}}>Visiteurs dans le monde</span></Text>
-            <Badge tone="success">{`${stats.online} en ligne`}</Badge>
+            <span style={{ fontSize: 14, fontWeight: 600, color: 'white' }}>Visiteurs dans le monde</span>
+            <span style={{ background: 'rgba(57,255,20,0.15)', color: '#39ff14', border: '1px solid rgba(57,255,20,0.4)', borderRadius: 20, padding: '3px 12px', fontSize: 12, fontWeight: 600 }}>● {stats.online} en ligne</span>
           </div>
-          <div style={{ width: '100%', height: 500, borderRadius: 12, overflow: 'hidden', background: 'transparent' }}>
-            <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', overflow: 'hidden', borderRadius: 16 }}>
+          <div style={{ width: '100%', borderRadius: 12, overflow: 'hidden', background: 'transparent' }}>
+            <div style={{ position: 'relative', width: '100%', aspectRatio: '1/1', overflow: 'hidden', borderRadius: 16 }}>
             <GlobeAceternity
               markers={[
                 ...ONLINE_VISITORS.map(v => ({ location: [v.lat, v.lng] as [number,number], size: 0.12, color: [0.2, 1.0, 0.4] as [number,number,number] })),
@@ -172,7 +172,7 @@ export default function LivePage() {
             </div>
           </div>
           {/* Activité en cours */}
-          <div style={{ marginTop: 16, borderTop: '1px solid #f1f1f1', paddingTop: 12 }}>
+          <div style={{ marginTop: 16, borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 12 }}>
             <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>Activité en cours</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {ONLINE_VISITORS.slice(0, 4).map((v, i) => (
