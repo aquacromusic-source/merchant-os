@@ -117,10 +117,30 @@ export default function ProductsPage() {
     URL.revokeObjectURL(url)
   }, [list])
 
+  const bulkUpdateStatus = async (status: string) => {
+    const ids = selectedResources
+    await Promise.all(ids.map(id =>
+      fetch(`/api/products/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ site: activeSite, status }),
+      })
+    ))
+    fetchProducts(0)
+  }
+
+  const bulkDelete = async () => {
+    if (!confirm(`Supprimer ${selectedResources.length} produit(s) ? Cette action est irréversible.`)) return
+    await Promise.all(selectedResources.map(id =>
+      fetch(`/api/products/${id}?site=${activeSite}`, { method: 'DELETE' })
+    ))
+    fetchProducts(0)
+  }
+
   const promotedBulkActions = [
-    { content: 'Rendre actif', icon: ViewIcon, onAction: () => {} },
-    { content: 'Archiver', icon: ArchiveIcon, onAction: () => {} },
-    { content: 'Supprimer', icon: DeleteIcon, onAction: () => {} },
+    { content: 'Rendre actif', icon: ViewIcon, onAction: () => bulkUpdateStatus('live') },
+    { content: 'Archiver', icon: ArchiveIcon, onAction: () => bulkUpdateStatus('draft') },
+    { content: 'Supprimer', icon: DeleteIcon, onAction: () => bulkDelete() },
   ]
 
   const rowMarkup = list.map((p, index) => (
@@ -205,7 +225,21 @@ export default function ProductsPage() {
   return (
     <Page
       title="Produits"
-      primaryAction={{ content: 'Ajouter un produit', icon: PlusIcon, onAction: () => router.push('/products/P-1002') }}
+      primaryAction={{ content: 'Ajouter un produit', icon: PlusIcon, onAction: async () => {
+        try {
+          const res = await fetch('/api/products', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ site: activeSite, title: 'Nouveau produit', price: 0, status: 'draft' }),
+          })
+          const data = await res.json()
+          if (data.success && data.product?.id) {
+            router.push(`/products/${data.product.id}?site=${activeSite}`)
+          } else {
+            fetchProducts(0)
+          }
+        } catch { fetchProducts(0) }
+      } }}
       secondaryActions={[
         { content: 'Exporter', icon: ExportIcon, onAction: handleExportCSV },
         { content: 'Importer', icon: ImportIcon, onAction: () => setImportModalOpen(true) },

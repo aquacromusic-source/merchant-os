@@ -157,7 +157,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
   )
 
   const notifBellMarkup = (
-    <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', height: '100%', justifyContent: 'center' }}>
+    <div style={{ position: 'relative', display: 'flex', alignItems: 'center', height: 60, justifyContent: 'center' }}>
       <button
         onClick={() => setNotifOpen(v => !v)}
         style={{
@@ -324,8 +324,8 @@ export function Shell({ children }: { children: React.ReactNode }) {
         </svg>
       </div>
       <span style={{
-        fontWeight: 600,
-        fontSize: 14,
+        fontWeight: 500,
+        fontSize: 16,
         color: '#1a1a1a',
         letterSpacing: '-0.01em',
       }}>
@@ -335,7 +335,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
   )
 
   const secondaryMenuMarkup = (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 20, height: 60, justifyContent: 'center' }}>
       {notifBellMarkup}
     </div>
   )

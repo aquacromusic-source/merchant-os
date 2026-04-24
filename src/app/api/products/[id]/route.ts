@@ -1,13 +1,36 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { put } from '@vercel/blob'
+
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY!
+
+const SITE_CONFIG: Record<string, {
+  table: string
+  titleCol: string
+  activeCol: string | null
+  imageCol: string
+  priceCol: string
+}> = {
+  'gaming-posters': { table: 'posters', titleCol: 'title', activeCol: 'is_active', imageCol: 'image_url', priceCol: 'price' },
+  'strap': { table: 'kettel_products', titleCol: 'name', activeCol: 'is_active', imageCol: 'image_url', priceCol: 'price' },
+  'pdf-guide-store': { table: 'guides', titleCol: 'title', activeCol: 'is_published', imageCol: 'cover_url', priceCol: 'price' },
+}
+
+function getConfig(site: string) {
+  return SITE_CONFIG[site] || SITE_CONFIG['gaming-posters']
+}
+
+// GET — récupérer un produit par ID
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params
-    const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
-    const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY!
-    
-    const url = `${SUPABASE_URL}/rest/v1/posters?slug=eq.${id}&is_active=eq.true&limit=1`
+    const site = new URL(req.url).searchParams.get('site') || 'gaming-posters'
+    const config = getConfig(site)
+
+    const url = `${SUPABASE_URL}/rest/v1/${config.table}?id=eq.${id}&limit=1`
     const res = await fetch(url, {
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
     })
@@ -19,66 +42,95 @@ export async function GET(
   }
 }
 
-import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-import { put } from '@vercel/blob'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://depztempjsdlpnfcjxir.supabase.co',
-  process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_KEY!
-)
-
-// PATCH — mettre à jour un produit
-export async function PATCH(
+// PUT — mettre à jour un produit par ID
+export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params
     const body = await req.json()
+    const site = body.site || 'gaming-posters'
+    const config = getConfig(site)
 
-    const { title, seo_desc, tags, collections, status, price, genres } = body
-
-    // Construire l'objet de mise à jour
     const updateData: Record<string, any> = {}
-    if (title !== undefined) updateData.title = title
-    if (seo_desc !== undefined) updateData.seo_desc = seo_desc
-    if (tags !== undefined) updateData.tags = tags
-    if (status !== undefined) updateData.is_active = status === 'live'
-    if (price !== undefined) updateData.price = price
-    if (genres !== undefined) updateData.genres = genres
+    if (body.title !== undefined) updateData[config.titleCol] = body.title
+    if (body.price !== undefined) updateData[config.priceCol] = body.price
+    if (body.image_url !== undefined) updateData[config.imageCol] = body.image_url
+    if (body.status !== undefined && config.activeCol) {
+      updateData[config.activeCol] = body.status === 'live'
+    }
+    // Site-specific fields
+    if (body.category !== undefined && (site === 'strap' || site === 'pdf-guide-store')) updateData.category = body.category
+    if (body.description !== undefined && site === 'pdf-guide-store') updateData.description = body.description
+    if (body.stock !== undefined && site === 'strap') updateData.stock = body.stock
+    // Gaming posters specific
+    if (body.seo_desc !== undefined && site === 'gaming-posters') updateData.seo_desc = body.seo_desc
+    if (body.tags !== undefined && site === 'gaming-posters') updateData.tags = body.tags
+    if (body.genres !== undefined && site === 'gaming-posters') updateData.genres = body.genres
+    if (body.slug !== undefined && site === 'gaming-posters') updateData.slug = body.slug
 
-    // Essayer avec igdb_id d'abord, sinon avec slug
-    let result
-    // Si l'id est numérique, chercher par ID
-    if (!isNaN(Number(id.replace('P-', '')))) {
-      // ID mock → chercher dans posters par position
-      const { data, error } = await supabase
-        .from('posters')
-        .select('id, slug')
-        .limit(50)
-
-      if (error) throw error
-      // Pour les IDs mock (P-1000, P-1001...), mapper à la DB
-      const idx = parseInt(id.replace('P-', '')) - 1000
-      const poster = data?.[idx]
-      if (poster) {
-        result = await supabase
-          .from('posters')
-          .update(updateData)
-          .eq('id', poster.id)
-      }
-    } else {
-      // Sinon chercher par slug
-      result = await supabase
-        .from('posters')
-        .update(updateData)
-        .eq('slug', id)
+    if (Object.keys(updateData).length === 0) {
+      return NextResponse.json({ error: 'No fields to update' }, { status: 400 })
     }
 
-    if (result?.error) throw result.error
+    const url = `${SUPABASE_URL}/rest/v1/${config.table}?id=eq.${id}`
+    const res = await fetch(url, {
+      method: 'PATCH',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation',
+      },
+      body: JSON.stringify(updateData),
+    })
 
-    return NextResponse.json({ success: true, updated: updateData })
+    if (!res.ok) {
+      const err = await res.text()
+      return NextResponse.json({ error: err }, { status: res.status })
+    }
+
+    const data = await res.json()
+    return NextResponse.json({ success: true, product: data[0] })
+  } catch (e: any) {
+    return NextResponse.json({ error: e.message }, { status: 500 })
+  }
+}
+
+// PATCH — alias pour PUT (compatibilité)
+export async function PATCH(
+  req: NextRequest,
+  ctx: { params: Promise<{ id: string }> }
+) {
+  return PUT(req, ctx)
+}
+
+// DELETE — supprimer un produit par ID
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params
+    const site = new URL(req.url).searchParams.get('site') || 'gaming-posters'
+    const config = getConfig(site)
+
+    const url = `${SUPABASE_URL}/rest/v1/${config.table}?id=eq.${id}`
+    const res = await fetch(url, {
+      method: 'DELETE',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+      },
+    })
+
+    if (!res.ok) {
+      const err = await res.text()
+      return NextResponse.json({ error: err }, { status: res.status })
+    }
+
+    return NextResponse.json({ success: true })
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 })
   }
@@ -93,6 +145,8 @@ export async function POST(
     const { id } = await params
     const formData = await req.formData()
     const files = formData.getAll('images') as File[]
+    const site = formData.get('site') as string || 'gaming-posters'
+    const config = getConfig(site)
 
     if (files.length === 0) {
       return NextResponse.json({ error: 'Aucun fichier' }, { status: 400 })
@@ -108,27 +162,21 @@ export async function POST(
       uploadedUrls.push(blob.url)
     }
 
-    // Mettre à jour le premier en image_url si pas encore défini
+    // Update the product's image
     if (uploadedUrls[0]) {
-      // Chercher le poster par ID mock
-      const { data } = await supabase
-        .from('posters')
-        .select('id, images')
-        .limit(50)
+      const updateData: Record<string, any> = {}
+      updateData[config.imageCol] = uploadedUrls[0]
 
-      const idx = parseInt(id.replace('P-', '')) - 1000
-      const poster = data?.[idx]
-
-      if (poster) {
-        const existingImages = poster.images || []
-        await supabase
-          .from('posters')
-          .update({
-            images: [...existingImages, ...uploadedUrls],
-            image_url: poster.images?.length ? poster.images[0] : uploadedUrls[0],
-          })
-          .eq('id', poster.id)
-      }
+      const url = `${SUPABASE_URL}/rest/v1/${config.table}?id=eq.${id}`
+      await fetch(url, {
+        method: 'PATCH',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updateData),
+      })
     }
 
     return NextResponse.json({ success: true, urls: uploadedUrls })
