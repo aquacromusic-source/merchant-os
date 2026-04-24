@@ -162,7 +162,7 @@ export default function LivePage() {
             <Badge tone="success">{`${stats.online} en ligne`}</Badge>
           </div>
           <div style={{ width: '100%', height: 500, borderRadius: 12, overflow: 'hidden', background: 'transparent' }}>
-            <div style={{ position: 'relative', width: '100%', aspectRatio: '4/3', overflow: 'hidden', borderRadius: 20 }}>
+            <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', overflow: 'hidden', borderRadius: 16 }}>
             <GlobeAceternity
               markers={[
                 ...ONLINE_VISITORS.map(v => ({ location: [v.lat, v.lng] as [number,number], size: 0.12, color: [0.2, 1.0, 0.4] as [number,number,number] })),
