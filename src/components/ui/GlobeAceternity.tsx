@@ -18,8 +18,8 @@ export function GlobeAceternity({ markers = [] }: GlobeProps) {
       if (cancelled || !containerRef.current) return
       const w = containerRef.current.clientWidth || 600
       const h = containerRef.current.clientHeight || 600
-      // Shrink the globe to 60% so it fits comfortably with margin
-      const scale = 0.6
+      // Shrink the globe to 40% — full sphere visible as a small blue ball with margin all around
+      const scale = 0.4
       const gw = Math.round(w * scale)
       const gh = Math.round(h * scale)
 
@@ -55,7 +55,7 @@ export function GlobeAceternity({ markers = [] }: GlobeProps) {
       globe.controls().autoRotate = true
       globe.controls().autoRotateSpeed = 0.4
       globe.controls().enableZoom = false
-      globe.pointOfView({ lat: 20, lng: -10, altitude: 1.8 }, 0)
+      globe.pointOfView({ lat: 20, lng: -10, altitude: 2.8 }, 0)
 
       // Center the reduced-size canvas inside the container
       const canvas = containerRef.current.querySelector('canvas')
