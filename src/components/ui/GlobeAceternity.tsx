@@ -1,127 +1,78 @@
 'use client'
 
-import React, { useEffect, useRef, useState } from 'react'
-import createGlobe from 'cobe'
+import React, { useEffect, useRef } from 'react'
 
 interface GlobeProps {
   markers?: { location: [number, number]; size: number; color?: [number, number, number] }[]
 }
 
 export function GlobeAceternity({ markers = [] }: GlobeProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const pointerInteracting = useRef<number | null>(null)
-  const phiRef = useRef(0)
-  const widthRef = useRef(0)
-  const rotationRef = useRef(0)
+  const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (!canvasRef.current) return
+    if (!containerRef.current) return
+    let globe: any
+    let cancelled = false
 
-    // Attendre que le DOM soit prêt et que le canvas ait des dimensions
-    const initGlobe = () => {
-      if (!canvasRef.current) return
-      const w = canvasRef.current.parentElement?.clientWidth || 600
-      widthRef.current = w
-      canvasRef.current.width = w * 2
-      canvasRef.current.height = w * 2
-      canvasRef.current.style.width = w + 'px'
-      canvasRef.current.style.height = w + 'px'
+    import('globe.gl').then(({ default: GlobeGL }) => {
+      if (cancelled || !containerRef.current) return
+      const w = containerRef.current.clientWidth || 600
 
-      const onResize = () => {
-        if (canvasRef.current) {
-          const newW = canvasRef.current.parentElement?.clientWidth || 600
-          widthRef.current = newW
-        }
-      }
-      window.addEventListener('resize', onResize)
+      globe = new (GlobeGL as any)()(containerRef.current)
+      globe
+        .width(w)
+        .height(w)
+        .backgroundColor('rgba(0,0,0,0)')
+        .globeImageUrl('/earth-night.jpg')
+        .bumpImageUrl('//unpkg.com/three-globe/example/img/earth-topology.png')
+        .atmosphereColor('rgba(80,160,255,0.5)')
+        .atmosphereAltitude(0.15)
+        .pointsData(markers)
+        .pointLat((d: any) => d.location[0])
+        .pointLng((d: any) => d.location[1])
+        .pointColor((d: any) => {
+          const c = d.color || [0.2, 1, 0.4]
+          return `rgba(${Math.round(c[0]*255)},${Math.round(c[1]*255)},${Math.round(c[2]*255)},0.9)`
+        })
+        .pointAltitude(0.04)
+        .pointRadius(0.6)
+        .ringsData(markers.filter((_, i) => i % 2 === 0))
+        .ringLat((d: any) => d.location[0])
+        .ringLng((d: any) => d.location[1])
+        .ringColor((d: any) => {
+          const c = (d as any).color || [0.2, 1, 0.4]
+          return () => `rgba(${Math.round(c[0]*255)},${Math.round(c[1]*255)},${Math.round(c[2]*255)},0.5)`
+        })
+        .ringMaxRadius(3)
+        .ringPropagationSpeed(2.5)
+        .ringRepeatPeriod(1200)
 
-      let globe: any
-      try {
-        globe = (createGlobe as any)(canvasRef.current, {
-          devicePixelRatio: 2,
-          width: w * 2,
-          height: w * 2,
-        phi: 0.6,
-        theta: 0.15,
-        dark: 1,
-        diffuse: 1.2,
-        mapSamples: 16000,
-        mapBrightness: 6,
-        baseColor: [0.05, 0.08, 0.28],
-        markerColor: [0.1, 0.8, 1],
-        glowColor: [0.05, 0.15, 0.6],
-        markers,
-        onRender: (state: Record<string, any>) => {
-          if (!pointerInteracting.current) {
-            phiRef.current += 0.003
-          }
-          state.phi = phiRef.current + rotationRef.current
-          state.width = widthRef.current * 2
-          state.height = widthRef.current * 2
-        },
-      })
+      globe.controls().autoRotate = true
+      globe.controls().autoRotateSpeed = 0.4
+      globe.controls().enableZoom = false
+      globe.pointOfView({ lat: 25, lng: -10, altitude: 1.8 }, 0)
+    })
 
-        setTimeout(() => {
-          if (canvasRef.current) canvasRef.current.style.opacity = '1'
-        }, 200)
-      } catch (e) {
-        console.error('Globe error:', e)
-      }
-
-      return () => {
-        globe?.destroy()
-        window.removeEventListener('resize', onResize)
-      }
+    return () => {
+      cancelled = true
+      try { globe?.destroy?.() } catch {}
     }
-
-    // Init après un frame pour que le DOM soit peint
-    const timeout = setTimeout(initGlobe, 100)
-    return () => clearTimeout(timeout)
-  }, []) // eslint-disable-line
+  }, [markers.length])
 
   return (
-    <div style={{ width: '100%', aspectRatio: '1/1', position: 'relative', maxWidth: 700, margin: '0 auto' }}>
-      <canvas
-        ref={canvasRef}
-        onPointerDown={(e) => {
-          pointerInteracting.current = e.clientX
-          if (canvasRef.current) canvasRef.current.style.cursor = 'grabbing'
-        }}
-        onPointerUp={() => {
-          pointerInteracting.current = null
-          if (canvasRef.current) canvasRef.current.style.cursor = 'grab'
-        }}
-        onPointerOut={() => {
-          pointerInteracting.current = null
-        }}
-        onMouseMove={(e) => {
-          if (pointerInteracting.current !== null) {
-            const delta = (e.clientX - pointerInteracting.current) / 200
-            rotationRef.current = delta
-          }
-        }}
-        style={{
-          width: '100%',
-          height: '100%',
-          cursor: 'grab',
-          opacity: 0,
-          transition: 'opacity 1s ease',
-        }}
-      />
-      {/* Légende */}
+    <div style={{ position: 'relative', width: '100%', aspectRatio: '1/1', maxWidth: 600, margin: '0 auto' }}>
+      <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
       <div style={{
         position: 'absolute', bottom: 12, left: '50%', transform: 'translateX(-50%)',
-        display: 'flex', gap: 14, background: 'rgba(0,0,0,0.6)',
+        display: 'flex', gap: 14, background: 'rgba(0,0,0,0.65)',
         padding: '5px 14px', borderRadius: 20, backdropFilter: 'blur(4px)',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: 'white' }}>
-          <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#33e66a' }}/>
-          En ligne
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: 'white' }}>
-          <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#3380ff' }}/>
-          Commandes
-        </div>
+        {[['#33e66a', 'En ligne'], ['#3380ff', 'Commandes']].map(([color, label]) => (
+          <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: 'white' }}>
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: color }}/>
+            {label}
+          </div>
+        ))}
       </div>
     </div>
   )
