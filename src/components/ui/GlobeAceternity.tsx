@@ -18,8 +18,7 @@ export function GlobeAceternity({ markers = [] }: GlobeProps) {
       if (cancelled || !containerRef.current) return
       const cw = containerRef.current.clientWidth || 600
       const ch = containerRef.current.clientHeight || 600
-      // Use ~80% of available space, keep square (proportional)
-      const size = Math.round(Math.min(cw, ch) * 0.82)
+      const size = Math.min(cw, ch)
       const w = size
       const h = size
 
@@ -27,7 +26,7 @@ export function GlobeAceternity({ markers = [] }: GlobeProps) {
       globe
         .width(w)
         .height(h)
-        .backgroundColor('#000000')
+        .backgroundColor('rgba(0,0,0,0)')
         .globeImageUrl('/earth-night.jpg')
         .bumpImageUrl('//unpkg.com/three-globe/example/img/earth-topology.png')
         .atmosphereColor('rgba(60,140,255,0.6)')
