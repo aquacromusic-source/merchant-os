@@ -96,8 +96,6 @@ export default function LivePage() {
           0%,100% { opacity: 0.3; transform: scale(1); }
           50% { opacity: 1; transform: scale(1.3); }
         }
-      `}</style>
-      <style>{`
         @keyframes ping { 75%,100%{ transform:scale(1.8);opacity:0; } }
       `}</style>
 
