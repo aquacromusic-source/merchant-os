@@ -158,8 +158,6 @@ export default function LivePage() {
 
         {/* DROITE — Globe */}
         <div style={{ background: '#000000', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', minHeight: 500, overflow: 'hidden' }}>
-          {/* Blue glow behind globe */}
-          <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '70%', height: '70%', borderRadius: '50%', background: 'radial-gradient(circle, rgba(51,128,255,0.35) 0%, rgba(51,128,255,0.12) 40%, transparent 70%)', pointerEvents: 'none', zIndex: 0 }} />
           <GlobeAceternity
             markers={[
               ...ONLINE_VISITORS.map(v => ({ location: [v.lat, v.lng] as [number,number], size: 0.12, color: [0.2, 1.0, 0.4] as [number,number,number] })),
