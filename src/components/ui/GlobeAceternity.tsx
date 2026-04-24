@@ -16,14 +16,8 @@ export function GlobeAceternity({ markers = [] }: GlobeProps) {
 
     import('globe.gl').then(({ default: GlobeGL }) => {
       if (cancelled || !containerRef.current) return
-      const parent = containerRef.current.parentElement
-      const cw = parent?.clientWidth || 600
-      const ch = parent?.clientHeight || 600
-      const size = Math.min(cw, ch) * 0.85
-      const w = size
-      const h = size
-      containerRef.current.style.width = `${w}px`
-      containerRef.current.style.height = `${h}px`
+      const w = 500
+      const h = 500
 
       globe = new (GlobeGL as any)()(containerRef.current)
       globe
@@ -67,6 +61,6 @@ export function GlobeAceternity({ markers = [] }: GlobeProps) {
   }, [markers.length])
 
   return (
-    <div ref={containerRef} style={{ position: 'relative', zIndex: 1 }} />
+    <div ref={containerRef} style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 500, height: 500, zIndex: 1 }} />
   )
 }
