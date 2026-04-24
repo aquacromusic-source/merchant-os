@@ -157,7 +157,7 @@ export default function LivePage() {
         </div>
 
         {/* DROITE — Globe */}
-        <div style={{ background: 'linear-gradient(135deg, #121820 0%, #1a2332 100%)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', minHeight: 800, overflow: 'visible' }}>
+        <div style={{ background: 'radial-gradient(2px 2px at 20% 30%, white, rgba(255,255,255,.2) 1px, transparent 1px), radial-gradient(2px 2px at 60% 70%, white, rgba(255,255,255,.15) 1px, transparent 1px), radial-gradient(1px 1px at 50% 50%, white, rgba(255,255,255,.1) 1px, transparent 1px), radial-gradient(1px 1px at 80% 10%, white, rgba(255,255,255,.2) 1px, transparent 1px), linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #121820 100%)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', minHeight: 800, overflow: 'visible', paddingTop: 40, paddingBottom: 40 }}>
           <GlobeAceternity
             markers={[
               ...ONLINE_VISITORS.map(v => ({ location: [v.lat, v.lng] as [number,number], size: 0.12, color: [0.2, 1.0, 0.4] as [number,number,number] })),
