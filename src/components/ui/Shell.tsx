@@ -54,6 +54,12 @@ const NOTIFICATIONS = [
   { id: '6', title: 'Nouveau message client', body: 'Dawid B. — question sur la livraison', time: 'il y a 5 h', tone: undefined, read: true },
 ]
 
+const SITES = [
+  { label: 'Gaming Posters', value: 'gaming-posters' },
+  { label: 'STRAP.', value: 'strap' },
+  { label: 'PDF Guide Store', value: 'pdf-guide-store' },
+]
+
 export function Shell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
@@ -62,6 +68,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const [searchValue, setSearchValue] = useState('')
   const [userMenuActive, setUserMenuActive] = useState(false)
   const [notifOpen, setNotifOpen] = useState(false)
+  const [activeSite, setActiveSite] = useState('gaming-posters')
   // Toujours partir de vide — le useEffect charge depuis localStorage
   const [notifications, setNotifications] = useState<any[]>([])
 
@@ -267,10 +274,94 @@ export function Shell({ children }: { children: React.ReactNode }) {
     </div>
   )
 
+  const activeSiteLabel = SITES.find(s => s.value === activeSite)?.label ?? 'Gaming Posters'
+
+  const contextControlMarkup = (
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: 10,
+      paddingLeft: 16,
+      height: '100%',
+      whiteSpace: 'nowrap',
+    }}>
+      {/* Gamepad icon for Gaming Posters, generic store icon otherwise */}
+      <svg
+        width="28"
+        height="28"
+        viewBox="0 0 28 28"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        style={{ flexShrink: 0 }}
+      >
+        <rect width="28" height="28" rx="6" fill="#1a1a1a" />
+        <text
+          x="14"
+          y="19"
+          textAnchor="middle"
+          fill="white"
+          fontSize="14"
+          fontWeight="700"
+          fontFamily="system-ui, sans-serif"
+        >
+          {activeSiteLabel.charAt(0)}
+        </text>
+      </svg>
+      <span style={{
+        fontWeight: 700,
+        fontSize: 14,
+        color: '#1a1a1a',
+        letterSpacing: '-0.01em',
+      }}>
+        {activeSiteLabel}
+      </span>
+    </div>
+  )
+
+  const siteSelectMarkup = (
+    <div style={{ display: 'flex', alignItems: 'center', marginRight: 4 }}>
+      <select
+        value={activeSite}
+        onChange={(e) => {
+          setActiveSite(e.target.value)
+          console.log('Site changed:', e.target.value)
+        }}
+        style={{
+          appearance: 'none',
+          WebkitAppearance: 'none',
+          background: 'var(--p-color-bg-surface-secondary)',
+          border: '1px solid var(--p-color-border)',
+          borderRadius: 8,
+          padding: '6px 28px 6px 10px',
+          fontSize: 13,
+          fontWeight: 500,
+          color: 'var(--p-color-text)',
+          cursor: 'pointer',
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23637381' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'right 8px center',
+          lineHeight: '20px',
+        }}
+      >
+        {SITES.map(s => (
+          <option key={s.value} value={s.value}>{s.label}</option>
+        ))}
+      </select>
+    </div>
+  )
+
+  const secondaryMenuMarkup = (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+      {siteSelectMarkup}
+      {notifBellMarkup}
+    </div>
+  )
+
   const topBarMarkup = (
     <TopBar
       showNavigationToggle
       userMenu={userMenuMarkup}
+      contextControl={contextControlMarkup}
       searchField={searchFieldMarkup}
       searchResultsVisible={searchActive}
       searchResults={
@@ -284,7 +375,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
       }
       onSearchResultsDismiss={handleSearchResultsDismiss}
       onNavigationToggle={toggleMobileNavigation}
-      secondaryMenu={notifBellMarkup}
+      secondaryMenu={secondaryMenuMarkup}
     />
   )
 
