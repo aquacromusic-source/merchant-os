@@ -1,3 +1,4 @@
+import { rateLimit, getClientIP } from '../../lib/rateLimit'
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 
@@ -12,6 +13,11 @@ export async function POST(req: NextRequest) {
   if (authHeader !== expectedSecret) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
+  // Rate limiting — max 10 req/min par IP
+  const ip = getClientIP(req)
+  const { success } = rateLimit(ip, { limit: 10, windowMs: 60_000 })
+  if (!success) return NextResponse.json({ error: "Trop de requêtes." }, { status: 429 })
+
   try {
     const { messages, systemPrompt } = await req.json()
 
