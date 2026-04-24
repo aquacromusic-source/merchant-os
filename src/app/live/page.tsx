@@ -157,7 +157,7 @@ export default function LivePage() {
         </div>
 
         {/* DROITE — Globe */}
-        <div style={{ backgroundImage: "url('/space-background.webp')", backgroundSize: 'cover', backgroundPosition: 'center', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', minHeight: 800, overflow: 'visible', paddingTop: 10, paddingBottom: 0, paddingLeft: 80, paddingRight: 80 }}>
+        <div style={{ backgroundImage: "url('/space-background.webp')", backgroundSize: 'cover', backgroundPosition: 'center', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', minHeight: 800, overflow: 'visible', padding: 20 }}>
           <GlobeAceternity
             markers={[
               ...ONLINE_VISITORS.map(v => ({ location: [v.lat, v.lng] as [number,number], size: 0.12, color: [0.2, 1.0, 0.4] as [number,number,number] })),
