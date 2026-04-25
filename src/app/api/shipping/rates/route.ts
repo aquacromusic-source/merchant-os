@@ -20,6 +20,48 @@ export async function OPTIONS() {
   return new NextResponse(null, { status: 200, headers: corsHeaders })
 }
 
+export async function GET(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url)
+    const site = searchParams.get('site') || 'gaming-posters'
+    const country = searchParams.get('country')
+
+    // Build zones query
+    let zonesUrl = `${SUPABASE_URL}/rest/v1/shipping_zones?site_id=eq.${encodeURIComponent(site)}&is_active=eq.true`
+    if (country) {
+      zonesUrl += `&countries=cs.["${encodeURIComponent(country)}"]`
+    }
+
+    const zonesRes = await fetch(zonesUrl, { headers })
+    if (!zonesRes.ok) {
+      const err = await zonesRes.text()
+      return NextResponse.json({ error: err }, { status: zonesRes.status, headers: corsHeaders })
+    }
+
+    const zones = await zonesRes.json()
+
+    if (zones.length === 0) {
+      return NextResponse.json({ zones: [], rates: [] }, { headers: corsHeaders })
+    }
+
+    // Fetch rates for all matching zones
+    const zoneIds = zones.map((z: any) => z.id)
+    const ratesUrl = `${SUPABASE_URL}/rest/v1/shipping_rates?zone_id=in.(${zoneIds.map(encodeURIComponent).join(',')})&is_active=eq.true&order=price.asc`
+
+    const ratesRes = await fetch(ratesUrl, { headers })
+    if (!ratesRes.ok) {
+      const err = await ratesRes.text()
+      return NextResponse.json({ error: err }, { status: ratesRes.status, headers: corsHeaders })
+    }
+
+    const rates = await ratesRes.json()
+
+    return NextResponse.json({ zones, rates }, { headers: corsHeaders })
+  } catch (e: any) {
+    return NextResponse.json({ error: e.message }, { status: 500, headers: corsHeaders })
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
