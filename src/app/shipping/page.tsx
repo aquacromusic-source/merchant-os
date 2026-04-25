@@ -243,8 +243,13 @@ export default function ShippingPage() {
             <EmptyState
               heading="Aucune zone d'expédition"
               image=""
+              action={{
+                content: seeding ? 'Importation...' : 'Importer les données',
+                onAction: seedData,
+                loading: seeding,
+              }}
             >
-              <p>Les zones d&apos;expédition et tarifs apparaîtront ici une fois configurés.</p>
+              <p>Importez les zones et tarifs d&apos;expédition réels (UPS, GLS) pour tous les sites.</p>
             </EmptyState>
           </Card>
         ) : (
