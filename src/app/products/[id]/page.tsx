@@ -493,6 +493,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
   const [channelTags, setChannelTags] = useState(SALES_CHANNELS)
   const [collectionTags, setCollectionTags] = useState<string[]>([])
   const [productTags, setProductTags] = useState(PRODUCT_TAGS)
+  const [expandImages, setExpandImages] = useState(false)
 
   // Load real product from Supabase
   useEffect(() => {
@@ -772,25 +773,26 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                         </InlineStack>
                         <div style={{
                           display: 'grid',
-                          gridTemplateColumns: 'repeat(6, 1fr)',
+                          gridTemplateColumns: 'repeat(auto-fill, 80px)',
                           gap: 8,
                         }}>
-                          {images.map((img, idx) => (
+                          {(expandImages ? images : images.slice(0, 8)).map((img, idx) => (
                             <div
                               key={img.id}
                               style={{
                                 position: 'relative', cursor: 'pointer',
                                 borderRadius: 8, overflow: 'hidden',
                                 border: '1px solid #d0d0d0',
+                                width: 80, height: 80,
                               }}
                               onClick={() => setSelectedImage(img)}
                             >
                               {img.url ? (
-                                <img src={img.url} alt={img.alt || img.label} style={{ width: '100%', height: 80, objectFit: 'cover', display: 'block' }} />
+                                <img src={img.url} alt={img.alt || img.label} style={{ width: 80, height: 80, objectFit: 'cover', display: 'block', borderRadius: 8 }} />
                               ) : (
                                 <div style={{
                                   background: 'repeating-linear-gradient(45deg,#e8e8e8,#e8e8e8 6px,#f1f1f1 6px,#f1f1f1 12px)',
-                                  height: 80, display: 'grid', placeItems: 'center',
+                                  width: 80, height: 80, display: 'grid', placeItems: 'center',
                                   fontSize: 10, color: '#888',
                                 }}>
                                   {idx === 0 ? '🏆' : `📷`} {img.label}
@@ -808,7 +810,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                           {/* Add button */}
                           <div
                             style={{
-                              height: 80, border: '1.5px dashed #c4c4c4', borderRadius: 8,
+                              width: 80, height: 80, border: '1.5px dashed #c4c4c4', borderRadius: 8,
                               display: 'grid', placeItems: 'center', cursor: 'pointer',
                               color: '#888',
                             }}
@@ -817,6 +819,32 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                             <span style={{ fontSize: 20 }}>+</span>
                           </div>
                         </div>
+                        {images.length > 8 && !expandImages && (
+                          <div style={{ textAlign: 'center', marginTop: 4 }}>
+                            <button
+                              onClick={() => setExpandImages(true)}
+                              style={{
+                                background: 'none', border: 'none', color: '#2c6ecb',
+                                cursor: 'pointer', fontSize: 13, fontWeight: 500,
+                              }}
+                            >
+                              + Voir {images.length - 8} de plus
+                            </button>
+                          </div>
+                        )}
+                        {images.length > 8 && expandImages && (
+                          <div style={{ textAlign: 'center', marginTop: 4 }}>
+                            <button
+                              onClick={() => setExpandImages(false)}
+                              style={{
+                                background: 'none', border: 'none', color: '#2c6ecb',
+                                cursor: 'pointer', fontSize: 13, fontWeight: 500,
+                              }}
+                            >
+                              Voir moins
+                            </button>
+                          </div>
+                        )}
                         <Text as="p" variant="bodySm" tone="subdued">
                           Cliquez sur une image pour modifier le texte alternatif, recadrer ou générer une variante.
                         </Text>
