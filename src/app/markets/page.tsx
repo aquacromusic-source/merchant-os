@@ -352,7 +352,10 @@ export default function MarketsPage() {
   // -----------------------------------------------------------------------
   if (loading) {
     return (
-      <Page title="Marches">
+      <Page
+        title="Marches"
+        primaryAction={{ content: 'Creer un marche', icon: PlusIcon, onAction: () => { setForm(blankForm()); setCreateOpen(true) } }}
+      >
         <Layout>
           <Layout.Section>
             <Card>
@@ -363,6 +366,19 @@ export default function MarketsPage() {
             </Card>
           </Layout.Section>
         </Layout>
+
+        {/* ---- Create Modal ---- */}
+        <Modal
+          open={createOpen}
+          onClose={() => setCreateOpen(false)}
+          title="Creer un marche"
+          primaryAction={{ content: 'Creer', onAction: handleCreate, loading: saving, disabled: !form.name || !form.code }}
+          secondaryActions={[{ content: 'Annuler', onAction: () => setCreateOpen(false) }]}
+        >
+          <Modal.Section>
+            {renderFormFields()}
+          </Modal.Section>
+        </Modal>
       </Page>
     )
   }
@@ -372,7 +388,11 @@ export default function MarketsPage() {
   // -----------------------------------------------------------------------
   if (needsSetup) {
     return (
-      <Page title="Marches" subtitle="Gerez vos marches internationaux et leurs parametres de localisation.">
+      <Page
+        title="Marches"
+        subtitle="Gerez vos marches internationaux et leurs parametres de localisation."
+        primaryAction={{ content: 'Creer un marche', icon: PlusIcon, onAction: () => { setForm(blankForm()); setCreateOpen(true) } }}
+      >
         <Layout>
           <Layout.Section>
             <BlockStack gap="400">
@@ -404,6 +424,19 @@ export default function MarketsPage() {
             </BlockStack>
           </Layout.Section>
         </Layout>
+
+        {/* ---- Create Modal ---- */}
+        <Modal
+          open={createOpen}
+          onClose={() => setCreateOpen(false)}
+          title="Creer un marche"
+          primaryAction={{ content: 'Creer', onAction: handleCreate, loading: saving, disabled: !form.name || !form.code }}
+          secondaryActions={[{ content: 'Annuler', onAction: () => setCreateOpen(false) }]}
+        >
+          <Modal.Section>
+            {renderFormFields()}
+          </Modal.Section>
+        </Modal>
       </Page>
     )
   }
