@@ -10,6 +10,16 @@ const headers = {
   'Prefer': 'return=representation',
 }
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+}
+
+export async function OPTIONS() {
+  return new NextResponse(null, { status: 200, headers: corsHeaders })
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
@@ -36,12 +46,12 @@ export async function POST(req: NextRequest) {
 
     if (!res.ok) {
       const err = await res.text()
-      return NextResponse.json({ error: err }, { status: res.status })
+      return NextResponse.json({ error: err }, { status: res.status, headers: corsHeaders })
     }
 
     const data = await res.json()
-    return NextResponse.json({ success: true, rate: data[0] }, { status: 201 })
+    return NextResponse.json({ success: true, rate: data[0] }, { status: 201, headers: corsHeaders })
   } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 })
+    return NextResponse.json({ error: e.message }, { status: 500, headers: corsHeaders })
   }
 }
