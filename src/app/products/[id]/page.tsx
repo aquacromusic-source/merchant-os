@@ -246,14 +246,22 @@ function VariantDetailPanel({ variant, onClose }: { variant: VariantRow; onClose
 
 // ─── Image Modal ─────────────────────────────────────────────────────────────
 
-function ImageModal({ image, onClose }: { image: typeof MOCK_IMAGES[0]; onClose: () => void }) {
+function ImageModal({ image, onClose, onUpdate }: { image: typeof MOCK_IMAGES[0]; onClose: () => void; onUpdate: (updated: typeof MOCK_IMAGES[0]) => void }) {
+  const [label, setLabel] = useState(image.label)
+  const [alt, setAlt] = useState(image.alt)
+
+  const handleDone = () => {
+    onUpdate({ ...image, label, alt })
+    onClose()
+  }
+
   return (
     <Modal
       open
       onClose={onClose}
       title={image.label}
       size="large"
-      primaryAction={{ content: 'Terminé', onAction: onClose }}
+      primaryAction={{ content: 'Terminé', onAction: handleDone }}
       secondaryActions={[
         { content: 'Recadrage', onAction: () => {} },
         { content: 'Redimensionnement', onAction: () => {} },
@@ -267,23 +275,23 @@ function ImageModal({ image, onClose }: { image: typeof MOCK_IMAGES[0]; onClose:
             border: '1px solid #d0d0d0',
           }}>
             {image.url ? (
-              <img src={image.url} alt={image.alt || image.label} style={{ maxWidth: '100%', maxHeight: 380, objectFit: 'contain' }} />
+              <img src={image.url} alt={alt || label} style={{ maxWidth: '100%', maxHeight: 380, objectFit: 'contain' }} />
             ) : (
-              <ImagePlaceholder label={image.label} size="lg" />
+              <ImagePlaceholder label={label} size="lg" />
             )}
           </div>
           {/* Infos */}
           <BlockStack gap="300">
-            <TextField label="Nom" value={image.label + '.jpg'} autoComplete="off" onChange={() => {}} />
-            <TextField label="Texte alternatif" value={image.alt} multiline={2} autoComplete="off" onChange={() => {}} />
+            <TextField label="Nom" value={label} autoComplete="off" onChange={setLabel} />
+            <TextField label="Texte alternatif" value={alt} multiline={2} autoComplete="off" onChange={setAlt} />
             <Box paddingBlockStart="300">
               <BlockStack gap="100">
                 <Text variant="headingSm" as="h3">Détails</Text>
                 <Divider />
-                <InlineStack align="space-between"><Text as="span" tone="subdued" variant="bodySm">Format</Text>image.format</InlineStack>
-                <InlineStack align="space-between"><Text as="span" tone="subdued" variant="bodySm">Dimensions</Text>image.dims</InlineStack>
-                <InlineStack align="space-between"><Text as="span" tone="subdued" variant="bodySm">Taille</Text>image.size</InlineStack>
-                <InlineStack align="space-between"><Text as="span" tone="subdued" variant="bodySm">Ajoutée</Text>image.date</InlineStack>
+                <InlineStack align="space-between"><Text as="span" tone="subdued" variant="bodySm">Format</Text><Text as="span" variant="bodySm">{image.format}</Text></InlineStack>
+                <InlineStack align="space-between"><Text as="span" tone="subdued" variant="bodySm">Dimensions</Text><Text as="span" variant="bodySm">{image.dims}</Text></InlineStack>
+                <InlineStack align="space-between"><Text as="span" tone="subdued" variant="bodySm">Taille</Text><Text as="span" variant="bodySm">{image.size}</Text></InlineStack>
+                <InlineStack align="space-between"><Text as="span" tone="subdued" variant="bodySm">Ajoutée</Text><Text as="span" variant="bodySm">{image.date}</Text></InlineStack>
               </BlockStack>
             </Box>
             <Box paddingBlockStart="200">
@@ -505,14 +513,26 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
           setPrice(String(data.price ?? ''))
           setStock(data.stock !== undefined ? data.stock : null)
           const realImages: typeof MOCK_IMAGES = []
-          if (data.image_url) {
-            realImages.push({ id: 'real-main', label: 'Principal', alt: t, format: 'JPG', dims: 'Original', size: '—', date: 'En ligne', url: data.image_url })
-          }
-          if (data.cover_url && data.cover_url !== data.image_url) {
-            realImages.push({ id: 'real-cover', label: 'Couverture', alt: t, format: 'JPG', dims: 'Original', size: '—', date: 'En ligne', url: data.cover_url })
-          }
-          if (data.thumb_image && data.thumb_image !== data.image_url && data.thumb_image !== data.cover_url) {
-            realImages.push({ id: 'real-thumb', label: 'Miniature', alt: t, format: 'JPG', dims: 'Original', size: '—', date: 'En ligne', url: data.thumb_image })
+          // Load images[] JSONB array from Supabase (multiple images)
+          if (Array.isArray(data.images) && data.images.length > 0) {
+            const seen = new Set<string>()
+            data.images.forEach((imgUrl: string, idx: number) => {
+              if (imgUrl && !seen.has(imgUrl)) {
+                seen.add(imgUrl)
+                realImages.push({ id: `db-img-${idx}`, label: idx === 0 ? 'Principal' : `Image ${idx + 1}`, alt: t, format: 'JPG', dims: 'Original', size: '—', date: 'En ligne', url: imgUrl })
+              }
+            })
+          } else {
+            // Fallback: load from individual image columns
+            if (data.image_url) {
+              realImages.push({ id: 'real-main', label: 'Principal', alt: t, format: 'JPG', dims: 'Original', size: '—', date: 'En ligne', url: data.image_url })
+            }
+            if (data.cover_url && data.cover_url !== data.image_url) {
+              realImages.push({ id: 'real-cover', label: 'Couverture', alt: t, format: 'JPG', dims: 'Original', size: '—', date: 'En ligne', url: data.cover_url })
+            }
+            if (data.thumb_image && data.thumb_image !== data.image_url && data.thumb_image !== data.cover_url) {
+              realImages.push({ id: 'real-thumb', label: 'Miniature', alt: t, format: 'JPG', dims: 'Original', size: '—', date: 'En ligne', url: data.thumb_image })
+            }
           }
           if (realImages.length > 0) {
             setImages(realImages)
@@ -540,6 +560,13 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
       if (category) body.category = category
       if (vendor) body.vendor = vendor
 
+      // Include existing remote image URLs in the PUT body
+      const existingUrls = images.filter(img => img.url && !img.url.startsWith('blob:')).map(img => img.url)
+      if (existingUrls.length > 0) {
+        body.images = existingUrls
+        body.image_url = existingUrls[0]
+      }
+
       const res = await fetch(`/api/products/${productId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -552,7 +579,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
         return
       }
 
-      // Upload new local images
+      // Upload new local (blob:) images via POST multipart
       const newLocalImages = images.filter(img => img.url && img.url.startsWith('blob:'))
       if (newLocalImages.length > 0) {
         const formData = new FormData()
@@ -560,12 +587,25 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
         for (const img of newLocalImages) {
           const response = await fetch(img.url)
           const blob = await response.blob()
-          formData.append('images', blob, img.label)
+          formData.append('images', blob, img.label || 'image.jpg')
         }
-        await fetch(`/api/products/${productId}`, {
+        const uploadRes = await fetch(`/api/products/${productId}`, {
           method: 'POST',
           body: formData,
         })
+        if (uploadRes.ok) {
+          const uploadData = await uploadRes.json()
+          if (uploadData.urls) {
+            // Replace blob: URLs with real uploaded URLs
+            setImages(prev => prev.map(img => {
+              if (img.url && img.url.startsWith('blob:')) {
+                const newUrl = uploadData.urls.shift()
+                return newUrl ? { ...img, url: newUrl, date: 'En ligne' } : img
+              }
+              return img
+            }))
+          }
+        }
       }
 
       setSaved(true)
@@ -1034,11 +1074,18 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
             </Layout.Section>
           </Layout>
         </Tabs>
+        <Box paddingBlockEnd="800" />
       </Page>
 
       {/* ── Modals & Panels ────────────────────────────────────────────────── */}
       {selectedImage && (
-        <ImageModal image={selectedImage} onClose={() => setSelectedImage(null)} />
+        <ImageModal
+          image={selectedImage}
+          onClose={() => setSelectedImage(null)}
+          onUpdate={(updated) => {
+            setImages(prev => prev.map(img => img.id === updated.id ? updated : img))
+          }}
+        />
       )}
       {selectedVariant && (
         <>
