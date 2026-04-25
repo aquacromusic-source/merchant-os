@@ -12,6 +12,7 @@ import {
 } from '@shopify/polaris-icons'
 import { useRouter } from 'next/navigation'
 import { MarkdownRenderer } from '@/components/ui/MarkdownRenderer'
+import { useSite } from '@/contexts/SiteContext'
 
 interface TokenUsage {
   input_tokens: number
@@ -109,15 +110,14 @@ Par quoi on commence ?`,
   const [deleteModal, setDeleteModal] = useState(false)
   const [deployModal, setDeployModal] = useState(false)
   const [deployTarget, setDeployTarget] = useState<'all' | 'selected'>('selected')
-  const [selectedSites, setSelectedSites] = useState<string[]>(['pixelwall'])
+  const [selectedSites, setSelectedSites] = useState<string[]>(['gaming-posters'])
   const [deploying, setDeploying] = useState(false)
   const [deployed, setDeployed] = useState(false)
 
   const SITES = [
-    { id: 'pixelwall', name: 'PIXELWALL', url: 'gamin-posters.vercel.app', color: '#00e5ff' },
-    { id: 'popcorn', name: 'Popcorn Posters', url: 'pdf-guide-store.vercel.app', color: '#ff6b35' },
-    { id: 'filmwall', name: 'FilmWall (bientôt)', url: '', color: '#7c3aed', disabled: true },
-    { id: 'sportwall', name: 'SportWall (bientôt)', url: '', color: '#00c853', disabled: true },
+    { id: 'gaming-posters', name: 'Gaming Posters', url: 'gaming-posters.vercel.app', color: '#00e5ff' },
+    { id: 'strap', name: 'STRAP.', url: 'strap-store.vercel.app', color: '#ff6b35' },
+    { id: 'pdf-guide-store', name: 'PDF Guide Store', url: 'pdf-guide-store.vercel.app', color: '#7c3aed' },
   ]
 
   const handleDeploy = async () => {
@@ -605,7 +605,6 @@ Réponds en français, de manière directe et actionnable. Utilise du markdown p
                   <div
                     key={site.id}
                     onClick={() => {
-                      if ((site as any).disabled) return
                       setSelectedSites(prev =>
                         prev.includes(site.id) ? prev.filter(x => x !== site.id) : [...prev, site.id]
                       )
@@ -616,8 +615,7 @@ Réponds en français, de manière directe et actionnable. Utilise du markdown p
                       borderRadius: 8,
                       border: selectedSites.includes(site.id) ? `2px solid ${site.color}` : '1px solid #e5e5e5',
                       background: selectedSites.includes(site.id) ? `${site.color}10` : 'white',
-                      cursor: (site as any).disabled ? 'not-allowed' : 'pointer',
-                      opacity: (site as any).disabled ? 0.5 : 1,
+                      cursor: 'pointer',
                       transition: 'all 0.15s',
                     }}
                   >
@@ -626,7 +624,7 @@ Réponds en français, de manière directe et actionnable. Utilise du markdown p
                       <div style={{ fontSize: 13, fontWeight: 600, color: '#1a1a1a' }}>{site.name}</div>
                       {site.url && <div style={{ fontSize: 11, color: '#8c9196' }}>{site.url}</div>}
                     </div>
-                    {selectedSites.includes(site.id) && !((site as any).disabled) && (
+                    {selectedSites.includes(site.id) && (
                       <div style={{ fontSize: 16, color: site.color }}>✓</div>
                     )}
                   </div>
@@ -636,7 +634,7 @@ Réponds en français, de manière directe et actionnable. Utilise du markdown p
                 <Button
                   fullWidth
                   variant="plain"
-                  onClick={() => setSelectedSites(SITES.filter(s => !(s as any).disabled).map(s => s.id))}
+                  onClick={() => setSelectedSites(SITES.map(s => s.id))}
                 >
                   Tous les sites
                 </Button>
@@ -721,6 +719,8 @@ Réponds en français, de manière directe et actionnable. Utilise du markdown p
           </BlockStack>
         </Modal.Section>
       </Modal>
+
+      <div style={{ paddingBottom: 40 }} />
 
       <style>{`
         @keyframes pulse {

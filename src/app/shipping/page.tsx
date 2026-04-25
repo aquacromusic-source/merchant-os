@@ -187,6 +187,10 @@ export default function ShippingPage() {
         setModalOpen(false)
         resetForm()
         fetchZones()
+      } else {
+        const err = await res.json().catch(() => ({ error: 'Erreur serveur' }))
+        setToast(`Erreur : ${err.error || 'Impossible de sauvegarder'}`)
+        setTimeout(() => setToast(''), 5000)
       }
     } finally {
       setSaving(false)
@@ -215,7 +219,7 @@ export default function ShippingPage() {
 
   const openAddModalFromHeader = () => {
     resetForm()
-    setSelectedZoneId('')
+    setSelectedZoneId(zones.length > 0 ? zones[0].id : '')
     setModalOpen(true)
   }
 

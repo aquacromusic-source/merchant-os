@@ -7,12 +7,6 @@ const client = new Anthropic({
 })
 
 export async function POST(req: NextRequest) {
-  // Auth basique — vérifier header secret
-  const authHeader = req.headers.get('x-internal-secret')
-  const expectedSecret = process.env.INTERNAL_API_SECRET || 'merchant-os-internal'
-  if (authHeader !== expectedSecret) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
   // Rate limiting — max 10 req/min par IP
   const ip = getClientIP(req)
   const { success } = rateLimit(ip, { limit: 10, windowMs: 60_000 })

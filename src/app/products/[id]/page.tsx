@@ -9,7 +9,6 @@ import {
   Select,
   Badge,
   Button,
-  ButtonGroup,
   InlineStack,
   BlockStack,
   Box,
@@ -18,7 +17,6 @@ import {
   Tag,
   Modal,
   Tabs,
-  DataTable,
   Checkbox,
   Banner,
 } from '@shopify/polaris'
@@ -31,35 +29,23 @@ import {
 import { collections as allCollections } from '@/lib/data'
 import { useSite } from '@/contexts/SiteContext'
 
-// ─── Mock extended product data ──────────────────────────────────────────────
+// ─── Types ──────────────────────────────────────────────────────────────────
 
 interface VariantRow {
   id: string
-  size: string
-  frame: string
+  option1_name: string | null
+  option1_value: string | null
+  option2_name: string | null
+  option2_value: string | null
   sku: string
   price: number
   stock: number
-  image?: string
+  compare_at_price?: number | null
+  barcode?: string | null
+  weight_grams?: number | null
+  image_url?: string | null
+  position?: number
 }
-
-const MOCK_VARIANTS: VariantRow[] = [
-  { id: 'v1', size: 'A4', frame: 'Without Frame', sku: 'SH-001-A4-NOF', price: 11.95, stock: 18 },
-  { id: 'v2', size: 'A4', frame: 'With Black Frame', sku: 'SH-001-A4-BLK', price: 34.95, stock: 19 },
-  { id: 'v3', size: 'A4', frame: 'With White Frame', sku: 'SH-001-A4-WHT', price: 34.95, stock: 19 },
-  { id: 'v4', size: 'A3', frame: 'Without Frame', sku: 'SH-001-A3-NOF', price: 19.95, stock: 18 },
-  { id: 'v5', size: 'A3', frame: 'With Black Frame', sku: 'SH-001-A3-BLK', price: 44.95, stock: 18 },
-  { id: 'v6', size: 'A3', frame: 'With White Frame', sku: 'SH-001-A3-WHT', price: 44.95, stock: 18 },
-  { id: 'v7', size: 'A2', frame: 'Without Frame', sku: 'SH-001-A2-NOF', price: 24.95, stock: 16 },
-  { id: 'v8', size: 'A2', frame: 'With Black Frame', sku: 'SH-001-A2-BLK', price: 54.95, stock: 17 },
-  { id: 'v9', size: 'A2', frame: 'With White Frame', sku: 'SH-001-A2-WHT', price: 54.95, stock: 17 },
-  { id: 'v10', size: 'A1', frame: 'Without Frame', sku: 'SH-001-A1-NOF', price: 34.95, stock: 14 },
-  { id: 'v11', size: 'A1', frame: 'With Black Frame', sku: 'SH-001-A1-BLK', price: 64.95, stock: 14 },
-  { id: 'v12', size: 'A1', frame: 'With White Frame', sku: 'SH-001-A1-WHT', price: 64.95, stock: 15 },
-]
-
-const SIZE_OPTIONS = ['A4', 'A3', 'A2', 'A1']
-const FRAME_OPTIONS = ['Without Frame', 'With Black Frame', 'With White Frame']
 
 const MOCK_IMAGES: { id: string; label: string; alt: string; format: string; dims: string; size: string; date: string; url: string }[] = [
   { id: 'img1', label: 'Hero', alt: 'Vue principale du poster', format: 'JPG', dims: '2400 × 3200', size: '1.2 MB', date: '12 avr. 2026', url: '' },
@@ -70,10 +56,8 @@ const MOCK_IMAGES: { id: string; label: string; alt: string; format: string; dim
   { id: 'img6', label: 'Packaging', alt: 'Emballage poster', format: 'JPG', dims: '1600 × 1600', size: '720 KB', date: '8 avr. 2026', url: '' },
 ]
 
-const SALES_CHANNELS = ['Boutique en ligne', 'Point de vente', 'TikTok', 'Pinterest', 'Facebook']
+const DEFAULT_CHANNELS = ['Boutique en ligne', 'Point de vente', 'TikTok', 'Pinterest', 'Facebook']
 const MARKETS = ['Spain', 'European Union', 'International', 'Pologne', 'Portugal', 'Allemagne', 'France', 'Italie', 'Norvège', 'Pays-Bas']
-// Collections chargées dynamiquement depuis data.ts
-const PRODUCT_TAGS = ['Wall Art', 'Poster', 'Michael Jordan', 'Basketball', 'Space Jordan', 'Comic']
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -128,9 +112,31 @@ function RichTextToolbar() {
 const toolBtn: React.CSSProperties = { background: 'none', border: '1px solid transparent', borderRadius: 4, padding: '2px 6px', fontSize: 12, cursor: 'pointer', color: '#333' }
 const sep: React.CSSProperties = { width: 1, height: 16, background: '#d0d0d0', margin: '0 2px' }
 
-function VariantDetailPanel({ variant, onClose }: { variant: VariantRow; onClose: () => void }) {
-  const [vSize] = useState(variant.size)
-  const [vFrame] = useState(variant.frame)
+function VariantDetailPanel({ variant, onClose, onSave }: { variant: VariantRow; onClose: () => void; onSave: (updated: VariantRow) => void }) {
+  const [vOpt1] = useState(variant.option1_value || '')
+  const [vOpt2] = useState(variant.option2_value || '')
+  const [vPrice, setVPrice] = useState(variant.price.toFixed(2))
+  const [vCompare, setVCompare] = useState(variant.compare_at_price ? String(variant.compare_at_price) : '')
+  const [vStock, setVStock] = useState(String(variant.stock))
+  const [vSku, setVSku] = useState(variant.sku || '')
+  const [vBarcode, setVBarcode] = useState(variant.barcode || '')
+  const [vWeight, setVWeight] = useState(variant.weight_grams ? String(variant.weight_grams) : '')
+
+  const variantLabel = [variant.option1_value, variant.option2_value].filter(Boolean).join(' / ')
+
+  const handleSaveVariant = () => {
+    onSave({
+      ...variant,
+      price: parseFloat(vPrice) || 0,
+      compare_at_price: vCompare ? parseFloat(vCompare) : null,
+      stock: parseInt(vStock) || 0,
+      sku: vSku,
+      barcode: vBarcode,
+      weight_grams: vWeight ? parseInt(vWeight) : null,
+    })
+    onClose()
+  }
+
   return (
     <div style={{
       position: 'fixed', top: 0, right: 0, bottom: 0,
@@ -142,9 +148,9 @@ function VariantDetailPanel({ variant, onClose }: { variant: VariantRow; onClose
       <div style={{ padding: '16px 20px', borderBottom: '1px solid #e0e0e0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <div style={{ fontSize: 11, color: '#666', marginBottom: 2 }}>
-            Produit &rsaquo; <strong>{variant.size} / {variant.frame}</strong>
+            Produit &rsaquo; <strong>{variantLabel}</strong>
           </div>
-          <div style={{ fontWeight: 600, fontSize: 15 }}>{variant.size} / {variant.frame}</div>
+          <div style={{ fontWeight: 600, fontSize: 15 }}>{variantLabel}</div>
         </div>
         <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: '#666' }}>✕</button>
       </div>
@@ -154,7 +160,7 @@ function VariantDetailPanel({ variant, onClose }: { variant: VariantRow; onClose
           <Card>
             <Box padding="300">
               <InlineStack gap="300" align="center">
-                <ImagePlaceholder label={variant.sku} size="lg" />
+                <ImagePlaceholder label={vSku || variantLabel} size="lg" />
                 <BlockStack gap="100">
                   <Text variant="bodySm" as="p" tone="subdued">Image de la variante</Text>
                   <Button size="slim">Modifier</Button>
@@ -167,8 +173,12 @@ function VariantDetailPanel({ variant, onClose }: { variant: VariantRow; onClose
             <Box padding="300">
               <BlockStack gap="300">
                 <Text variant="headingSm" as="h3">Options</Text>
-                <Select label="Size" options={SIZE_OPTIONS} value={vSize} onChange={() => {}} />
-                <Select label="Frame" options={FRAME_OPTIONS} value={vFrame} onChange={() => {}} />
+                {variant.option1_name && (
+                  <TextField label={variant.option1_name} value={vOpt1} autoComplete="off" disabled onChange={() => {}} />
+                )}
+                {variant.option2_name && (
+                  <TextField label={variant.option2_name} value={vOpt2} autoComplete="off" disabled onChange={() => {}} />
+                )}
               </BlockStack>
             </Box>
           </Card>
@@ -177,9 +187,8 @@ function VariantDetailPanel({ variant, onClose }: { variant: VariantRow; onClose
             <Box padding="300">
               <BlockStack gap="300">
                 <Text variant="headingSm" as="h3">Tarification</Text>
-                <TextField label="Prix" value={variant.price.toFixed(2)} prefix="€" autoComplete="off" onChange={() => {}} />
-                <TextField label="Prix avant réduction" value="" prefix="€" autoComplete="off" onChange={() => {}} />
-                <TextField label="Prix unitaire" value="" prefix="€" autoComplete="off" onChange={() => {}} />
+                <TextField label="Prix" value={vPrice} prefix="€" autoComplete="off" type="number" onChange={setVPrice} />
+                <TextField label="Prix avant réduction" value={vCompare} prefix="€" autoComplete="off" type="number" onChange={setVCompare} />
                 <Checkbox label="Facturer la taxe sur ce produit" checked={true} onChange={() => {}} />
               </BlockStack>
             </Box>
@@ -189,16 +198,7 @@ function VariantDetailPanel({ variant, onClose }: { variant: VariantRow; onClose
             <Box padding="300">
               <BlockStack gap="300">
                 <Text variant="headingSm" as="h3">Stock</Text>
-                <DataTable
-                  columnContentTypes={['text','numeric','numeric','numeric','numeric']}
-                  headings={['Emplacement','Indisponible','Engagé','Disponible','En stock']}
-                  rows={[
-                    ['Valencia', '0', '1', `${Math.max(0,variant.stock-2)}`, `${variant.stock}`],
-                    ['App gelato', '0', '0', '0', '0'],
-                    ['Total', '0', '1', `${Math.max(0,variant.stock-2)}`, `${variant.stock}`],
-                  ]}
-                />
-                <Button variant="plain">Afficher l&apos;historique des ajustements</Button>
+                <TextField label="En stock" value={vStock} autoComplete="off" type="number" onChange={setVStock} />
               </BlockStack>
             </Box>
           </Card>
@@ -207,8 +207,8 @@ function VariantDetailPanel({ variant, onClose }: { variant: VariantRow; onClose
             <Box padding="300">
               <BlockStack gap="300">
                 <Text variant="headingSm" as="h3">SKU & Code-barres</Text>
-                <TextField label="SKU" value={variant.sku} autoComplete="off" onChange={() => {}} />
-                <TextField label="Code-barres (ISBN, UPC, GTIN…)" value="" autoComplete="off" onChange={() => {}} />
+                <TextField label="SKU" value={vSku} autoComplete="off" onChange={setVSku} />
+                <TextField label="Code-barres (ISBN, UPC, GTIN…)" value={vBarcode} autoComplete="off" onChange={setVBarcode} />
               </BlockStack>
             </Box>
           </Card>
@@ -217,20 +217,7 @@ function VariantDetailPanel({ variant, onClose }: { variant: VariantRow; onClose
             <Box padding="300">
               <BlockStack gap="300">
                 <Text variant="headingSm" as="h3">Expédition</Text>
-                <Select label="Emballage" options={['Emballage standard','Tube poster','Boîte rigide']} value="Tube poster" onChange={() => {}} />
-                <TextField label="Poids (g)" value="250" autoComplete="off" onChange={() => {}} />
-              </BlockStack>
-            </Box>
-          </Card>
-          {/* Méta */}
-          <Card>
-            <Box padding="300">
-              <BlockStack gap="300">
-                <Text variant="headingSm" as="h3">Champs méta</Text>
-                <TextField label="Google Age Group" value="" autoComplete="off" onChange={() => {}} />
-                <TextField label="Condition" value="new" autoComplete="off" onChange={() => {}} />
-                <TextField label="Gender" value="" autoComplete="off" onChange={() => {}} />
-                <TextField label="MPN" value={variant.sku} autoComplete="off" onChange={() => {}} />
+                <TextField label="Poids (g)" value={vWeight} autoComplete="off" type="number" onChange={setVWeight} />
               </BlockStack>
             </Box>
           </Card>
@@ -238,7 +225,7 @@ function VariantDetailPanel({ variant, onClose }: { variant: VariantRow; onClose
       </div>
       <div style={{ padding: '12px 20px', borderTop: '1px solid #e0e0e0', display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
         <Button onClick={onClose}>Annuler</Button>
-        <Button variant="primary">Enregistrer</Button>
+        <Button variant="primary" onClick={handleSaveVariant}>Enregistrer</Button>
       </div>
     </div>
   )
@@ -318,12 +305,27 @@ function ImageModal({ image, onClose, onUpdate }: { image: typeof MOCK_IMAGES[0]
 
 // ─── Grouped Variants Table ───────────────────────────────────────────────────
 
-function VariantsTable({ onSelectVariant }: { onSelectVariant: (v: VariantRow) => void }) {
-  const [expanded, setExpanded] = useState<Record<string, boolean>>({ A4: false, A3: false, A2: false, A1: false })
-  const grouped = SIZE_OPTIONS.map(size => ({
-    size,
-    variants: MOCK_VARIANTS.filter(v => v.size === size),
-  }))
+function VariantsTable({ variants, onSelectVariant }: { variants: VariantRow[]; onSelectVariant: (v: VariantRow) => void }) {
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({})
+
+  // Group by option1_value (e.g. Size)
+  const option1Values = Array.from(new Set(variants.map(v => v.option1_value).filter(Boolean))) as string[]
+  const hasGroups = option1Values.length > 0 && variants.some(v => v.option2_value)
+
+  const grouped = hasGroups
+    ? option1Values.map(val => ({
+        groupKey: val,
+        variants: variants.filter(v => v.option1_value === val),
+      }))
+    : [{ groupKey: '', variants }]
+
+  if (variants.length === 0) {
+    return (
+      <div style={{ border: '1px solid #e0e0e0', borderRadius: 8, padding: 20, textAlign: 'center', color: '#888' }}>
+        <Text as="p" variant="bodySm" tone="subdued">Aucune variante. Cliquez sur &quot;Ajouter une variante&quot; pour en créer.</Text>
+      </div>
+    )
+  }
 
   return (
     <div style={{ border: '1px solid #e0e0e0', borderRadius: 8, overflow: 'hidden' }}>
@@ -334,17 +336,46 @@ function VariantsTable({ onSelectVariant }: { onSelectVariant: (v: VariantRow) =
         borderBottom: '1px solid #e0e0e0', fontSize: 12, fontWeight: 600, color: '#555',
       }}>
         <div />
-        <div>Variante ↕ <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: '#888' }}>Tout agrandir</button></div>
+        <div>Variante ↕</div>
         <div style={{ textAlign: 'right' }}>Prix</div>
         <div style={{ textAlign: 'right' }}>Disponible</div>
       </div>
-      {grouped.map(({ size, variants }) => {
-        const totalStock = variants.reduce((a, v) => a + v.stock, 0)
-        const minPrice = Math.min(...variants.map(v => v.price))
-        const maxPrice = Math.max(...variants.map(v => v.price))
-        const isExp = expanded[size]
+      {grouped.map(({ groupKey, variants: groupVars }) => {
+        const totalStock = groupVars.reduce((a, v) => a + v.stock, 0)
+        const minPrice = Math.min(...groupVars.map(v => v.price))
+        const maxPrice = Math.max(...groupVars.map(v => v.price))
+        const isExp = expanded[groupKey] ?? false
+
+        if (!hasGroups) {
+          // Flat list - no grouping
+          return groupVars.map(v => {
+            const label = [v.option1_value, v.option2_value].filter(Boolean).join(' / ') || v.sku || 'Variante'
+            return (
+              <div
+                key={v.id}
+                style={{
+                  display: 'grid', gridTemplateColumns: '32px 1fr 140px 100px',
+                  padding: '8px 12px', borderBottom: '1px solid #f0f0f0',
+                  cursor: 'pointer', background: 'white',
+                }}
+                onClick={() => onSelectVariant(v)}
+              >
+                <Checkbox label="" checked={false} onChange={() => {}} />
+                <InlineStack gap="200" blockAlign="center">
+                  <BlockStack gap="0">
+                    <Text as="span" variant="bodySm" fontWeight="medium">{label}</Text>
+                    {v.sku && <Text as="span" variant="bodySm" tone="subdued">{v.sku}</Text>}
+                  </BlockStack>
+                </InlineStack>
+                <div style={{ textAlign: 'right', fontSize: 13, alignSelf: 'center' }}>{v.price.toFixed(2)} €</div>
+                <div style={{ textAlign: 'right', fontSize: 13, alignSelf: 'center' }}>{v.stock}</div>
+              </div>
+            )
+          })
+        }
+
         return (
-          <div key={size}>
+          <div key={groupKey}>
             {/* Group header */}
             <div
               style={{
@@ -352,14 +383,14 @@ function VariantsTable({ onSelectVariant }: { onSelectVariant: (v: VariantRow) =
                 padding: '10px 12px', borderBottom: '1px solid #e8e8e8',
                 cursor: 'pointer', background: isExp ? '#f0f7ff' : 'white',
               }}
-              onClick={() => setExpanded(e => ({ ...e, [size]: !e[size] }))}
+              onClick={() => setExpanded(e => ({ ...e, [groupKey]: !e[groupKey] }))}
             >
               <Checkbox label="" checked={false} onChange={() => {}} />
               <InlineStack gap="200" blockAlign="center">
-                <ImagePlaceholder label={size} size="sm" />
+                <ImagePlaceholder label={groupKey} size="sm" />
                 <BlockStack gap="0">
-                  size
-                  <Text as="span" variant="bodySm" tone="subdued">{variants.length} variantes {isExp ? '↕' : '↕'}</Text>
+                  <Text as="span" variant="bodySm" fontWeight="medium">{groupKey}</Text>
+                  <Text as="span" variant="bodySm" tone="subdued">{groupVars.length} variantes {isExp ? '▼' : '▶'}</Text>
                 </BlockStack>
               </InlineStack>
               <div style={{ textAlign: 'right', fontSize: 13, alignSelf: 'center' }}>
@@ -368,7 +399,7 @@ function VariantsTable({ onSelectVariant }: { onSelectVariant: (v: VariantRow) =
               <div style={{ textAlign: 'right', fontSize: 13, alignSelf: 'center' }}>{totalStock}</div>
             </div>
             {/* Variant rows */}
-            {isExp && variants.map(v => (
+            {isExp && groupVars.map(v => (
               <div
                 key={v.id}
                 style={{
@@ -380,10 +411,9 @@ function VariantsTable({ onSelectVariant }: { onSelectVariant: (v: VariantRow) =
               >
                 <Checkbox label="" checked={false} onChange={() => {}} />
                 <InlineStack gap="200" blockAlign="center">
-                  <ImagePlaceholder label={v.size[0]} size="sm" />
                   <BlockStack gap="0">
-                    {v.frame}
-                    v.sku
+                    <Text as="span" variant="bodySm" fontWeight="medium">{v.option2_value || v.option1_value}</Text>
+                    {v.sku && <Text as="span" variant="bodySm" tone="subdued">{v.sku}</Text>}
                   </BlockStack>
                 </InlineStack>
                 <div style={{ textAlign: 'right', fontSize: 13, alignSelf: 'center' }}>{v.price.toFixed(2)} €</div>
@@ -396,7 +426,7 @@ function VariantsTable({ onSelectVariant }: { onSelectVariant: (v: VariantRow) =
       {/* Footer */}
       <div style={{ padding: '10px 14px', background: '#f6f6f6', borderTop: '1px solid #e0e0e0' }}>
         <Text as="p" variant="bodySm" tone="subdued">
-          Stock total pour tous les emplacements : <strong>{MOCK_VARIANTS.reduce((a, v) => a + v.stock, 0)} disponibles</strong>
+          Stock total pour tous les emplacements : <strong>{variants.reduce((a, v) => a + v.stock, 0)} disponibles</strong>
         </Text>
       </div>
     </div>
@@ -405,11 +435,11 @@ function VariantsTable({ onSelectVariant }: { onSelectVariant: (v: VariantRow) =
 
 // ─── SEO Preview ─────────────────────────────────────────────────────────────
 
-function SEOPreview({ title, slug }: { title: string; slug: string }) {
-  const [seoTitle, setSeoTitle] = useState(`${title} | Studio Nord & Co`)
-  const [seoDesc, setSeoDesc] = useState(`Commandez votre ${title.toLowerCase()}. Impression musée sur papier haut grammage. Livraison rapide en France et Europe.`)
-  const [urlSlug, setUrlSlug] = useState(slug)
-
+function SEOPreview({ seoTitle, setSeoTitle, seoDesc, setSeoDesc, urlSlug, setUrlSlug }: {
+  seoTitle: string; setSeoTitle: (v: string) => void
+  seoDesc: string; setSeoDesc: (v: string) => void
+  urlSlug: string; setUrlSlug: (v: string) => void
+}) {
   const titleLen = seoTitle.length
   const descLen = seoDesc.length
   const titleOver = titleLen > 70
@@ -490,10 +520,19 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
   const [vendor, setVendor] = useState('')
   const [productType, setProductType] = useState('')
   const [themeTemplate, setThemeTemplate] = useState('produits-postersbase')
-  const [channelTags, setChannelTags] = useState(SALES_CHANNELS)
+  const [channelTags, setChannelTags] = useState<string[]>(DEFAULT_CHANNELS)
   const [collectionTags, setCollectionTags] = useState<string[]>([])
-  const [productTags, setProductTags] = useState(PRODUCT_TAGS)
+  const [productTags, setProductTags] = useState<string[]>([])
   const [expandImages, setExpandImages] = useState(false)
+
+  // SEO state (lifted from SEOPreview)
+  const [seoTitle, setSeoTitle] = useState('')
+  const [seoDesc, setSeoDesc] = useState('')
+  const [urlSlug, setUrlSlug] = useState('')
+
+  // Variants from Supabase
+  const [variants, setVariants] = useState<VariantRow[]>([])
+  const [variantsLoading, setVariantsLoading] = useState(false)
 
   // Load real product from Supabase
   useEffect(() => {
@@ -513,6 +552,27 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
           setDescription(data.description || data.seo_desc || '')
           setPrice(String(data.price ?? ''))
           setStock(data.stock !== undefined ? data.stock : null)
+
+          // Load tags from DB
+          if (Array.isArray(data.tags) && data.tags.length > 0) {
+            setProductTags(data.tags)
+          }
+
+          // Load SEO fields
+          setSeoTitle(data.seo_title || `${t} | Studio Nord & Co`)
+          setSeoDesc(data.seo_desc || `Commandez votre ${t.toLowerCase()}. Impression musée sur papier haut grammage. Livraison rapide en France et Europe.`)
+          setUrlSlug(data.slug || t.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''))
+
+          // Load collections from DB
+          if (Array.isArray(data.collections) && data.collections.length > 0) {
+            setCollectionTags(data.collections)
+          }
+
+          // Load channels from DB
+          if (Array.isArray(data.channels) && data.channels.length > 0) {
+            setChannelTags(data.channels)
+          }
+
           const realImages: typeof MOCK_IMAGES = []
           // Load images[] JSONB array from Supabase (multiple images)
           if (Array.isArray(data.images) && data.images.length > 0) {
@@ -544,6 +604,21 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
       .finally(() => setLoading(false))
   }, [productId, activeSite])
 
+  // Load variants from Supabase
+  useEffect(() => {
+    if (!productId) return
+    setVariantsLoading(true)
+    fetch(`/api/products/${productId}/variants?site=${activeSite}`)
+      .then(r => r.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setVariants(data)
+        }
+      })
+      .catch(() => {})
+      .finally(() => setVariantsLoading(false))
+  }, [productId, activeSite])
+
   const productTitle = title || '...'
 
   const handleSave = async () => {
@@ -560,6 +635,18 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
       if (description) body.description = description
       if (category) body.category = category
       if (vendor) body.vendor = vendor
+
+      // SEO fields
+      body.seo_title = seoTitle
+      body.seo_desc = seoDesc
+      body.slug = urlSlug
+
+      // Tags
+      body.tags = productTags
+
+      // Collections & Channels
+      body.collections = collectionTags
+      body.channels = channelTags
 
       // Include existing remote image URLs in the PUT body
       const existingUrls = images.filter(img => img.url && !img.url.startsWith('blob:')).map(img => img.url)
@@ -609,6 +696,55 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
         }
       }
 
+      // Save variants to Supabase
+      if (variants.length > 0) {
+        const variantsBody = {
+          site: activeSite,
+          variants: variants.map((v, i) => ({
+            option1_name: v.option1_name,
+            option1_value: v.option1_value,
+            option2_name: v.option2_name,
+            option2_value: v.option2_value,
+            sku: v.sku,
+            price: v.price,
+            compare_at_price: v.compare_at_price,
+            stock: v.stock,
+            barcode: v.barcode,
+            weight_grams: v.weight_grams,
+            image_url: v.image_url,
+            position: i,
+          })),
+        }
+        const varRes = await fetch(`/api/products/${productId}/variants`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(variantsBody),
+        })
+        if (varRes.ok) {
+          const varData = await varRes.json()
+          if (varData.variants) {
+            setVariants(varData.variants)
+          }
+        }
+      }
+
+      // Re-fetch product to ensure images state matches DB
+      const refreshRes = await fetch(`/api/products/${productId}?site=${activeSite}`)
+      if (refreshRes.ok) {
+        const refreshed = await refreshRes.json()
+        if (Array.isArray(refreshed.images) && refreshed.images.length > 0) {
+          const seen = new Set<string>()
+          const freshImages: typeof MOCK_IMAGES = []
+          refreshed.images.forEach((imgUrl: string, idx: number) => {
+            if (imgUrl && !seen.has(imgUrl)) {
+              seen.add(imgUrl)
+              freshImages.push({ id: `db-img-${idx}`, label: idx === 0 ? 'Principal' : `Image ${idx + 1}`, alt: title, format: 'JPG', dims: 'Original', size: '—', date: 'En ligne', url: imgUrl })
+            }
+          })
+          if (freshImages.length > 0) setImages(freshImages)
+        }
+      }
+
       setSaved(true)
       setTimeout(() => setSaved(false), 4000)
     } catch (err: any) {
@@ -617,8 +753,6 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
       setSaving(false)
     }
   }
-
-  const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
 
   const statusOptions = [
     { label: 'Actif', value: 'live' },
@@ -867,39 +1001,73 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                       </BlockStack>
                     </Card>
 
-                    {/* Options de variantes */}
+                    {/* Variantes */}
                     <Card>
                       <BlockStack gap="400">
                         <InlineStack align="space-between" blockAlign="center">
                           <Text variant="headingMd" as="h2">Variantes</Text>
-                          <Button size="slim" icon={PlusIcon}>Ajouter une option</Button>
+                          <Button size="slim" icon={PlusIcon} onClick={() => {
+                            const newVariant: VariantRow = {
+                              id: `new-${Date.now()}`,
+                              option1_name: variants.length > 0 ? variants[0].option1_name : 'Size',
+                              option1_value: '',
+                              option2_name: variants.length > 0 ? variants[0].option2_name : null,
+                              option2_value: null,
+                              sku: '',
+                              price: parseFloat(price) || 0,
+                              stock: 0,
+                              position: variants.length,
+                            }
+                            setVariants(prev => [...prev, newVariant])
+                            setSelectedVariant(newVariant)
+                          }}>Ajouter une variante</Button>
                         </InlineStack>
-                        {/* Options pills */}
-                        <BlockStack gap="300">
-                          {[
-                            { label: 'Size', options: SIZE_OPTIONS },
-                            { label: 'Frame', options: FRAME_OPTIONS },
-                          ].map(opt => (
-                            <div key={opt.label}>
-                              <Text as="p" variant="bodySm" fontWeight="medium">{opt.label}</Text>
-                              <Box paddingBlockStart="100">
-                                <InlineStack gap="200" wrap>
-                                  {opt.options.map(o => (
-                                    <div key={o} style={{
-                                      padding: '4px 12px', border: '1px solid #c4c4c4',
-                                      borderRadius: 20, fontSize: 12.5, fontWeight: 500,
-                                      background: 'white', cursor: 'pointer',
-                                    }}>{o}</div>
-                                  ))}
-                                  <Button variant="plain" size="slim" icon={PlusIcon}>Ajouter une autre option</Button>
-                                </InlineStack>
-                              </Box>
-                            </div>
-                          ))}
-                        </BlockStack>
-                        <Divider />
+                        {/* Options pills - derived from actual variants */}
+                        {variants.length > 0 && (() => {
+                          const opt1Name = variants[0]?.option1_name
+                          const opt2Name = variants[0]?.option2_name
+                          const opt1Values = Array.from(new Set(variants.map(v => v.option1_value).filter(Boolean))) as string[]
+                          const opt2Values = Array.from(new Set(variants.map(v => v.option2_value).filter(Boolean))) as string[]
+                          return (
+                            <BlockStack gap="300">
+                              {opt1Name && opt1Values.length > 0 && (
+                                <div>
+                                  <Text as="p" variant="bodySm" fontWeight="medium">{opt1Name}</Text>
+                                  <Box paddingBlockStart="100">
+                                    <InlineStack gap="200" wrap>
+                                      {opt1Values.map(o => (
+                                        <div key={o} style={{
+                                          padding: '4px 12px', border: '1px solid #c4c4c4',
+                                          borderRadius: 20, fontSize: 12.5, fontWeight: 500,
+                                          background: 'white', cursor: 'pointer',
+                                        }}>{o}</div>
+                                      ))}
+                                    </InlineStack>
+                                  </Box>
+                                </div>
+                              )}
+                              {opt2Name && opt2Values.length > 0 && (
+                                <div>
+                                  <Text as="p" variant="bodySm" fontWeight="medium">{opt2Name}</Text>
+                                  <Box paddingBlockStart="100">
+                                    <InlineStack gap="200" wrap>
+                                      {opt2Values.map(o => (
+                                        <div key={o} style={{
+                                          padding: '4px 12px', border: '1px solid #c4c4c4',
+                                          borderRadius: 20, fontSize: 12.5, fontWeight: 500,
+                                          background: 'white', cursor: 'pointer',
+                                        }}>{o}</div>
+                                      ))}
+                                    </InlineStack>
+                                  </Box>
+                                </div>
+                              )}
+                            </BlockStack>
+                          )
+                        })()}
+                        {variants.length > 0 && <Divider />}
                         {/* Table variantes */}
-                        <VariantsTable onSelectVariant={setSelectedVariant} />
+                        <VariantsTable variants={variants} onSelectVariant={setSelectedVariant} />
                       </BlockStack>
                     </Card>
 
@@ -940,7 +1108,11 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                   <Card>
                     <BlockStack gap="400">
                       <Text variant="headingMd" as="h2">Aperçu sur les moteurs de recherche</Text>
-                      <SEOPreview title={title} slug={slug} />
+                      <SEOPreview
+                        seoTitle={seoTitle} setSeoTitle={setSeoTitle}
+                        seoDesc={seoDesc} setSeoDesc={setSeoDesc}
+                        urlSlug={urlSlug} setUrlSlug={setUrlSlug}
+                      />
                     </BlockStack>
                   </Card>
                 )}
@@ -950,9 +1122,23 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                     <BlockStack gap="400">
                       <InlineStack align="space-between" blockAlign="center">
                         <Text variant="headingMd" as="h2">Toutes les variantes</Text>
-                        <Button size="slim" icon={PlusIcon}>Ajouter une variante</Button>
+                        <Button size="slim" icon={PlusIcon} onClick={() => {
+                          const newVariant: VariantRow = {
+                            id: `new-${Date.now()}`,
+                            option1_name: variants.length > 0 ? variants[0].option1_name : 'Size',
+                            option1_value: '',
+                            option2_name: variants.length > 0 ? variants[0].option2_name : null,
+                            option2_value: null,
+                            sku: '',
+                            price: parseFloat(price) || 0,
+                            stock: 0,
+                            position: variants.length,
+                          }
+                          setVariants(prev => [...prev, newVariant])
+                          setSelectedVariant(newVariant)
+                        }}>Ajouter une variante</Button>
                       </InlineStack>
-                      <VariantsTable onSelectVariant={setSelectedVariant} />
+                      <VariantsTable variants={variants} onSelectVariant={setSelectedVariant} />
                     </BlockStack>
                   </Card>
                 )}
@@ -1121,7 +1307,13 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
             style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 49 }}
             onClick={() => setSelectedVariant(null)}
           />
-          <VariantDetailPanel variant={selectedVariant} onClose={() => setSelectedVariant(null)} />
+          <VariantDetailPanel
+            variant={selectedVariant}
+            onClose={() => setSelectedVariant(null)}
+            onSave={(updated) => {
+              setVariants(prev => prev.map(v => v.id === updated.id ? updated : v))
+            }}
+          />
         </>
       )}
     </>
