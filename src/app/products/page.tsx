@@ -61,7 +61,12 @@ export default function ProductsPage() {
   const fetchProducts = useCallback((page: number, append = false) => {
     setLoadingProducts(true)
     fetch(`/api/products?limit=${PAGE_SIZE}&offset=${page * PAGE_SIZE}&site=${activeSite}`)
-      .then(r => r.json())
+      .then(r => {
+        if (!r.ok) {
+          throw new Error(`HTTP ${r.status}: ${r.statusText}`)
+        }
+        return r.json()
+      })
       .then(data => {
         if (append) {
           setAllProducts(prev => [...prev, ...(data.products || [])])
@@ -70,6 +75,10 @@ export default function ProductsPage() {
         }
         setTotalProducts(data.total || 0)
         setCurrentPage(page)
+      })
+      .catch(err => {
+        console.error('Fetch products error:', err)
+        if (!append) setAllProducts([])
       })
       .finally(() => setLoadingProducts(false))
   }, [activeSite])
