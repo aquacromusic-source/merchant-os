@@ -1,5 +1,5 @@
 'use client'
-import React, { useState } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import {
   Page,
   Layout,
@@ -18,6 +18,7 @@ import {
   DataTable,
   Checkbox,
   Avatar,
+  Spinner,
 } from '@shopify/polaris'
 import {
   SettingsIcon,
@@ -27,14 +28,81 @@ import {
   ReceiptEuroIcon,
   ChevronRightIcon,
   PlusIcon,
-  EmailIcon,
-  GlobeIcon,
   NotificationIcon,
+  GlobeIcon,
   LocationIcon,
   ImageIcon,
   FolderIcon,
   ClipboardIcon,
 } from '@shopify/polaris-icons'
+import { useSite } from '@/contexts/SiteContext'
+
+interface Settings {
+  id: string
+  site_id: string
+  store_name: string | null
+  store_email: string | null
+  store_phone: string | null
+  store_currency: string | null
+  store_timezone: string | null
+  store_language: string | null
+  address_line1: string | null
+  address_line2: string | null
+  address_city: string | null
+  address_zip: string | null
+  address_country: string | null
+  stripe_enabled: boolean
+  paypal_enabled: boolean
+  klarna_enabled: boolean
+  bank_transfer_enabled: boolean
+  cod_enabled: boolean
+  notification_email_enabled: boolean
+  notification_sms_enabled: boolean
+  notification_order_created: boolean
+  notification_order_paid: boolean
+  notification_order_shipped: boolean
+  notification_order_delivered: boolean
+  notification_refund: boolean
+  notification_abandoned_cart: boolean
+  notification_welcome: boolean
+  notification_stock_alert: boolean
+  notification_new_customer: boolean
+  notification_chargeback: boolean
+  team_email: string | null
+  checkout_contact_method: string | null
+  checkout_separate_name: boolean
+  checkout_marketing_optin: boolean
+  checkout_phone_required: boolean
+  checkout_prefill: boolean
+  checkout_auto_process: boolean
+  accounts_mode: string | null
+  accounts_magic_link: boolean
+  accounts_google: boolean
+  accounts_facebook: boolean
+  accounts_delete_request: boolean
+  accounts_order_history: boolean
+  tax_enabled: boolean
+  tax_rate: number | null
+  tax_included: boolean
+  tax_on_shipping: boolean
+  tax_oss_number: string | null
+  primary_domain: string | null
+  custom_domains: unknown[]
+  brand_primary_color: string | null
+  brand_secondary_color: string | null
+  brand_heading_font: string | null
+  brand_body_font: string | null
+  plan_name: string | null
+  plan_price: number | null
+  plan_status: string | null
+  plan_renewal_date: string | null
+  billing_email: string | null
+  billing_card_last4: string | null
+  billing_card_expiry: string | null
+  billing_card_brand: string | null
+  locations: unknown[]
+  [key: string]: unknown
+}
 
 const SETTINGS_NAV = [
   { key: 'general', label: 'Général', icon: SettingsIcon },
@@ -53,63 +121,73 @@ const SETTINGS_NAV = [
   { key: 'files', label: 'Fichiers', icon: FolderIcon },
 ]
 
-function useSave() {
-  const [saving, setSaving] = useState(false)
-  const [saved, setSaved] = useState(false)
-  const handleSave = async () => {
-    setSaving(true)
-    await new Promise(r => setTimeout(r, 800))
-    setSaving(false)
-    setSaved(true)
-    setTimeout(() => setSaved(false), 3000)
-  }
-  return { saving, saved, handleSave }
-}
+function SettingContent({
+  active,
+  settings,
+  onChange,
+  onSave,
+  saving,
+  saved,
+  error,
+}: {
+  active: string
+  settings: Settings
+  onChange: (field: string, value: unknown) => void
+  onSave: () => void
+  saving: boolean
+  saved: boolean
+  error: string | null
+}) {
+  const SaveBanner = () => (
+    <>
+      {saved && <Banner tone="success" onDismiss={() => {}}>Modifications enregistrées ✓</Banner>}
+      {error && <Banner tone="critical" onDismiss={() => {}}>{error}</Banner>}
+    </>
+  )
 
-function SettingContent({ active }: { active: string }) {
-  const { saving, saved, handleSave } = useSave()
+  const SaveButton = () => (
+    <InlineStack>
+      <Button variant="primary" loading={saving} onClick={onSave}>Enregistrer</Button>
+    </InlineStack>
+  )
 
   if (active === 'general') return (
     <BlockStack gap="400">
-      {saved && <Banner tone="success" onDismiss={() => {}}>Modifications enregistrées ✓</Banner>}
+      <SaveBanner />
       <Card>
         <BlockStack gap="400">
           <Text as="h2" variant="headingSm" fontWeight="semibold">Informations sur la boutique</Text>
-          <TextField label="Nom de la boutique" value="Studio Nord & Co" autoComplete="off" onChange={() => {}} />
-          <TextField label="E-mail du compte" type="email" value="hello@studionord.co" autoComplete="off" onChange={() => {}} />
-          <TextField label="Numéro de téléphone" value="+33 1 42 00 00 00" autoComplete="off" onChange={() => {}} />
+          <TextField label="Nom de la boutique" value={settings.store_name || ''} autoComplete="off" onChange={(v) => onChange('store_name', v)} />
+          <TextField label="E-mail du compte" type="email" value={settings.store_email || ''} autoComplete="off" onChange={(v) => onChange('store_email', v)} />
+          <TextField label="Numéro de téléphone" value={settings.store_phone || ''} autoComplete="off" onChange={(v) => onChange('store_phone', v)} />
           <Select
             label="Devise"
             options={[
-              { label: 'EUR — Euro', value: 'eur' },
-              { label: 'USD — Dollar', value: 'usd' },
-              { label: 'GBP — Livre sterling', value: 'gbp' },
+              { label: 'EUR — Euro', value: 'EUR' },
+              { label: 'USD — Dollar', value: 'USD' },
+              { label: 'GBP — Livre sterling', value: 'GBP' },
             ]}
-            value="eur"
-            onChange={() => {}}
+            value={settings.store_currency || 'EUR'}
+            onChange={(v) => onChange('store_currency', v)}
           />
-          <InlineStack>
-            <Button variant="primary" loading={saving} onClick={handleSave}>Enregistrer</Button>
-          </InlineStack>
+          <SaveButton />
         </BlockStack>
       </Card>
       <Card>
         <BlockStack gap="400">
           <Text as="h2" variant="headingSm" fontWeight="semibold">Adresse de la boutique</Text>
-          <TextField label="Adresse" value="12 rue des Ateliers" autoComplete="off" onChange={() => {}} />
+          <TextField label="Adresse" value={settings.address_line1 || ''} autoComplete="off" onChange={(v) => onChange('address_line1', v)} />
           <InlineGrid columns={2} gap="300">
-            <TextField label="Ville" value="Paris" autoComplete="off" onChange={() => {}} />
-            <TextField label="Code postal" value="75011" autoComplete="off" onChange={() => {}} />
+            <TextField label="Ville" value={settings.address_city || ''} autoComplete="off" onChange={(v) => onChange('address_city', v)} />
+            <TextField label="Code postal" value={settings.address_zip || ''} autoComplete="off" onChange={(v) => onChange('address_zip', v)} />
           </InlineGrid>
           <Select
             label="Pays"
-            options={[{ label: 'France', value: 'fr' }, { label: 'Belgique', value: 'be' }, { label: 'Suisse', value: 'ch' }]}
-            value="fr"
-            onChange={() => {}}
+            options={[{ label: 'France', value: 'FR' }, { label: 'Belgique', value: 'BE' }, { label: 'Suisse', value: 'CH' }, { label: 'Espagne', value: 'ES' }, { label: 'Allemagne', value: 'DE' }]}
+            value={settings.address_country || 'FR'}
+            onChange={(v) => onChange('address_country', v)}
           />
-          <InlineStack>
-            <Button variant="primary" loading={saving} onClick={handleSave}>Enregistrer</Button>
-          </InlineStack>
+          <SaveButton />
         </BlockStack>
       </Card>
     </BlockStack>
@@ -117,18 +195,18 @@ function SettingContent({ active }: { active: string }) {
 
   if (active === 'plan') return (
     <BlockStack gap="400">
-      {saved && <Banner tone="success" onDismiss={() => {}}>Modifications enregistrées ✓</Banner>}
+      <SaveBanner />
       <Card>
         <BlockStack gap="400">
           <Text as="h2" variant="headingMd" fontWeight="semibold">Votre forfait actuel</Text>
           <InlineStack align="space-between" blockAlign="center">
             <BlockStack gap="100">
               <InlineStack gap="200" blockAlign="center">
-                <Text as="p" variant="headingLg" fontWeight="bold">Starter</Text>
-                <Badge tone="success">Actif</Badge>
+                <Text as="p" variant="headingLg" fontWeight="bold">{settings.plan_name || 'Starter'}</Text>
+                <Badge tone={settings.plan_status === 'active' ? 'success' : 'attention'}>{settings.plan_status === 'active' ? 'Actif' : 'Inactif'}</Badge>
               </InlineStack>
-              <Text as="p" variant="bodySm" tone="subdued">29 €/mois · Facturation mensuelle</Text>
-              <Text as="p" variant="bodySm" tone="subdued">Renouvellement le 22 mai 2026</Text>
+              <Text as="p" variant="bodySm" tone="subdued">{settings.plan_price || 29} €/mois · Facturation mensuelle</Text>
+              {settings.plan_renewal_date && <Text as="p" variant="bodySm" tone="subdued">Renouvellement le {settings.plan_renewal_date}</Text>}
             </BlockStack>
             <Button variant="primary">Changer de forfait</Button>
           </InlineStack>
@@ -160,14 +238,14 @@ function SettingContent({ active }: { active: string }) {
 
   if (active === 'billing') return (
     <BlockStack gap="400">
-      {saved && <Banner tone="success" onDismiss={() => {}}>Modifications enregistrées ✓</Banner>}
+      <SaveBanner />
       <Card>
         <BlockStack gap="400">
           <Text as="h2" variant="headingMd" fontWeight="semibold">Facturation</Text>
           <InlineStack align="space-between" blockAlign="center">
             <BlockStack gap="050">
-              <Text as="p" fontWeight="semibold">Plan actuel : Starter · 29 €/mois</Text>
-              <Text as="p" variant="bodySm" tone="subdued">Prochaine facturation le 22 mai 2026</Text>
+              <Text as="p" fontWeight="semibold">Plan actuel : {settings.plan_name || 'Starter'} · {settings.plan_price || 29} €/mois</Text>
+              {settings.plan_renewal_date && <Text as="p" variant="bodySm" tone="subdued">Prochaine facturation le {settings.plan_renewal_date}</Text>}
             </BlockStack>
             <Button>Gérer l&apos;abonnement</Button>
           </InlineStack>
@@ -176,15 +254,18 @@ function SettingContent({ active }: { active: string }) {
           <InlineStack align="space-between" blockAlign="center">
             <InlineStack gap="200" blockAlign="center">
               <div style={{ width: 36, height: 24, background: '#1A1F71', borderRadius: 4, display: 'grid', placeItems: 'center' }}>
-                <Text as="span" variant="bodySm" fontWeight="bold" tone="caution">VISA</Text>
+                <Text as="span" variant="bodySm" fontWeight="bold" tone="caution">{(settings.billing_card_brand || 'VISA').toUpperCase()}</Text>
               </div>
               <BlockStack gap="0">
-                <Text as="p" variant="bodySm" fontWeight="semibold">Visa se terminant par 8937</Text>
-                <Text as="p" variant="bodySm" tone="subdued">Expire 09/2027</Text>
+                <Text as="p" variant="bodySm" fontWeight="semibold">{settings.billing_card_brand || 'Visa'} se terminant par {settings.billing_card_last4 || '****'}</Text>
+                <Text as="p" variant="bodySm" tone="subdued">Expire {settings.billing_card_expiry || 'N/A'}</Text>
               </BlockStack>
             </InlineStack>
             <Button size="slim">Modifier</Button>
           </InlineStack>
+          <Divider />
+          <TextField label="E-mail de facturation" value={settings.billing_email || ''} autoComplete="off" onChange={(v) => onChange('billing_email', v)} />
+          <SaveButton />
         </BlockStack>
       </Card>
       <Card padding="0">
@@ -195,10 +276,9 @@ function SettingContent({ active }: { active: string }) {
           columnContentTypes={['text', 'text', 'numeric', 'text', 'text']}
           headings={['Date', 'Description', 'Montant', 'Statut', 'Action']}
           rows={[
-            ['22 avr. 2026', 'Forfait Starter — Avril 2026', '29,00 €', 'Payée', 'Télécharger'],
-            ['22 mar. 2026', 'Forfait Starter — Mars 2026', '29,00 €', 'Payée', 'Télécharger'],
-            ['22 fév. 2026', 'Forfait Starter — Février 2026', '29,00 €', 'Payée', 'Télécharger'],
-            ['22 jan. 2026', 'Forfait Starter — Janvier 2026', '29,00 €', 'Payée', 'Télécharger'],
+            ['22 avr. 2026', `Forfait ${settings.plan_name || 'Starter'} — Avril 2026`, `${settings.plan_price || 29},00 €`, 'Payée', 'Télécharger'],
+            ['22 mar. 2026', `Forfait ${settings.plan_name || 'Starter'} — Mars 2026`, `${settings.plan_price || 29},00 €`, 'Payée', 'Télécharger'],
+            ['22 fév. 2026', `Forfait ${settings.plan_name || 'Starter'} — Février 2026`, `${settings.plan_price || 29},00 €`, 'Payée', 'Télécharger'],
           ]}
         />
       </Card>
@@ -207,7 +287,7 @@ function SettingContent({ active }: { active: string }) {
 
   if (active === 'users') return (
     <BlockStack gap="400">
-      {saved && <Banner tone="success" onDismiss={() => {}}>Modifications enregistrées ✓</Banner>}
+      <SaveBanner />
       <Card>
         <BlockStack gap="400">
           <InlineStack align="space-between" blockAlign="center">
@@ -270,7 +350,7 @@ function SettingContent({ active }: { active: string }) {
 
   if (active === 'payments') return (
     <BlockStack gap="400">
-      {saved && <Banner tone="success" onDismiss={() => {}}>Modifications enregistrées ✓</Banner>}
+      <SaveBanner />
       <Card>
         <BlockStack gap="300">
           <InlineStack gap="200" blockAlign="center">
@@ -288,9 +368,9 @@ function SettingContent({ active }: { active: string }) {
           <Divider />
           <Text as="h3" variant="headingSm" fontWeight="semibold">Autres fournisseurs</Text>
           {[
-            { name: 'Stripe', desc: 'Paiements en ligne 1,5% + 0,25€', connected: false },
-            { name: 'PayPal', desc: 'PayPal, Pay Later, Venmo', connected: false },
-            { name: 'Klarna', desc: 'Paiement en 3x 4x sans frais', connected: false },
+            { name: 'Stripe', desc: 'Paiements en ligne 1,5% + 0,25€', field: 'stripe_enabled' as const },
+            { name: 'PayPal', desc: 'PayPal, Pay Later, Venmo', field: 'paypal_enabled' as const },
+            { name: 'Klarna', desc: 'Paiement en 3x 4x sans frais', field: 'klarna_enabled' as const },
           ].map((p, i) => (
             <div key={i}>
               {i > 0 && <Divider />}
@@ -300,7 +380,9 @@ function SettingContent({ active }: { active: string }) {
                     <Text as="p" fontWeight="semibold">{p.name}</Text>
                     <Text as="p" variant="bodySm" tone="subdued">{p.desc}</Text>
                   </BlockStack>
-                  <Button size="slim">Connecter</Button>
+                  <Button size="slim" onClick={() => onChange(p.field, !settings[p.field])}>
+                    {settings[p.field] ? 'Déconnecter' : 'Connecter'}
+                  </Button>
                 </InlineStack>
               </Box>
             </div>
@@ -311,17 +393,20 @@ function SettingContent({ active }: { active: string }) {
         <BlockStack gap="300">
           <Text as="h3" variant="headingSm" fontWeight="semibold">Paiements manuels</Text>
           {[
-            { name: 'Virement bancaire', enabled: true },
-            { name: 'Paiement à la livraison (COD)', enabled: false },
+            { name: 'Virement bancaire', field: 'bank_transfer_enabled' as const },
+            { name: 'Paiement à la livraison (COD)', field: 'cod_enabled' as const },
           ].map((m, i) => (
             <InlineStack key={i} align="space-between" blockAlign="center">
               <Text as="p" variant="bodySm">{m.name}</Text>
               <InlineStack gap="200">
-                <Badge tone={m.enabled ? 'success' : undefined}>{m.enabled ? 'Activé' : 'Désactivé'}</Badge>
-                <Button size="slim" variant="plain">{m.enabled ? 'Désactiver' : 'Activer'}</Button>
+                <Badge tone={settings[m.field] ? 'success' : undefined}>{settings[m.field] ? 'Activé' : 'Désactivé'}</Badge>
+                <Button size="slim" variant="plain" onClick={() => onChange(m.field, !settings[m.field])}>
+                  {settings[m.field] ? 'Désactiver' : 'Activer'}
+                </Button>
               </InlineStack>
             </InlineStack>
           ))}
+          <SaveButton />
         </BlockStack>
       </Card>
     </BlockStack>
@@ -329,7 +414,7 @@ function SettingContent({ active }: { active: string }) {
 
   if (active === 'checkout') return (
     <BlockStack gap="400">
-      {saved && <Banner tone="success" onDismiss={() => {}}>Modifications enregistrées ✓</Banner>}
+      <SaveBanner />
       <Card>
         <BlockStack gap="400">
           <Text as="h2" variant="headingMd" fontWeight="semibold">Finalisation de commande</Text>
@@ -341,29 +426,27 @@ function SettingContent({ active }: { active: string }) {
               { label: 'E-mail ou numéro de téléphone', value: 'email_phone' },
               { label: 'Numéro de téléphone uniquement', value: 'phone' },
             ]}
-            value="email"
-            onChange={() => {}}
+            value={settings.checkout_contact_method || 'email'}
+            onChange={(v) => onChange('checkout_contact_method', v)}
           />
-          <Checkbox label="Demander le prénom et le nom de famille séparément" checked={false} onChange={() => {}} />
-          <Checkbox label="Afficher une case pour les mises à jour marketing" checked={true} onChange={() => {}} />
+          <Checkbox label="Demander le prénom et le nom de famille séparément" checked={settings.checkout_separate_name} onChange={(v) => onChange('checkout_separate_name', v)} />
+          <Checkbox label="Afficher une case pour les mises à jour marketing" checked={settings.checkout_marketing_optin} onChange={(v) => onChange('checkout_marketing_optin', v)} />
           <Divider />
           <Text as="h3" variant="headingSm" fontWeight="semibold">Adresse de livraison</Text>
-          <Checkbox label="Rendre le numéro de téléphone obligatoire" checked={false} onChange={() => {}} />
-          <Checkbox label="Pré-remplir les champs avec les infos enregistrées" checked={true} onChange={() => {}} />
+          <Checkbox label="Rendre le numéro de téléphone obligatoire" checked={settings.checkout_phone_required} onChange={(v) => onChange('checkout_phone_required', v)} />
+          <Checkbox label="Pré-remplir les champs avec les infos enregistrées" checked={settings.checkout_prefill} onChange={(v) => onChange('checkout_prefill', v)} />
           <Divider />
           <Text as="h3" variant="headingSm" fontWeight="semibold">Traitement des commandes</Text>
           <Select
             label="Après le paiement"
             options={[
-              { label: 'Traiter automatiquement les commandes', value: 'auto' },
-              { label: 'Demander une confirmation manuelle', value: 'manual' },
+              { label: 'Traiter automatiquement les commandes', value: 'true' },
+              { label: 'Demander une confirmation manuelle', value: 'false' },
             ]}
-            value="auto"
-            onChange={() => {}}
+            value={settings.checkout_auto_process ? 'true' : 'false'}
+            onChange={(v) => onChange('checkout_auto_process', v === 'true')}
           />
-          <InlineStack>
-            <Button variant="primary" loading={saving} onClick={handleSave}>Enregistrer</Button>
-          </InlineStack>
+          <SaveButton />
         </BlockStack>
       </Card>
     </BlockStack>
@@ -371,7 +454,7 @@ function SettingContent({ active }: { active: string }) {
 
   if (active === 'accounts') return (
     <BlockStack gap="400">
-      {saved && <Banner tone="success" onDismiss={() => {}}>Modifications enregistrées ✓</Banner>}
+      <SaveBanner />
       <Card>
         <BlockStack gap="400">
           <Text as="h2" variant="headingMd" fontWeight="semibold">Comptes clients</Text>
@@ -382,22 +465,20 @@ function SettingContent({ active }: { active: string }) {
               { label: 'Facultatifs', value: 'optional' },
               { label: 'Obligatoires', value: 'required' },
             ]}
-            value="optional"
-            onChange={() => {}}
+            value={settings.accounts_mode || 'optional'}
+            onChange={(v) => onChange('accounts_mode', v)}
             helpText="Choisissez si les clients doivent créer un compte pour passer commande."
           />
           <Divider />
           <Text as="h3" variant="headingSm" fontWeight="semibold">Connexion client</Text>
-          <Checkbox label="Activer la connexion sans mot de passe (lien magique)" checked={true} onChange={() => {}} />
-          <Checkbox label="Activer la connexion Google" checked={false} onChange={() => {}} />
-          <Checkbox label="Activer la connexion Facebook" checked={false} onChange={() => {}} />
+          <Checkbox label="Activer la connexion sans mot de passe (lien magique)" checked={settings.accounts_magic_link} onChange={(v) => onChange('accounts_magic_link', v)} />
+          <Checkbox label="Activer la connexion Google" checked={settings.accounts_google} onChange={(v) => onChange('accounts_google', v)} />
+          <Checkbox label="Activer la connexion Facebook" checked={settings.accounts_facebook} onChange={(v) => onChange('accounts_facebook', v)} />
           <Divider />
           <Text as="h3" variant="headingSm" fontWeight="semibold">Confidentialité</Text>
-          <Checkbox label="Permettre aux clients de demander la suppression de leur compte" checked={true} onChange={() => {}} />
-          <Checkbox label="Afficher l'historique des commandes dans l'espace client" checked={true} onChange={() => {}} />
-          <InlineStack>
-            <Button variant="primary" loading={saving} onClick={handleSave}>Enregistrer</Button>
-          </InlineStack>
+          <Checkbox label="Permettre aux clients de demander la suppression de leur compte" checked={settings.accounts_delete_request} onChange={(v) => onChange('accounts_delete_request', v)} />
+          <Checkbox label="Afficher l'historique des commandes dans l'espace client" checked={settings.accounts_order_history} onChange={(v) => onChange('accounts_order_history', v)} />
+          <SaveButton />
         </BlockStack>
       </Card>
     </BlockStack>
@@ -405,7 +486,7 @@ function SettingContent({ active }: { active: string }) {
 
   if (active === 'shipping') return (
     <BlockStack gap="400">
-      {saved && <Banner tone="success" onDismiss={() => {}}>Modifications enregistrées ✓</Banner>}
+      <SaveBanner />
       <Card>
         <BlockStack gap="300">
           <InlineStack gap="200" blockAlign="center">
@@ -456,27 +537,29 @@ function SettingContent({ active }: { active: string }) {
 
   if (active === 'taxes') return (
     <BlockStack gap="400">
-      {saved && <Banner tone="success" onDismiss={() => {}}>Modifications enregistrées ✓</Banner>}
+      <SaveBanner />
       <Card>
         <BlockStack gap="300">
           <InlineStack gap="200" blockAlign="center">
             <ReceiptEuroIcon width={16} height={16} />
             <Text as="h2" variant="headingMd" fontWeight="semibold">Taxes et droits de douane</Text>
           </InlineStack>
-          <Banner tone="warning">
-            <Text as="p" fontWeight="semibold">Configuration TVA UE requise</Text>
-            <Text as="p" variant="bodySm">Configurez votre numéro OSS/IOSS pour les ventes en Europe.</Text>
-          </Banner>
+          {!settings.tax_oss_number && (
+            <Banner tone="warning">
+              <Text as="p" fontWeight="semibold">Configuration TVA UE requise</Text>
+              <Text as="p" variant="bodySm">Configurez votre numéro OSS/IOSS pour les ventes en Europe.</Text>
+            </Banner>
+          )}
           <TextField
             label="Numéro OSS/IOSS"
-            value=""
+            value={settings.tax_oss_number || ''}
             autoComplete="off"
-            onChange={() => {}}
+            onChange={(v) => onChange('tax_oss_number', v)}
             placeholder="EU123456789"
             helpText="Obligatoire pour les ventes B2C en dehors de votre pays d'établissement."
           />
-          <Checkbox label="Inclure les taxes dans les prix affichés" checked={true} onChange={() => {}} />
-          <Checkbox label="Facturer la taxe sur l'expédition" checked={false} onChange={() => {}} />
+          <Checkbox label="Inclure les taxes dans les prix affichés" checked={settings.tax_included} onChange={(v) => onChange('tax_included', v)} />
+          <Checkbox label="Facturer la taxe sur l'expédition" checked={settings.tax_on_shipping} onChange={(v) => onChange('tax_on_shipping', v)} />
           <Divider />
           <Text as="h3" variant="headingSm" fontWeight="semibold">Taux par région</Text>
           {[
@@ -499,9 +582,7 @@ function SettingContent({ active }: { active: string }) {
               </Box>
             </div>
           ))}
-          <InlineStack>
-            <Button variant="primary" loading={saving} onClick={handleSave}>Enregistrer</Button>
-          </InlineStack>
+          <SaveButton />
         </BlockStack>
       </Card>
     </BlockStack>
@@ -509,7 +590,7 @@ function SettingContent({ active }: { active: string }) {
 
   if (active === 'locations') return (
     <BlockStack gap="400">
-      {saved && <Banner tone="success" onDismiss={() => {}}>Modifications enregistrées ✓</Banner>}
+      <SaveBanner />
       <Card>
         <BlockStack gap="400">
           <InlineStack align="space-between" blockAlign="center">
@@ -519,11 +600,14 @@ function SettingContent({ active }: { active: string }) {
             </InlineStack>
             <Button icon={PlusIcon} variant="primary">Ajouter un emplacement</Button>
           </InlineStack>
-          {[
-            { name: 'Valencia (Principal)', address: 'Calle Colón 12, 46004 Valencia, Espagne', type: 'Entrepôt', default: true },
-            { name: 'App gelato', address: 'Gelato Print on Demand', type: 'Impression à la demande', default: false },
-            { name: 'Paris — Atelier', address: '12 rue des Ateliers, 75011 Paris, France', type: 'Boutique physique', default: false },
-          ].map((loc, i) => (
+          {(Array.isArray(settings.locations) && settings.locations.length > 0
+            ? settings.locations as Array<{ name: string; address: string; type: string; default?: boolean }>
+            : [
+              { name: 'Valencia (Principal)', address: 'Calle Colón 12, 46004 Valencia, Espagne', type: 'Entrepôt', default: true },
+              { name: 'App gelato', address: 'Gelato Print on Demand', type: 'Impression à la demande', default: false },
+              { name: 'Paris — Atelier', address: '12 rue des Ateliers, 75011 Paris, France', type: 'Boutique physique', default: false },
+            ]
+          ).map((loc, i) => (
             <div key={i}>
               {i > 0 && <Divider />}
               <Box paddingBlockStart={i > 0 ? '300' : '0'}>
@@ -548,7 +632,7 @@ function SettingContent({ active }: { active: string }) {
 
   if (active === 'domains') return (
     <BlockStack gap="400">
-      {saved && <Banner tone="success" onDismiss={() => {}}>Modifications enregistrées ✓</Banner>}
+      <SaveBanner />
       <Card>
         <BlockStack gap="400">
           <InlineStack align="space-between" blockAlign="center">
@@ -559,9 +643,9 @@ function SettingContent({ active }: { active: string }) {
             <Button icon={PlusIcon} variant="primary">Connecter un domaine</Button>
           </InlineStack>
           {[
-            { domain: 'studionord.co', type: 'Domaine principal', ssl: true, status: 'Connecté' },
-            { domain: 'www.studionord.co', type: 'Redirection → studionord.co', ssl: true, status: 'Actif' },
-            { domain: 'studionord.mymerchant.com', type: 'Domaine Merchant OS', ssl: true, status: 'Actif' },
+            { domain: settings.primary_domain || 'example.com', type: 'Domaine principal', ssl: true, status: 'Connecté' },
+            { domain: `www.${settings.primary_domain || 'example.com'}`, type: `Redirection → ${settings.primary_domain || 'example.com'}`, ssl: true, status: 'Actif' },
+            { domain: `${settings.site_id}.mymerchant.com`, type: 'Domaine Merchant OS', ssl: true, status: 'Actif' },
           ].map((d, i) => (
             <div key={i}>
               {i > 0 && <Divider />}
@@ -584,9 +668,9 @@ function SettingContent({ active }: { active: string }) {
               </Box>
             </div>
           ))}
-          <Banner tone="info">
-            <Text as="p">Votre boutique est accessible sur <strong>studionord.co</strong>. Les visiteurs de <strong>www.studionord.co</strong> sont redirigés automatiquement.</Text>
-          </Banner>
+          <Divider />
+          <TextField label="Domaine principal" value={settings.primary_domain || ''} autoComplete="off" onChange={(v) => onChange('primary_domain', v)} />
+          <SaveButton />
         </BlockStack>
       </Card>
     </BlockStack>
@@ -594,7 +678,7 @@ function SettingContent({ active }: { active: string }) {
 
   if (active === 'notifications') return (
     <BlockStack gap="400">
-      {saved && <Banner tone="success" onDismiss={() => {}}>Modifications enregistrées ✓</Banner>}
+      <SaveBanner />
       <Card>
         <BlockStack gap="400">
           <InlineStack gap="200" blockAlign="center">
@@ -602,23 +686,24 @@ function SettingContent({ active }: { active: string }) {
             <Text as="h2" variant="headingMd" fontWeight="semibold">Notifications clients</Text>
           </InlineStack>
           <Text as="p" variant="bodySm" tone="subdued">Ces e-mails sont envoyés automatiquement à vos clients.</Text>
-          {[
-            { name: 'Confirmation de commande', enabled: true, editable: true },
-            { name: 'Commande expédiée', enabled: true, editable: true },
-            { name: 'Commande livrée', enabled: true, editable: true },
-            { name: 'Remboursement effectué', enabled: true, editable: true },
-            { name: 'Panier abandonné', enabled: true, editable: true },
-            { name: 'Bienvenue client', enabled: false, editable: true },
-            { name: 'Réinitialisation du mot de passe', enabled: true, editable: false },
-          ].map((n, i) => (
+          {([
+            { name: 'Confirmation de commande', field: 'notification_order_created', editable: true },
+            { name: 'Commande expédiée', field: 'notification_order_shipped', editable: true },
+            { name: 'Commande livrée', field: 'notification_order_delivered', editable: true },
+            { name: 'Remboursement effectué', field: 'notification_refund', editable: true },
+            { name: 'Panier abandonné', field: 'notification_abandoned_cart', editable: true },
+            { name: 'Bienvenue client', field: 'notification_welcome', editable: true },
+          ] as const).map((n, i) => (
             <div key={i}>
               {i > 0 && <Divider />}
               <Box paddingBlockStart={i > 0 ? '200' : '0'}>
                 <InlineStack align="space-between" blockAlign="center">
                   <Text as="p" variant="bodySm">{n.name}</Text>
                   <InlineStack gap="200">
-                    <Badge tone={n.enabled ? 'success' : undefined}>{n.enabled ? 'Activé' : 'Désactivé'}</Badge>
-                    {n.editable && <Button size="slim" variant="plain">Modifier</Button>}
+                    <Badge tone={settings[n.field] ? 'success' : undefined}>{settings[n.field] ? 'Activé' : 'Désactivé'}</Badge>
+                    {n.editable && <Button size="slim" variant="plain" onClick={() => onChange(n.field, !settings[n.field])}>
+                      {settings[n.field] ? 'Désactiver' : 'Activer'}
+                    </Button>}
                   </InlineStack>
                 </InlineStack>
               </Box>
@@ -632,22 +717,20 @@ function SettingContent({ active }: { active: string }) {
           <Text as="p" variant="bodySm" tone="subdued">Ces alertes sont envoyées à votre équipe interne.</Text>
           <TextField
             label="E-mail de l'équipe"
-            value="equipe@studionord.co"
+            value={settings.team_email || ''}
             autoComplete="off"
-            onChange={() => {}}
+            onChange={(v) => onChange('team_email', v)}
             helpText="Toutes les alertes commande et stock seront envoyées ici."
           />
-          {[
-            { name: 'Nouvelle commande reçue', enabled: true },
-            { name: 'Stock critique (< 5 unités)', enabled: true },
-            { name: 'Nouveau client inscrit', enabled: false },
-            { name: 'Rétrofacturation ouverte', enabled: true },
-          ].map((n, i) => (
-            <Checkbox key={i} label={n.name} checked={n.enabled} onChange={() => {}} />
+          {([
+            { name: 'Nouvelle commande reçue', field: 'notification_order_paid' },
+            { name: 'Stock critique (< 5 unités)', field: 'notification_stock_alert' },
+            { name: 'Nouveau client inscrit', field: 'notification_new_customer' },
+            { name: 'Rétrofacturation ouverte', field: 'notification_chargeback' },
+          ] as const).map((n, i) => (
+            <Checkbox key={i} label={n.name} checked={settings[n.field]} onChange={(v) => onChange(n.field, v)} />
           ))}
-          <InlineStack>
-            <Button variant="primary" loading={saving} onClick={handleSave}>Enregistrer</Button>
-          </InlineStack>
+          <SaveButton />
         </BlockStack>
       </Card>
     </BlockStack>
@@ -655,7 +738,7 @@ function SettingContent({ active }: { active: string }) {
 
   if (active === 'brand') return (
     <BlockStack gap="400">
-      {saved && <Banner tone="success" onDismiss={() => {}}>Modifications enregistrées ✓</Banner>}
+      <SaveBanner />
       <Card>
         <BlockStack gap="400">
           <InlineStack gap="200" blockAlign="center">
@@ -679,7 +762,7 @@ function SettingContent({ active }: { active: string }) {
             </div>
           </BlockStack>
           <BlockStack gap="200">
-            <Text as="p" variant="bodySm" fontWeight="medium">Favicon (32×32 px)</Text>
+            <Text as="p" variant="bodySm" fontWeight="medium">Favicon (32x32 px)</Text>
             <div style={{
               width: 48, height: 48,
               border: '1.5px dashed #c4c4c4',
@@ -697,15 +780,15 @@ function SettingContent({ active }: { active: string }) {
             <BlockStack gap="100">
               <Text as="p" variant="bodySm" fontWeight="medium">Couleur principale</Text>
               <InlineStack gap="200" blockAlign="center">
-                <div style={{ width: 32, height: 32, borderRadius: 6, background: '#1a1a1a', border: '1px solid #d0d0d0', cursor: 'pointer' }} />
-                <TextField label="" labelHidden value="#1A1A1A" autoComplete="off" onChange={() => {}} />
+                <div style={{ width: 32, height: 32, borderRadius: 6, background: settings.brand_primary_color || '#1a1a1a', border: '1px solid #d0d0d0', cursor: 'pointer' }} />
+                <TextField label="" labelHidden value={settings.brand_primary_color || '#1A1A1A'} autoComplete="off" onChange={(v) => onChange('brand_primary_color', v)} />
               </InlineStack>
             </BlockStack>
             <BlockStack gap="100">
               <Text as="p" variant="bodySm" fontWeight="medium">Couleur secondaire</Text>
               <InlineStack gap="200" blockAlign="center">
-                <div style={{ width: 32, height: 32, borderRadius: 6, background: '#f5f0eb', border: '1px solid #d0d0d0', cursor: 'pointer' }} />
-                <TextField label="" labelHidden value="#F5F0EB" autoComplete="off" onChange={() => {}} />
+                <div style={{ width: 32, height: 32, borderRadius: 6, background: settings.brand_secondary_color || '#f5f0eb', border: '1px solid #d0d0d0', cursor: 'pointer' }} />
+                <TextField label="" labelHidden value={settings.brand_secondary_color || '#F5F0EB'} autoComplete="off" onChange={(v) => onChange('brand_secondary_color', v)} />
               </InlineStack>
             </BlockStack>
           </InlineGrid>
@@ -719,8 +802,8 @@ function SettingContent({ active }: { active: string }) {
               { label: 'Raleway', value: 'raleway' },
               { label: 'Montserrat', value: 'montserrat' },
             ]}
-            value="inter"
-            onChange={() => {}}
+            value={settings.brand_heading_font || 'inter'}
+            onChange={(v) => onChange('brand_heading_font', v)}
           />
           <Select
             label="Police du corps"
@@ -729,12 +812,10 @@ function SettingContent({ active }: { active: string }) {
               { label: 'Georgia', value: 'georgia' },
               { label: 'Source Serif Pro', value: 'source-serif' },
             ]}
-            value="inter"
-            onChange={() => {}}
+            value={settings.brand_body_font || 'inter'}
+            onChange={(v) => onChange('brand_body_font', v)}
           />
-          <InlineStack>
-            <Button variant="primary" loading={saving} onClick={handleSave}>Enregistrer</Button>
-          </InlineStack>
+          <SaveButton />
         </BlockStack>
       </Card>
     </BlockStack>
@@ -742,7 +823,7 @@ function SettingContent({ active }: { active: string }) {
 
   if (active === 'files') return (
     <BlockStack gap="400">
-      {saved && <Banner tone="success" onDismiss={() => {}}>Modifications enregistrées ✓</Banner>}
+      <SaveBanner />
       <Card>
         <BlockStack gap="400">
           <InlineStack align="space-between" blockAlign="center">
@@ -800,6 +881,84 @@ function SettingContent({ active }: { active: string }) {
 
 export default function SettingsPage() {
   const [active, setActive] = useState('general')
+  const { activeSite } = useSite()
+  const [settings, setSettings] = useState<Settings | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const loadSettings = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await fetch(`/api/settings?site=${activeSite}`)
+      if (!res.ok) {
+        const data = await res.json()
+        setError(data.error || 'Erreur de chargement')
+        return
+      }
+      const data = await res.json()
+      setSettings(data)
+    } catch {
+      setError('Impossible de charger les paramètres')
+    } finally {
+      setLoading(false)
+    }
+  }, [activeSite])
+
+  useEffect(() => {
+    loadSettings()
+  }, [loadSettings])
+
+  const handleChange = (field: string, value: unknown) => {
+    if (!settings) return
+    setSettings({ ...settings, [field]: value })
+  }
+
+  const handleSave = async () => {
+    if (!settings) return
+    setSaving(true)
+    setError(null)
+    setSaved(false)
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...settings, site_id: activeSite }),
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        setError(data.error || 'Erreur de sauvegarde')
+      } else {
+        const data = await res.json()
+        setSettings(data)
+        setSaved(true)
+        setTimeout(() => setSaved(false), 3000)
+      }
+    } catch {
+      setError('Impossible de sauvegarder')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (loading || !settings) {
+    return (
+      <Page title="Paramètres" subtitle="Gérez votre boutique, votre compte et vos préférences.">
+        <Layout>
+          <Layout.Section>
+            <Card>
+              <BlockStack gap="300" inlineAlign="center">
+                <Spinner size="large" />
+                <Text as="p" variant="bodySm" tone="subdued">Chargement des paramètres...</Text>
+              </BlockStack>
+            </Card>
+          </Layout.Section>
+        </Layout>
+      </Page>
+    )
+  }
 
   return (
     <Page
@@ -815,11 +974,11 @@ export default function SettingsPage() {
                   width: 36, height: 36, borderRadius: 8, flexShrink: 0,
                   background: 'linear-gradient(135deg, oklch(0.75 0.12 50), oklch(0.65 0.14 30))',
                   display: 'grid', placeItems: 'center', color: 'white', fontWeight: 700
-                }}>S</div>
+                }}>{(settings.store_name || 'S')[0].toUpperCase()}</div>
                 <BlockStack gap="050">
-                  <Text as="p" fontWeight="semibold">Studio Nord &amp; Co</Text>
+                  <Text as="p" fontWeight="semibold">{settings.store_name || 'Ma boutique'}</Text>
                   <Text as="p" variant="bodySm" tone="subdued">
-                    <span style={{ fontFamily: 'monospace' }}>studionord.co</span>
+                    <span style={{ fontFamily: 'monospace' }}>{settings.primary_domain || `${activeSite}.mymerchant.com`}</span>
                   </Text>
                 </BlockStack>
               </InlineStack>
@@ -843,7 +1002,15 @@ export default function SettingsPage() {
         </Layout.Section>
 
         <Layout.Section>
-          <SettingContent active={active} />
+          <SettingContent
+            active={active}
+            settings={settings}
+            onChange={handleChange}
+            onSave={handleSave}
+            saving={saving}
+            saved={saved}
+            error={error}
+          />
         </Layout.Section>
       </Layout>
     </Page>
