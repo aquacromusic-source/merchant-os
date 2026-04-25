@@ -56,6 +56,7 @@ const ZONES = [
   { id_suffix: 'zone-11', name: 'Venezuela, Brésil, Argentine, Chili', countries: ['VE', 'BR', 'AR', 'CL'] },
   { id_suffix: 'zone-12', name: 'Inde, Corée du Sud', countries: ['IN', 'KR'] },
   { id_suffix: 'zone-13', name: 'Hong Kong, Jersey, Singapour (+103 pays)', countries: ['HK', 'JE', 'SG'] },
+  { id_suffix: 'zone-90', name: 'Îles Åland, Bulgarie, Tchéquie (+65 pays)', countries: ['AX', 'BG', 'CZ'] },
 ]
 
 // ─── Helper to build standard rate sets ─────────────────────────────────────────
@@ -115,8 +116,9 @@ const RATES_BY_ZONE = {
   'thailande':        makeRates(12.95, 6.95, '7-10 business days', { lang: 'en' }),
   'porto-rico':       makeRates(11.95, 6.95, '5-8 business days', { lang: 'en' }),
   'zone-11':          makeRates(12.95, 6.95, '7-10 business days', { lang: 'es' }),
-  'zone-12':          makeRates(12.95, 6.95, '7-10 business days', { lang: 'en' }),
-  'zone-13':          makeRates(13.95, 6.95, '7-12 business days', { lang: 'en' }),
+  'zone-12':          makeRates(34.95, 33.95, '7-10 business days', { lang: 'en' }),
+  'zone-13':          makeRates(37.95, 36.95, '7-12 business days', { lang: 'en' }),
+  'zone-90':          makeRates(87.95, 86.95, '10-15 business days', { lang: 'en' }),
 }
 
 // ─── Upsert helper ──────────────────────────────────────────────────────────────
