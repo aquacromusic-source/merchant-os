@@ -29,7 +29,7 @@ const SITE_CONFIG: Record<string, {
   'strap': {
     table: 'kettel_products',
     titleCol: 'name',
-    activeCol: 'is_active',
+    activeCol: null,
     slugCol: null,
     imageCol: 'image_url',
     priceCol: 'price',

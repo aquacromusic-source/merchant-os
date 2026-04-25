@@ -10,7 +10,7 @@ const SITE_CONFIG: Record<string, {
   priceCol: string
 }> = {
   'gaming-posters': { table: 'posters', titleCol: 'title', activeCol: 'is_active', priceCol: 'price' },
-  'strap': { table: 'kettel_products', titleCol: 'name', activeCol: 'is_active', priceCol: 'price' },
+  'strap': { table: 'kettel_products', titleCol: 'name', activeCol: null, priceCol: 'price' },
   'pdf-guide-store': { table: 'guides', titleCol: 'title', activeCol: 'is_published', priceCol: 'price' },
 }
 
