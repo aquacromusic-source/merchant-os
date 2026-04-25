@@ -1,5 +1,5 @@
 /**
- * Seed REAL shipping zones & rates (Robin's actual tariffs)
+ * Seed REAL shipping zones & rates (Robin's actual tariffs — ALL zones)
  * Run: node scripts/seed-shipping-real.mjs
  */
 
@@ -22,104 +22,104 @@ const headers = {
 
 const SITES = ['gaming-posters', 'strap', 'pdf-guide-store']
 
+// ─── ZONES ──────────────────────────────────────────────────────────────────────
+
 const ZONES = [
-  {
-    id_suffix: 'allemagne',
-    name: 'Allemagne',
-    countries: ['DE'],
-  },
-  {
-    id_suffix: 'espagne',
-    name: 'Espagne (49 provinces)',
-    countries: ['ES'],
-  },
-  {
-    id_suffix: 'canaries',
-    name: 'Canaries',
-    countries: ['IC'],
-  },
-  {
-    id_suffix: 'ceuta-melilla',
-    name: 'Ceuta / Melilla',
-    countries: ['EA'],
-  },
-  {
-    id_suffix: 'france',
-    name: 'France',
-    countries: ['FR'],
-  },
-  {
-    id_suffix: 'irlande',
-    name: 'Irlande',
-    countries: ['IE'],
-  },
-  {
-    id_suffix: 'italie',
-    name: 'Italie',
-    countries: ['IT'],
-  },
-  {
-    id_suffix: 'portugal',
-    name: 'Portugal',
-    countries: ['PT'],
-  },
-  {
-    id_suffix: 'belgique-pays-bas',
-    name: 'Belgique / Pays-Bas',
-    countries: ['BE', 'NL'],
-  },
+  // Europe principale
+  { id_suffix: 'allemagne', name: 'Allemagne', countries: ['DE'] },
+  { id_suffix: 'belgique-pays-bas', name: 'Belgique / Pays-Bas', countries: ['BE', 'NL'] },
+  { id_suffix: 'espagne', name: 'Espagne (49 provinces)', countries: ['ES'] },
+  { id_suffix: 'canaries', name: 'Canaries', countries: ['IC'] },
+  { id_suffix: 'ceuta-melilla', name: 'Ceuta / Melilla', countries: ['XC', 'XL'] },
+  { id_suffix: 'france', name: 'France', countries: ['FR'] },
+  { id_suffix: 'irlande', name: 'Irlande', countries: ['IE'] },
+  { id_suffix: 'italie', name: 'Italie', countries: ['IT'] },
+  { id_suffix: 'portugal', name: 'Portugal', countries: ['PT'] },
+  // Europe élargie
+  { id_suffix: 'zone-006', name: 'Suède, Autriche, Danemark, Finlande', countries: ['SE', 'AT', 'DK', 'FI'] },
+  { id_suffix: 'zone-061', name: 'Croatie, Estonie, Hongrie, Lettonie, Lituanie, Slovénie', countries: ['HR', 'EE', 'HU', 'LV', 'LT', 'SI'] },
+  { id_suffix: 'zone-008', name: 'Kosovo, Monténégro, Russie, Serbie', countries: ['XK', 'ME', 'RU', 'RS'] },
+  { id_suffix: 'royaume-uni', name: 'Royaume-Uni', countries: ['GB'] },
+  { id_suffix: 'norvege', name: 'Norvège', countries: ['NO'] },
+  { id_suffix: 'pologne', name: 'Pologne', countries: ['PL'] },
+  { id_suffix: 'grece', name: 'Grèce', countries: ['GR'] },
+  { id_suffix: 'turquie', name: 'Turquie', countries: ['TR'] },
+  { id_suffix: 'israel', name: 'Israël', countries: ['IL'] },
+  { id_suffix: 'liechtenstein', name: 'Liechtenstein', countries: ['LI'] },
+  // Monde
+  { id_suffix: 'etats-unis', name: 'États-Unis', countries: ['US'] },
+  { id_suffix: 'australie', name: 'Australie', countries: ['AU'] },
+  { id_suffix: 'emirats', name: 'Émirats arabes unis', countries: ['AE'] },
+  { id_suffix: 'mexique', name: 'Mexique', countries: ['MX'] },
+  { id_suffix: 'thailande', name: 'Thaïlande', countries: ['TH'] },
+  { id_suffix: 'porto-rico', name: 'Porto Rico', countries: ['PR'] },
+  { id_suffix: 'zone-11', name: 'Venezuela, Brésil, Argentine, Chili', countries: ['VE', 'BR', 'AR', 'CL'] },
+  { id_suffix: 'zone-12', name: 'Inde, Corée du Sud', countries: ['IN', 'KR'] },
+  { id_suffix: 'zone-13', name: 'Hong Kong, Jersey, Singapour (+103 pays)', countries: ['HK', 'JE', 'SG'] },
 ]
 
-const RATES_BY_ZONE = {
-  allemagne: [
-    { name: 'EXPRESS Livraison domicile UPS', carrier: 'UPS', price: 6.95, delivery_time: '2-3 jours ouvrés', min_order: 0, max_order: null },
-    { name: 'Relais GLS', carrier: 'GLS', price: 4.95, delivery_time: '3-5 jours ouvrés', min_order: 0, max_order: 49.99 },
-    { name: 'Relais GLS — Gratuit', carrier: 'GLS', price: 0, delivery_time: '3-5 jours ouvrés', min_order: 50, max_order: null },
-    { name: 'VIP 24H Point Relais UPS', carrier: 'UPS', price: 13.95, delivery_time: '24h', min_order: 0, max_order: null },
-  ],
-  espagne: [
-    { name: 'EXPRESS Entrega Domicilio UPS', carrier: 'UPS', price: 4.95, delivery_time: '2-3 días laborables', min_order: 0, max_order: null },
-    { name: 'Relais GLS', carrier: 'GLS', price: 3.95, delivery_time: '3-5 días laborables', min_order: 0, max_order: 49.99 },
-    { name: 'Relais GLS — Gratuit', carrier: 'GLS', price: 0, delivery_time: '3-5 días laborables', min_order: 50, max_order: null },
-  ],
-  canaries: [
-    { name: 'Entrega domicilio UPS', carrier: 'UPS', price: 5.95, delivery_time: '4-6 días laborables', min_order: 0, max_order: null },
-    { name: 'Relais GLS', carrier: 'GLS', price: 4.95, delivery_time: '5-7 días laborables', min_order: 0, max_order: 49.99 },
-    { name: 'Relais GLS — Gratuit', carrier: 'GLS', price: 0, delivery_time: '5-7 días laborables', min_order: 50, max_order: null },
-  ],
-  'ceuta-melilla': [
-    { name: 'Entrega domicilio UPS', carrier: 'UPS', price: 6.95, delivery_time: '4-6 días laborables', min_order: 0, max_order: null },
-    { name: 'Relais GLS', carrier: 'GLS', price: 4.95, delivery_time: '5-7 días laborables', min_order: 0, max_order: 49.99 },
-    { name: 'Relais GLS — Gratuit', carrier: 'GLS', price: 0, delivery_time: '5-7 días laborables', min_order: 50, max_order: null },
-  ],
-  france: [
-    { name: 'EXPRESS Livraison Domicile UPS', carrier: 'UPS', price: 6.95, delivery_time: '2-3 jours ouvrés', min_order: 0, max_order: null },
-    { name: 'Relais GLS', carrier: 'GLS', price: 4.95, delivery_time: '3-5 jours ouvrés', min_order: 0, max_order: 49.99 },
-    { name: 'Relais GLS — Gratuit', carrier: 'GLS', price: 0, delivery_time: '3-5 jours ouvrés', min_order: 50, max_order: null },
-    { name: 'VIP 24H Livraison Point Relais UPS', carrier: 'UPS', price: 13.95, delivery_time: '24h', min_order: 0, max_order: null },
-  ],
-  irlande: [
-    { name: 'EXPRESS Home Delivery UPS', carrier: 'UPS', price: 6.95, delivery_time: '2-4 business days', min_order: 0, max_order: null },
-    { name: 'Relais GLS', carrier: 'GLS', price: 6.95, delivery_time: '4-6 business days', min_order: 0, max_order: 49.99 },
-    { name: 'Relais GLS — Gratuit', carrier: 'GLS', price: 0, delivery_time: '4-6 business days', min_order: 50, max_order: null },
-  ],
-  italie: [
-    { name: 'EXPRESS Consegna domicilio UPS', carrier: 'UPS', price: 6.95, delivery_time: '2-3 giorni lavorativi', min_order: 0, max_order: null },
-    { name: 'Relais GLS', carrier: 'GLS', price: 4.95, delivery_time: '3-5 giorni lavorativi', min_order: 0, max_order: 49.99 },
-    { name: 'Relais GLS — Gratuit', carrier: 'GLS', price: 0, delivery_time: '3-5 giorni lavorativi', min_order: 50, max_order: null },
-    { name: 'VIP 24H Consegna punto ritiro UPS', carrier: 'UPS', price: 13.95, delivery_time: '24h', min_order: 0, max_order: null },
-  ],
-  portugal: [
-    { name: 'EXPRESS Entrega domicílio UPS', carrier: 'UPS', price: 5.95, delivery_time: '2-4 dias úteis', min_order: 0, max_order: null },
-    { name: 'Relais GLS', carrier: 'GLS', price: 4.95, delivery_time: '3-5 dias úteis', min_order: 0, max_order: 49.99 },
-    { name: 'Relais GLS — Gratuit', carrier: 'GLS', price: 0, delivery_time: '3-5 dias úteis', min_order: 50, max_order: null },
-  ],
-  'belgique-pays-bas': [
-    { name: 'EXPRESS Livraison domicile UPS', carrier: 'UPS', price: 6.95, delivery_time: '2-3 jours ouvrés', min_order: 0, max_order: null },
-    { name: 'Relais GLS', carrier: 'GLS', price: 4.95, delivery_time: '3-5 jours ouvrés', min_order: 0, max_order: 49.99 },
-    { name: 'Relais GLS — Gratuit', carrier: 'GLS', price: 0, delivery_time: '3-5 jours ouvrés', min_order: 50, max_order: null },
-  ],
+// ─── Helper to build standard rate sets ─────────────────────────────────────────
+
+function makeRates(upsPrice, glsPrice, delivery, { vip = false, lang = 'fr' } = {}) {
+  const labels = {
+    fr: { ups: 'EXPRESS Livraison domicile UPS', gls_paid: 'Relais GLS', gls_free: 'Relais GLS — Gratuit', vip: 'VIP 24H Point Relais UPS', del: delivery || '2-3 jours ouvrés', glsDel: delivery || '3-5 jours ouvrés' },
+    es: { ups: 'EXPRESS Entrega Domicilio UPS', gls_paid: 'Relais GLS', gls_free: 'Relais GLS — Gratuit', vip: 'VIP 24H Punto de recogida UPS', del: delivery || '2-3 días laborables', glsDel: delivery || '3-5 días laborables' },
+    it: { ups: 'EXPRESS Consegna domicilio UPS', gls_paid: 'Relais GLS', gls_free: 'Relais GLS — Gratuit', vip: 'VIP 24H Consegna punto ritiro UPS', del: delivery || '2-3 giorni lavorativi', glsDel: delivery || '3-5 giorni lavorativi' },
+    pt: { ups: 'EXPRESS Entrega domicílio UPS', gls_paid: 'Relais GLS', gls_free: 'Relais GLS — Gratuit', vip: 'VIP 24H Ponto de recolha UPS', del: delivery || '2-4 dias úteis', glsDel: delivery || '3-5 dias úteis' },
+    en: { ups: 'EXPRESS Home Delivery UPS', gls_paid: 'Relais GLS', gls_free: 'Relais GLS — Free', vip: 'VIP 24H Relay Point UPS', del: delivery || '2-4 business days', glsDel: delivery || '4-6 business days' },
+    de: { ups: 'EXPRESS Lieferung nach Hause UPS', gls_paid: 'Relais GLS', gls_free: 'Relais GLS — Kostenlos', vip: 'VIP 24H Abholpunkt UPS', del: delivery || '2-3 Werktage', glsDel: delivery || '3-5 Werktage' },
+  }
+  const l = labels[lang] || labels.fr
+  const rates = [
+    { name: l.ups, carrier: 'UPS', price: upsPrice, delivery_time: l.del, min_order: 0, max_order: null },
+    { name: l.gls_paid, carrier: 'GLS', price: glsPrice, delivery_time: l.glsDel, min_order: 0, max_order: 49.99 },
+    { name: l.gls_free, carrier: 'GLS', price: 0, delivery_time: l.glsDel, min_order: 50, max_order: null },
+  ]
+  if (vip) {
+    rates.push({ name: l.vip, carrier: 'UPS', price: 13.95, delivery_time: '24h', min_order: 0, max_order: null })
+  }
+  return rates
 }
+
+// ─── RATES BY ZONE ──────────────────────────────────────────────────────────────
+
+const RATES_BY_ZONE = {
+  // Europe principale
+  'allemagne':        makeRates(6.95, 4.95, null, { vip: true, lang: 'de' }),
+  'belgique-pays-bas': makeRates(6.95, 4.95, null, { lang: 'fr' }),
+  'espagne':          makeRates(4.95, 3.95, null, { lang: 'es' }),
+  'canaries':         makeRates(5.95, 4.95, '4-6 días laborables', { lang: 'es' }),
+  'ceuta-melilla':    makeRates(6.95, 4.95, '4-6 días laborables', { lang: 'es' }),
+  'france':           makeRates(6.95, 4.95, null, { vip: true, lang: 'fr' }),
+  'irlande':          makeRates(6.95, 6.95, null, { lang: 'en' }),
+  'italie':           makeRates(6.95, 4.95, null, { vip: true, lang: 'it' }),
+  'portugal':         makeRates(5.95, 4.95, null, { lang: 'pt' }),
+
+  // Europe élargie
+  'zone-006':         makeRates(7.95, 5.95, null, { lang: 'en' }),
+  'zone-061':         makeRates(8.95, 5.95, null, { lang: 'en' }),
+  'zone-008':         makeRates(9.95, 6.95, null, { lang: 'en' }),
+  'royaume-uni':      makeRates(7.95, 5.95, null, { lang: 'en' }),
+  'norvege':          makeRates(8.95, 6.95, null, { lang: 'en' }),
+  'pologne':          makeRates(7.95, 5.95, null, { lang: 'en' }),
+  'grece':            makeRates(8.95, 5.95, null, { lang: 'en' }),
+  'turquie':          makeRates(9.95, 6.95, null, { lang: 'en' }),
+  'israel':           makeRates(10.95, 6.95, null, { lang: 'en' }),
+  'liechtenstein':    makeRates(8.95, 5.95, null, { lang: 'en' }),
+
+  // Monde
+  'etats-unis':       makeRates(11.95, 6.95, '5-8 business days', { lang: 'en' }),
+  'australie':        makeRates(12.95, 6.95, '7-10 business days', { lang: 'en' }),
+  'emirats':          makeRates(11.95, 6.95, '5-8 business days', { lang: 'en' }),
+  'mexique':          makeRates(11.95, 6.95, '5-8 business days', { lang: 'es' }),
+  'thailande':        makeRates(12.95, 6.95, '7-10 business days', { lang: 'en' }),
+  'porto-rico':       makeRates(11.95, 6.95, '5-8 business days', { lang: 'en' }),
+  'zone-11':          makeRates(12.95, 6.95, '7-10 business days', { lang: 'es' }),
+  'zone-12':          makeRates(12.95, 6.95, '7-10 business days', { lang: 'en' }),
+  'zone-13':          makeRates(13.95, 6.95, '7-12 business days', { lang: 'en' }),
+}
+
+// ─── Upsert helper ──────────────────────────────────────────────────────────────
 
 async function upsert(table, rows) {
   const url = `${SUPABASE_URL}/rest/v1/${table}`
@@ -138,8 +138,10 @@ async function upsert(table, rows) {
   return data
 }
 
+// ─── Main ───────────────────────────────────────────────────────────────────────
+
 async function seed() {
-  console.log('🚚 Seeding REAL shipping zones & rates...\n')
+  console.log('🚚 Seeding ALL shipping zones & rates (28 zones)...\n')
 
   for (const siteId of SITES) {
     console.log(`Site: ${siteId}`)
@@ -178,7 +180,7 @@ async function seed() {
     console.log()
   }
 
-  console.log('✅ Done!')
+  console.log(`✅ Done! ${ZONES.length} zones × ${SITES.length} sites = ${ZONES.length * SITES.length} zone rows`)
 }
 
 seed().catch(e => {

@@ -28,6 +28,10 @@ const FLAGS: Record<string, string> = {
   SE: '🇸🇪', DK: '🇩🇰', FI: '🇫🇮', NO: '🇳🇴', PL: '🇵🇱', CZ: '🇨🇿',
   RO: '🇷🇴', HU: '🇭🇺', GR: '🇬🇷', HR: '🇭🇷', BG: '🇧🇬', SK: '🇸🇰',
   SI: '🇸🇮', LT: '🇱🇹', LV: '🇱🇻', EE: '🇪🇪', MT: '🇲🇹', CY: '🇨🇾',
+  IC: '🇮🇨', TR: '🇹🇷', IL: '🇮🇱', LI: '🇱🇮', MX: '🇲🇽', TH: '🇹🇭',
+  AE: '🇦🇪', PR: '🇵🇷', XK: '🇽🇰', ME: '🇲🇪', RS: '🇷🇸', RU: '🇷🇺',
+  VE: '🇻🇪', BR: '🇧🇷', AR: '🇦🇷', CL: '🇨🇱', IN: '🇮🇳', HK: '🇭🇰',
+  SG: '🇸🇬', JE: '🇯🇪',
   EU: '🇪🇺', WORLD: '🌍',
 }
 
@@ -209,6 +213,14 @@ export default function ShippingPage() {
     return `${countries.slice(0, 3).map(c => FLAGS[c] || c).join(' ')} +${countries.length - 3}`
   }
 
+  const openAddModalFromHeader = () => {
+    resetForm()
+    setSelectedZoneId('')
+    setModalOpen(true)
+  }
+
+  const zoneOptions = zones.map(z => ({ label: z.name, value: z.id }))
+
   if (loading) {
     return (
       <Page title="Expédition et livraison">
@@ -220,7 +232,14 @@ export default function ShippingPage() {
   }
 
   return (
-    <Page title="Expédition et livraison">
+    <Page
+      title="Expédition et livraison"
+      primaryAction={{
+        content: '+ Ajouter un tarif d\'expédition',
+        onAction: openAddModalFromHeader,
+        disabled: zones.length === 0,
+      }}
+    >
       <BlockStack gap="400">
         {toast && (
           <Banner tone="success" onDismiss={() => setToast('')}>
@@ -329,7 +348,7 @@ export default function ShippingPage() {
           content: editingRate ? 'Enregistrer' : 'Ajouter',
           onAction: handleSave,
           loading: saving,
-          disabled: !formName || !formPrice,
+          disabled: !formName || !formPrice || !selectedZoneId,
         }}
         secondaryActions={[
           { content: 'Annuler', onAction: () => { setModalOpen(false); resetForm() } },
@@ -337,6 +356,14 @@ export default function ShippingPage() {
       >
         <Modal.Section>
           <BlockStack gap="400">
+            {!editingRate && (
+              <Select
+                label="Zone d'expédition"
+                options={[{ label: 'Sélectionner une zone...', value: '' }, ...zoneOptions]}
+                value={selectedZoneId}
+                onChange={setSelectedZoneId}
+              />
+            )}
             <TextField
               label="Nom du tarif"
               value={formName}
