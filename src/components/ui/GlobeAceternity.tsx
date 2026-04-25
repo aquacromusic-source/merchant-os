@@ -2,8 +2,26 @@
 
 import React, { useEffect, useRef } from 'react'
 
+interface GlobeMarker {
+  location: [number, number]
+  size: number
+  type?: 'purchase' | 'visit' | 'cart'
+}
+
 interface GlobeProps {
-  markers?: { location: [number, number]; size: number; color?: [number, number, number] }[]
+  markers?: GlobeMarker[]
+}
+
+const RING_COLORS: Record<string, string> = {
+  purchase: 'rgba(0,255,136,0.8)',
+  cart: 'rgba(255,214,0,0.8)',
+  visit: 'rgba(0,229,255,0.8)',
+}
+
+const POINT_COLORS: Record<string, string> = {
+  purchase: 'rgba(0,255,136,0.9)',
+  cart: 'rgba(255,214,0,0.9)',
+  visit: 'rgba(0,229,255,0.9)',
 }
 
 export function GlobeAceternity({ markers = [] }: GlobeProps) {
@@ -31,22 +49,16 @@ export function GlobeAceternity({ markers = [] }: GlobeProps) {
         .pointsData(markers)
         .pointLat((d: any) => d.location[0])
         .pointLng((d: any) => d.location[1])
-        .pointColor((d: any) => {
-          const c = d.color || [0.2, 1, 0.4]
-          return `rgba(${Math.round(c[0]*255)},${Math.round(c[1]*255)},${Math.round(c[2]*255)},0.9)`
-        })
-        .pointAltitude(0.04)
-        .pointRadius(0.6)
-        .ringsData(markers.filter((_, i) => i % 2 === 0))
+        .pointColor((d: any) => POINT_COLORS[d.type] || POINT_COLORS.visit)
+        .pointAltitude(0.01)
+        .pointRadius(0.4)
+        .ringsData(markers)
         .ringLat((d: any) => d.location[0])
         .ringLng((d: any) => d.location[1])
-        .ringColor((d: any) => {
-          const c = (d as any).color || [0.2, 1, 0.4]
-          return () => `rgba(${Math.round(c[0]*255)},${Math.round(c[1]*255)},${Math.round(c[2]*255)},0.5)`
-        })
-        .ringMaxRadius(3)
-        .ringPropagationSpeed(2.5)
-        .ringRepeatPeriod(1200)
+        .ringColor((d: any) => () => RING_COLORS[d.type] || RING_COLORS.visit)
+        .ringMaxRadius(2)
+        .ringPropagationSpeed(2)
+        .ringRepeatPeriod(2000)
 
       globe.controls().autoRotate = true
       globe.controls().autoRotateSpeed = 0.4

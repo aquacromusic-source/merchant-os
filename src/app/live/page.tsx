@@ -160,8 +160,16 @@ export default function LivePage() {
         <div style={{ backgroundImage: "url('/space-background.webp')", backgroundSize: 'cover', backgroundPosition: 'center', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', minHeight: 'auto', overflow: 'visible', padding: 40 }}>
           <GlobeAceternity
             markers={[
-              ...ONLINE_VISITORS.map(v => ({ location: [v.lat, v.lng] as [number,number], size: 0.12, color: [0.2, 1.0, 0.4] as [number,number,number] })),
-              ...ORDER_CITIES.map(o => ({ location: [o.lat, o.lng] as [number,number], size: 0.09, color: [0.2, 0.55, 1.0] as [number,number,number] })),
+              ...ONLINE_VISITORS.map(v => ({
+                location: [v.lat, v.lng] as [number,number],
+                size: 0.12,
+                type: (v.action.includes('panier') || v.action.includes('paiement') ? 'cart' : 'visit') as 'cart' | 'visit',
+              })),
+              ...ORDER_CITIES.map(o => ({
+                location: [o.lat, o.lng] as [number,number],
+                size: 0.09,
+                type: 'purchase' as const,
+              })),
             ]}
           />
         </div>
