@@ -638,6 +638,13 @@ export function Shell({ children }: { children: React.ReactNode }) {
             onClick: () => router.push('/finance'),
           },
           {
+            url: '/shipping',
+            label: 'Livraison',
+            icon: DeliveryIcon,
+            selected: active.startsWith('shipping'),
+            onClick: () => router.push('/shipping'),
+          },
+          {
             url: '/settings',
             label: 'Paramètres',
             icon: SettingsIcon,
