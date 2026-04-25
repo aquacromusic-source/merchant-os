@@ -10,10 +10,11 @@ const SITE_CONFIG: Record<string, {
   activeCol: string | null
   imageCol: string
   priceCol: string
+  extraCols: string[] // columns known to exist beyond the basics
 }> = {
-  'gaming-posters': { table: 'posters', titleCol: 'title', activeCol: 'is_active', imageCol: 'image_url', priceCol: 'price' },
-  'strap': { table: 'kettel_products', titleCol: 'title', activeCol: null, imageCol: 'thumb_image', priceCol: 'price' },
-  'pdf-guide-store': { table: 'guides', titleCol: 'title', activeCol: 'is_published', imageCol: 'cover_url', priceCol: 'price' },
+  'gaming-posters': { table: 'posters', titleCol: 'title', activeCol: 'is_active', imageCol: 'image_url', priceCol: 'price', extraCols: ['slug', 'seo_title', 'seo_desc', 'images', 'tags', 'genres'] },
+  'strap': { table: 'kettel_products', titleCol: 'title', activeCol: null, imageCol: 'thumb_image', priceCol: 'price', extraCols: ['images', 'tags'] },
+  'pdf-guide-store': { table: 'guides', titleCol: 'title', activeCol: 'is_published', imageCol: 'cover_url', priceCol: 'price', extraCols: [] },
 }
 
 function getConfig(site: string) {
@@ -60,15 +61,18 @@ export async function PUT(
     if (body.status !== undefined && config.activeCol) {
       updateData[config.activeCol] = body.status === 'live'
     }
-    // Site-specific fields
+    // Only send extra fields if the column exists in the table
+    const extra = config.extraCols
+    const optionalFields = ['vendor', 'seo_title', 'seo_desc', 'slug', 'images', 'tags', 'genres']
+    for (const field of optionalFields) {
+      if (body[field] !== undefined && extra.includes(field)) {
+        updateData[field] = body[field]
+      }
+    }
+    // Site-specific fields (always exist in their respective tables)
     if (body.category !== undefined && (site === 'strap' || site === 'pdf-guide-store')) updateData.category = body.category
-    if (body.description !== undefined && site === 'pdf-guide-store') updateData.description = body.description
+    if (body.description !== undefined && (site === 'pdf-guide-store' || site === 'strap')) updateData.description = body.description
     if (body.stock !== undefined && site === 'strap') updateData.stock = body.stock
-    // Gaming posters specific
-    if (body.seo_desc !== undefined && site === 'gaming-posters') updateData.seo_desc = body.seo_desc
-    if (body.tags !== undefined && site === 'gaming-posters') updateData.tags = body.tags
-    if (body.genres !== undefined && site === 'gaming-posters') updateData.genres = body.genres
-    if (body.slug !== undefined && site === 'gaming-posters') updateData.slug = body.slug
 
     if (Object.keys(updateData).length === 0) {
       return NextResponse.json({ error: 'No fields to update' }, { status: 400 })
@@ -162,10 +166,28 @@ export async function POST(
       uploadedUrls.push(blob.url)
     }
 
-    // Update the product's image
-    if (uploadedUrls[0]) {
-      const updateData: Record<string, any> = {}
-      updateData[config.imageCol] = uploadedUrls[0]
+    // Update the product's main image + images JSONB array
+    if (uploadedUrls.length > 0) {
+      const supportsImages = config.extraCols.includes('images')
+      const updateData: Record<string, any> = {
+        [config.imageCol]: uploadedUrls[0], // main image = first uploaded
+      }
+
+      if (supportsImages) {
+        // Fetch current images array from DB
+        const getUrl = `${SUPABASE_URL}/rest/v1/${config.table}?id=eq.${id}&select=images,${config.imageCol}`
+        const getRes = await fetch(getUrl, {
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+        })
+        const existing = await getRes.json()
+        const currentImages: string[] = Array.isArray(existing[0]?.images) ? existing[0].images : []
+        if (existing[0]?.[config.imageCol] && currentImages.length === 0) {
+          currentImages.push(existing[0][config.imageCol])
+        }
+        const allImages = [...currentImages, ...uploadedUrls]
+        updateData[config.imageCol] = allImages[0] // main = first overall
+        updateData.images = allImages
+      }
 
       const url = `${SUPABASE_URL}/rest/v1/${config.table}?id=eq.${id}`
       await fetch(url, {

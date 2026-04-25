@@ -73,13 +73,23 @@ function RichTextToolbar() {
 const toolBtn: React.CSSProperties = { background: 'none', border: '1px solid transparent', borderRadius: 4, padding: '2px 6px', fontSize: 12, cursor: 'pointer', color: '#333' }
 const sep: React.CSSProperties = { width: 1, height: 16, background: '#d0d0d0', margin: '0 2px' }
 
-// ─── SEO Preview ─────────────────────────────────────────────────────────────
+// ─── Vendor defaults per site ────────────────────────────────────────────────
 
-function SEOPreview({ title, slug }: { title: string; slug: string }) {
-  const [seoTitle, setSeoTitle] = useState(`${title} | Studio Nord & Co`)
-  const [seoDesc, setSeoDesc] = useState(`Commandez votre ${title.toLowerCase()}. Impression musée sur papier haut grammage. Livraison rapide en France et Europe.`)
-  const [urlSlug, setUrlSlug] = useState(slug)
+const VENDOR_DEFAULTS: Record<string, string> = {
+  'gaming-posters': 'PIXELWALL',
+  'strap': 'STRAP.',
+  'pdf-guide-store': 'PDF Guide Store',
+}
 
+// ─── SEO Preview (controlled) ────────────────────────────────────────────────
+
+function SEOPreview({
+  seoTitle, setSeoTitle, seoDesc, setSeoDesc, urlSlug, setUrlSlug,
+}: {
+  seoTitle: string; setSeoTitle: (v: string) => void
+  seoDesc: string; setSeoDesc: (v: string) => void
+  urlSlug: string; setUrlSlug: (v: string) => void
+}) {
   const titleLen = seoTitle.length
   const descLen = seoDesc.length
   const titleOver = titleLen > 70
@@ -131,6 +141,30 @@ function SEOPreview({ title, slug }: { title: string; slug: string }) {
   )
 }
 
+// ─── Fixed Toast ─────────────────────────────────────────────────────────────
+
+function FixedToast({ message, tone, onDismiss }: {
+  message: string; tone: 'success' | 'error'; onDismiss: () => void
+}) {
+  return (
+    <div style={{
+      position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)',
+      zIndex: 9999, padding: '12px 24px', borderRadius: 8,
+      background: tone === 'success' ? '#1a7f37' : '#d82c0d',
+      color: 'white', fontSize: 14, fontWeight: 500,
+      boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+      display: 'flex', alignItems: 'center', gap: 12,
+      animation: 'slideUp 0.3s ease-out',
+    }}>
+      <span>{tone === 'success' ? '✓' : '✕'} {message}</span>
+      <button onClick={onDismiss} style={{
+        background: 'none', border: 'none', color: 'white',
+        cursor: 'pointer', fontSize: 16, padding: 0,
+      }}>✕</button>
+    </div>
+  )
+}
+
 // ─── Main Page ───────────────────────────────────────────────────────────────
 
 export default function ProductDetailPage({ params }: { params: { id: string } }) {
@@ -152,10 +186,17 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
   const [productType, setProductType] = useState('')
   const [images, setImages] = useState<ProductImage[]>([])
 
+  // SEO state (controlled, connected to save)
+  const [seoTitle, setSeoTitle] = useState('')
+  const [seoDesc, setSeoDesc] = useState('')
+  const [urlSlug, setUrlSlug] = useState('')
+
   // UI state
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [toastMessage, setToastMessage] = useState<string | null>(null)
+  const [toastTone, setToastTone] = useState<'success' | 'error'>('success')
   const [activeTab, setActiveTab] = useState(0)
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -175,23 +216,37 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
         setPrice(String(data.price ?? ''))
         setStock(data.stock !== undefined && data.stock !== null ? data.stock : null)
         setCategory(data.category || '')
-        setVendor(data.vendor || '')
+        setVendor(data.vendor || VENDOR_DEFAULTS[activeSite] || '')
         setProductType(data.category || data.type || '')
         setStatus(
           data.is_active === false || data.is_published === false ? 'draft' : 'live'
         )
 
-        // Build images from real data
-        const imgUrl = data.image_url || data.thumb_image || data.cover_url
-        if (imgUrl) {
-          setImages([{
-            id: 'main',
-            label: data.title || 'Image principale',
-            url: imgUrl,
-          }])
+        // SEO fields
+        const defaultSeoTitle = `${data.title || data.name || ''} | Studio Nord & Co`
+        const defaultSeoDesc = `Commandez votre ${(data.title || data.name || '').toLowerCase()}. Impression musée sur papier haut grammage. Livraison rapide en France et Europe.`
+        setSeoTitle(data.seo_title || defaultSeoTitle)
+        setSeoDesc(data.seo_desc || defaultSeoDesc)
+        const computedSlug = (data.title || data.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+        setUrlSlug(data.slug || computedSlug)
+
+        // Build images from real data — support multi-images JSONB
+        const imgList: ProductImage[] = []
+        if (Array.isArray(data.images) && data.images.length > 0) {
+          data.images.forEach((url: string, idx: number) => {
+            imgList.push({
+              id: `img-${idx}`,
+              label: idx === 0 ? 'Image principale' : `Image ${idx + 1}`,
+              url,
+            })
+          })
         } else {
-          setImages([])
+          const imgUrl = data.image_url || data.thumb_image || data.cover_url
+          if (imgUrl) {
+            imgList.push({ id: 'main', label: data.title || 'Image principale', url: imgUrl })
+          }
         }
+        setImages(imgList)
       }
     } catch {
       // ignore fetch errors during load
@@ -214,11 +269,18 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
         site: activeSite,
         title,
         status,
+        vendor,
+        seo_title: seoTitle,
+        seo_desc: seoDesc,
+        slug: urlSlug,
       }
       if (price !== '') body.price = parseFloat(price) || 0
       if (stock !== null) body.stock = stock
       if (description) body.description = description
       if (category) body.category = category
+      // Send existing (non-local) image URLs for JSONB persistence
+      const existingImageUrls = images.filter(img => !img.isLocal).map(img => img.url)
+      body.images = existingImageUrls
 
       const res = await fetch(`/api/products/${productId}`, {
         method: 'PUT',
@@ -251,12 +313,18 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
       }
 
       setSaved(true)
-      setTimeout(() => setSaved(false), 4000)
+      setToastMessage('Modifications enregistrées avec succès')
+      setToastTone('success')
+      setTimeout(() => { setSaved(false); setToastMessage(null) }, 4000)
 
-      // Reload to confirm changes
+      // Reload to confirm changes persist
       await loadProduct()
     } catch (err: any) {
-      setSaveError(err.message || 'Erreur réseau')
+      const msg = err.message || 'Erreur réseau'
+      setSaveError(msg)
+      setToastMessage(msg)
+      setToastTone('error')
+      setTimeout(() => setToastMessage(null), 6000)
     } finally {
       setSaving(false)
     }
@@ -315,8 +383,6 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
   }
 
   // ─── Derived ───────────────────────────────────────────────────────────
-
-  const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
 
   const statusOptions = [
     { label: 'Actif', value: 'live' },
@@ -627,7 +693,11 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                   <Card>
                     <BlockStack gap="400">
                       <Text variant="headingMd" as="h2">Aperçu sur les moteurs de recherche</Text>
-                      <SEOPreview title={title} slug={slug} />
+                      <SEOPreview
+                        seoTitle={seoTitle} setSeoTitle={setSeoTitle}
+                        seoDesc={seoDesc} setSeoDesc={setSeoDesc}
+                        urlSlug={urlSlug} setUrlSlug={setUrlSlug}
+                      />
                     </BlockStack>
                   </Card>
                 )}
@@ -715,6 +785,15 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
           </Layout>
         </Tabs>
       </Page>
+
+      {/* ── Fixed Toast notification ──────────────────────────────────────── */}
+      {toastMessage && (
+        <FixedToast
+          message={toastMessage}
+          tone={toastTone}
+          onDismiss={() => setToastMessage(null)}
+        />
+      )}
 
       {/* ── Delete Confirmation Modal ────────────────────────────────────── */}
       <Modal
