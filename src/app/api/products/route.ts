@@ -31,7 +31,7 @@ const SITE_CONFIG: Record<string, {
     titleCol: 'name',
     activeCol: null,
     slugCol: null,
-    imageCol: 'image_url',
+    imageCol: 'thumb_image',
     priceCol: 'price',
     category: 'Accessoire',
     vendor: 'STRAP.',
