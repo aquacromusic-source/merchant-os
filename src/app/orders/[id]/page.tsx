@@ -38,7 +38,6 @@ import {
   PlusIcon,
 } from '@shopify/polaris-icons'
 import { money } from '@/lib/utils'
-import { useSite } from '@/contexts/SiteContext'
 
 function paymentBadge(tone: string, label: string) {
   const toneMap: Record<string, 'success' | 'warning' | 'critical' | 'info' | 'attention'> = {
@@ -56,35 +55,30 @@ interface TimelineEvent {
 
 export default function OrderDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter()
-  const { activeSite } = useSite()
-
   const [order, setOrder] = useState<any>(null)
   const [cust, setCust] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     setLoading(true)
-    fetch(`/api/orders?site=${activeSite}`)
+    fetch(`/api/orders/${params.id}`)
       .then(r => r.json())
       .then(data => {
-        const allOrders = data.orders || []
-        const found = allOrders.find((o: any) => o.id === params.id || o.id === '#' + params.id || o.id?.slice(1) === params.id) || allOrders[0]
-        setOrder(found || { id: params.id, customer: 'Client inconnu', total: 0, items: 0, payment: { key: 'pending', label: 'En attente', tone: 'warn' }, fulfill: { key: 'unfulfilled', label: 'Non traitée', tone: 'warn' }, tags: [], risk: 'low', date: '', channel: '', location: '', ship: '' })
-        if (found?.customerId) {
-          fetch(`/api/customers/${found.customerId}`)
-            .then(r => r.json())
-            .then(c => setCust(c && !c.error ? c : { id: '', name: found.customer || 'Client inconnu', email: '', orders: 0, city: '', country: '', tags: [] }))
-            .catch(() => setCust({ id: '', name: found?.customer || 'Client inconnu', email: '', orders: 0, city: '', country: '', tags: [] }))
-        } else {
-          setCust({ id: '', name: found?.customer || 'Client inconnu', email: '', orders: 0, city: '', country: '', tags: [] })
+        const found = data.order
+        if (!found) {
+          setOrder({ id: params.id, order_number: params.id, customer: 'Client inconnu', customer_email: '', total: 0, items: [], payment: { key: 'pending', label: 'En attente', tone: 'warn' }, fulfill: { key: 'unfulfilled', label: 'Non traitée', tone: 'warn' }, tags: [], risk: 'low', date: '', channel: '', location: '', ship: '' })
+          setCust({ id: '', name: 'Client inconnu', email: '', orders: 0, city: '', country: '', tags: [] })
+          return
         }
+        setOrder(found)
+        setCust({ id: '', name: found.customer || 'Client inconnu', email: found.customer_email || '', orders: 0, city: found.shipping_address?.city || '', country: found.shipping_address?.country || '', tags: [] })
       })
       .catch(() => {
-        setOrder({ id: params.id, customer: 'Client inconnu', total: 0, items: 0, payment: { key: 'pending', label: 'En attente', tone: 'warn' }, fulfill: { key: 'unfulfilled', label: 'Non traitée', tone: 'warn' }, tags: [], risk: 'low', date: '', channel: '', location: '', ship: '' })
+        setOrder({ id: params.id, order_number: params.id, customer: 'Client inconnu', customer_email: '', total: 0, items: [], payment: { key: 'pending', label: 'En attente', tone: 'warn' }, fulfill: { key: 'unfulfilled', label: 'Non traitée', tone: 'warn' }, tags: [], risk: 'low', date: '', channel: '', location: '', ship: '' })
         setCust({ id: '', name: 'Client inconnu', email: '', orders: 0, city: '', country: '', tags: [] })
       })
       .finally(() => setLoading(false))
-  }, [params.id, activeSite])
+  }, [params.id])
 
   // Status state
   const [fulfillStatus, setFulfillStatus] = useState<any>(null)
@@ -221,14 +215,14 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
   return (
     <Page
       backAction={{ content: 'Commandes', onAction: () => router.push('/orders') }}
-      title={order.id}
+      title={order.order_number || order.id}
       titleMetadata={
         <InlineStack gap="200">
           <Badge tone={fulfillBadgeTone[paymentStatus.tone] || undefined}>{paymentStatus.label}</Badge>
           <Badge tone={fulfillBadgeTone[fulfillStatus.tone] || undefined}>{fulfillStatus.label}</Badge>
         </InlineStack>
       }
-      subtitle="22 avril 2026 · 08:28 · Boutique en ligne"
+      subtitle={`${order.date} · ${order.channel || 'Boutique en ligne'}`}
       secondaryActions={[
         { content: 'Rembourser', icon: RefreshIcon, onAction: () => setRefundModalOpen(true) },
         { content: 'Retourner', icon: ArchiveIcon },
@@ -262,10 +256,7 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
                   22 avril 2026 · Suivi GLS · <span style={{ fontFamily: 'monospace' }}>ZWLLMWFI</span>
                 </Text>
                 <Divider />
-                {[
-                  { name: 'George Russell Fire', variant: 'A3 · Cadre noir', sku: 'SH-GR-FIRE-A3-BLK', qty: 1, price: 44.95 },
-                  { name: 'Nomad Roll-Top Backpack', variant: 'Taille unique · Noir', sku: 'MOS-1004', qty: 1, price: 189.00 },
-                ].map((li, i) => (
+                {(order.items || []).map((li: any, i: number) => (
                   <InlineStack key={i} gap="300" blockAlign="start">
                     <div style={{
                       width: 48, height: 48, borderRadius: 8,
@@ -276,17 +267,21 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
                       <ImageIcon width={18} height={18} />
                     </div>
                     <BlockStack gap="050">
-                      <Text as="p" variant="bodySm" fontWeight="semibold">{li.name}</Text>
-                      <Text as="p" variant="bodySm" tone="subdued">{li.variant}</Text>
+                      <Text as="p" variant="bodySm" fontWeight="semibold">{li.title || li.name}</Text>
                       <Text as="p" variant="bodySm" tone="subdued">
-                        <span style={{ fontFamily: 'monospace' }}>{li.sku}</span>
+                        {[li.size, li.frame && li.frame !== 'none' ? `Cadre ${li.frame}` : null].filter(Boolean).join(' · ') || li.variant || ''}
                       </Text>
+                      {li.sku && (
+                        <Text as="p" variant="bodySm" tone="subdued">
+                          <span style={{ fontFamily: 'monospace' }}>{li.sku}</span>
+                        </Text>
+                      )}
                     </BlockStack>
                     <Text as="p" variant="bodySm" tone="subdued">
-                      {money(li.price)} × {li.qty}
+                      {money(li.price)} × {li.qty || 1}
                     </Text>
                     <Text as="p" variant="bodySm" fontWeight="semibold">
-                      {money(li.price * li.qty)}
+                      {money(li.price * (li.qty || 1))}
                     </Text>
                   </InlineStack>
                 ))}
@@ -318,9 +313,9 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
                   <Badge tone="success">Payée</Badge>
                 </InlineStack>
                 {[
-                  [`Sous-total · ${order.items?.length || 0} articles`, money(order.total - 8.95)],
-                  [`Expédition · ${order.ship}`, money(8.95)],
-                  ['TVA (comprise)', money(order.total * 0.17)],
+                  [`Sous-total · ${order.items?.length || 0} articles`, money(order.total)],
+                  [`Expédition · ${order.ship || 'Standard'}`, money(0)],
+                  ['TVA (comprise)', money(order.total * 0.2)],
                 ].map(([k, v], i) => (
                   <InlineStack key={i} align="space-between">
                     <Text as="p" variant="bodySm" tone="subdued">{k}</Text>
@@ -573,12 +568,9 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
         <Modal.Section>
           <FormLayout>
             <Text as="p" variant="bodySm" tone="subdued">Articles de la commande :</Text>
-            {[
-              { name: 'George Russell Fire A3', price: 44.95 },
-              { name: 'Nomad Roll-Top Backpack', price: 189.00 },
-            ].map((item, i) => (
+            {(order.items || []).map((item: any, i: number) => (
               <InlineStack key={i} align="space-between" blockAlign="center">
-                <Text as="p" variant="bodySm">{item.name}</Text>
+                <Text as="p" variant="bodySm">{item.title || item.name}</Text>
                 <Text as="p" variant="bodySm" fontWeight="semibold">{money(item.price)}</Text>
               </InlineStack>
             ))}
