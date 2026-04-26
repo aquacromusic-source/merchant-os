@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Page,
@@ -14,7 +14,7 @@ import {
   Box,
 } from '@shopify/polaris'
 import { ExportIcon, PlusIcon, SearchIcon } from '@shopify/polaris-icons'
-import { discounts } from '@/lib/data'
+import { useSite } from '@/contexts/SiteContext'
 
 function statusBadge(status: string) {
   const toneMap: Record<string, 'success' | 'warning' | undefined> = {
@@ -25,8 +25,18 @@ function statusBadge(status: string) {
 
 export default function DiscountsPage() {
   const router = useRouter()
+  const { activeSite } = useSite()
+  const [discounts, setDiscounts] = useState<any[]>([])
   const [selectedTab, setSelectedTab] = useState(0)
   const [searchValue, setSearchValue] = useState('')
+
+  useEffect(() => {
+    if (!activeSite) return
+    fetch(`/api/discounts?site=${activeSite}`)
+      .then(res => res.json())
+      .then(data => setDiscounts(Array.isArray(data) ? data : []))
+      .catch(() => setDiscounts([]))
+  }, [activeSite])
 
   const tabs = [
     { id: 'all', content: `Toutes (${discounts.length})` },
@@ -46,7 +56,7 @@ export default function DiscountsPage() {
       d.descr.toLowerCase().includes(searchValue.toLowerCase())
     )) return false
     return true
-  }), [searchValue, tabId])
+  }), [discounts, searchValue, tabId])
 
   const { selectedResources, allResourcesSelected, handleSelectionChange } = useIndexResourceState(
     list.map(d => ({ id: d.code }))
@@ -77,8 +87,8 @@ export default function DiscountsPage() {
 
   return (
     <Page
-      title="Réductions"
-      primaryAction={{ content: 'Créer une réduction', icon: PlusIcon }}
+      title="Reductions"
+      primaryAction={{ content: 'Creer une reduction', icon: PlusIcon }}
       secondaryActions={[{ content: 'Exporter', icon: ExportIcon }]}
     >
       <Card padding="0">
@@ -90,23 +100,23 @@ export default function DiscountsPage() {
               value={searchValue}
               onChange={setSearchValue}
               prefix={<SearchIcon />}
-              placeholder="Rechercher une réduction…"
+              placeholder="Rechercher une reduction..."
               autoComplete="off"
               clearButton
               onClearButtonClick={() => setSearchValue('')}
             />
           </Box>
           <IndexTable
-            resourceName={{ singular: 'réduction', plural: 'réductions' }}
+            resourceName={{ singular: 'reduction', plural: 'reductions' }}
             itemCount={list.length}
             selectedItemsCount={allResourcesSelected ? 'All' : selectedResources.length}
             onSelectionChange={handleSelectionChange}
             headings={[
               { title: 'Titre' },
               { title: 'Statut' },
-              { title: 'Méthode' },
+              { title: 'Methode' },
               { title: 'Type' },
-              { title: 'Utilisé', alignment: 'end' },
+              { title: 'Utilise', alignment: 'end' },
             ]}
           >
             {rowMarkup}

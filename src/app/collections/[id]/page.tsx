@@ -1,5 +1,5 @@
 'use client'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Page, Layout, Card, BlockStack, InlineStack, TextField,
@@ -11,16 +11,7 @@ import {
   ImageIcon, PlusIcon, DeleteIcon, SearchIcon,
   DragHandleIcon, ExternalIcon,
 } from '@shopify/polaris-icons'
-import { collections } from '@/lib/data'
-
-const MOCK_PRODUCTS = [
-  { id: 'P-1000', title: 'Pro Reel 900 Tote', image: '', price: 48, status: 'live' },
-  { id: 'P-1001', title: 'Riviera Oversized Sweater', image: '', price: 125, status: 'live' },
-  { id: 'P-1002', title: 'Field Notes Pocket Pad', image: '', price: 9.95, status: 'live' },
-  { id: 'P-1003', title: 'Ember Ceramic Mug', image: '', price: 22.5, status: 'live' },
-  { id: 'P-1004', title: 'Nomad Roll-Top Backpack', image: '', price: 189, status: 'live' },
-  { id: 'P-1005', title: 'Halftone Linen Cap', image: '', price: 39, status: 'live' },
-]
+import { useSite } from '@/contexts/SiteContext'
 
 const CONDITIONS_OPTIONS = [
   { label: 'Titre du produit', value: 'title' },
@@ -61,21 +52,23 @@ interface Condition {
 
 export default function CollectionDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter()
-  const c = collections.find((x: any) => x.id === params.id) || (collections[0] as any)
+  const { activeSite } = useSite()
 
-  const [title, setTitle] = useState(c?.title || 'Nouvelle collection')
-  const [description, setDescription] = useState(c?.description || '')
+  const [loading, setLoading] = useState(true)
+  const [title, setTitle] = useState('Nouvelle collection')
+  const [description, setDescription] = useState('')
   const [collectionType, setCollectionType] = useState<'manual' | 'smart'>('manual')
   const [conditionsMatch, setConditionsMatch] = useState<'all' | 'any'>('all')
   const [conditions, setConditions] = useState<Condition[]>([
     { id: '1', field: 'title', operator: 'contains', value: '' },
   ])
-  const [collectionProducts, setCollectionProducts] = useState(MOCK_PRODUCTS.slice(0, 3))
+  const [collectionProducts, setCollectionProducts] = useState<any[]>([])
+  const [allProducts, setAllProducts] = useState<any[]>([])
   const [status, setStatus] = useState('active')
   const [channels, setChannels] = useState(['online-store', 'pos'])
-  const [seoTitle, setSeoTitle] = useState(c?.title || '')
+  const [seoTitle, setSeoTitle] = useState('')
   const [seoDesc, setSeoDesc] = useState('')
-  const [urlHandle, setUrlHandle] = useState((c?.title || 'nouvelle-collection').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''))
+  const [urlHandle, setUrlHandle] = useState('nouvelle-collection')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [deleteModal, setDeleteModal] = useState(false)
@@ -83,6 +76,47 @@ export default function CollectionDetailPage({ params }: { params: { id: string 
   const [productSearch, setProductSearch] = useState('')
   const [collectionImage, setCollectionImage] = useState<string | null>(null)
   const fileInputRef = React.useRef<HTMLInputElement>(null)
+
+  // Fetch collection data
+  useEffect(() => {
+    fetch(`/api/collections/${params.id}`)
+      .then(res => res.json())
+      .then(c => {
+        if (c && c.id) {
+          setTitle(c.title || 'Nouvelle collection')
+          setDescription(c.description || '')
+          setSeoTitle(c.title || '')
+          setUrlHandle((c.title || 'nouvelle-collection').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''))
+          if (c.image_url) setCollectionImage(c.image_url)
+          if (c.status === 'live') setStatus('active')
+          else if (c.status === 'draft') setStatus('draft')
+        }
+        setLoading(false)
+      })
+      .catch(() => setLoading(false))
+  }, [params.id])
+
+  // Fetch products for the picker modal
+  useEffect(() => {
+    if (!activeSite) return
+    fetch(`/api/products?site=${activeSite}`)
+      .then(res => res.json())
+      .then(data => {
+        const products = (Array.isArray(data) ? data : []).map((p: any) => ({
+          id: p.id,
+          title: p.title || p.name,
+          image: p.image_url || '',
+          price: Number(p.price) || 0,
+          status: p.status || 'live',
+        }))
+        setAllProducts(products)
+        // Initialize collection products with first 3 if we have them
+        if (products.length > 0 && collectionProducts.length === 0) {
+          setCollectionProducts(products.slice(0, 3))
+        }
+      })
+      .catch(() => {})
+  }, [activeSite])
 
   const handleSave = async () => {
     setSaving(true)
@@ -116,7 +150,7 @@ export default function CollectionDetailPage({ params }: { params: { id: string 
     { id: 'tiktok', label: 'TikTok Shop', badge: null },
   ]
 
-  const filteredProducts = MOCK_PRODUCTS.filter(p =>
+  const filteredProducts = allProducts.filter(p =>
     !collectionProducts.find(cp => cp.id === p.id) &&
     p.title.toLowerCase().includes(productSearch.toLowerCase())
   )

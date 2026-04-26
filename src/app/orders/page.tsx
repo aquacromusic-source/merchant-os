@@ -31,12 +31,19 @@ import {
   SearchIcon,
   FilterIcon,
 } from '@shopify/polaris-icons'
-import { orders as allOrders } from '@/lib/data'
+// Orders loaded from Supabase via API
 import { money } from '@/lib/utils'
 import { Sparkline } from '@/components/ui/Sparkline'
 import { useSite } from '@/contexts/SiteContext'
 
-function buildTabs(orders: typeof allOrders) {
+type Order = {
+  id: string; customer: string; date: string; total: number;
+  payment: { key: string; tone: string; label: string };
+  fulfill: { key: string; tone: string; label: string };
+  items: number; channel: string; site_id: string; tags: string[]; risk: string;
+}
+
+function buildTabs(orders: Order[]) {
   return [
     { id: 'all', content: `Toutes (${orders.length})` },
     { id: 'unfulfilled', content: `Non traitées (${orders.filter(o => o.fulfill.key === 'unfulfilled').length})` },
@@ -56,7 +63,16 @@ function paymentBadge(tone: string, label: string) {
 export default function OrdersPage() {
   const router = useRouter()
   const { activeSite } = useSite()
-  const orders = useMemo(() => allOrders.filter(o => o.site_id === activeSite), [activeSite])
+  const [allOrders, setAllOrders] = useState<Order[]>([])
+
+  useEffect(() => {
+    fetch(`/api/orders?site=${activeSite}`)
+      .then(r => r.json())
+      .then(data => setAllOrders(data.orders || []))
+      .catch(() => setAllOrders([]))
+  }, [activeSite])
+
+  const orders = allOrders
   const TABS = useMemo(() => buildTabs(orders), [orders])
   const [selectedTab, setSelectedTab] = useState(0)
   const [searchValue, setSearchValue] = useState('')

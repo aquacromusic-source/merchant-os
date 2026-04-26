@@ -24,18 +24,57 @@ import {
   PlusIcon,
   SearchIcon,
 } from '@shopify/polaris-icons'
-import { customers as allCustomers } from '@/lib/data'
 import { money } from '@/lib/utils'
 import { useSite } from '@/contexts/SiteContext'
 
 export default function CustomersPage() {
   const router = useRouter()
   const { activeSite } = useSite()
-  const customers = useMemo(() => allCustomers.filter(c => c.site_id === activeSite), [activeSite])
+  const [customers, setCustomers] = useState<any[]>([])
   const [selectedTab, setSelectedTab] = useState(0)
   const [searchValue, setSearchValue] = useState('')
 
-  useEffect(() => { setSelectedTab(0) }, [activeSite])
+  useEffect(() => {
+    setSelectedTab(0)
+    fetch(`/api/customers?site=${activeSite}`)
+      .then(r => r.json())
+      .then((data: any[]) => {
+        const mapped = (data || []).map((c: any) => ({
+          id: c.id,
+          name: c.name || '',
+          email: c.email || '',
+          orders: c.order_count ?? c.orders ?? 0,
+          spend: parseFloat(c.total_spent ?? c.spend ?? 0),
+          lastOrder: c.last_order || '',
+          city: c.city || '',
+          country: c.country || '',
+          tags: c.tags || [],
+          subscribed: !!c.subscribed,
+          status: c.status || '',
+        }))
+        setCustomers(mapped)
+      })
+      .catch(() => setCustomers([]))
+  }, [activeSite])
+
+  const totalClients = customers.length
+  const subscribedCount = customers.filter(c => c.subscribed).length
+  const avgLifetimeValue = totalClients > 0
+    ? customers.reduce((sum, c) => sum + c.spend, 0) / totalClients
+    : 0
+  const returnRate = totalClients > 0
+    ? Math.round((customers.filter(c => c.orders > 1).length / totalClients) * 100)
+    : 0
+  const uniqueTags = new Set(customers.flatMap(c => c.tags))
+  const segmentCount = uniqueTags.size
+
+  const kpis = [
+    { l: 'Total clients', v: totalClients.toLocaleString('fr-FR') },
+    { l: 'Abonnés', v: subscribedCount.toLocaleString('fr-FR') },
+    { l: 'Valeur vie · moyenne', v: money(avgLifetimeValue) },
+    { l: 'Taux de retour', v: `${returnRate} %` },
+    { l: 'Segments actifs', v: String(segmentCount) },
+  ]
 
   const tabs = useMemo(() => [
     { id: 'all', content: `Tous (${customers.length})` },
@@ -55,7 +94,7 @@ export default function CustomersPage() {
       c.email.toLowerCase().includes(searchValue.toLowerCase())
     )) return false
     return true
-  }), [searchValue, tabId])
+  }), [customers, searchValue, tabId])
 
   const { selectedResources, allResourcesSelected, handleSelectionChange } = useIndexResourceState(
     list.map(c => ({ id: c.id }))
@@ -91,7 +130,7 @@ export default function CustomersPage() {
       </IndexTable.Cell>
       <IndexTable.Cell>
         <InlineStack gap="100" wrap>
-          {c.tags.map(t => <Tag key={t}>{t}</Tag>)}
+          {c.tags.map((t: string) => <Tag key={t}>{t}</Tag>)}
         </InlineStack>
       </IndexTable.Cell>
     </IndexTable.Row>
@@ -108,19 +147,12 @@ export default function CustomersPage() {
     >
       <BlockStack gap="500">
         <InlineGrid columns={5} gap="300">
-          {[
-            { l: 'Total clients', v: '3 248', d: '+12%' },
-            { l: 'Abonnés', v: '1 842', d: '+8%' },
-            { l: 'Valeur vie · moyenne', v: '189,20 €' },
-            { l: 'Taux de retour', v: '26 %', d: '+2 pts' },
-            { l: 'Segments actifs', v: '8' },
-          ].map((k, i) => (
+          {kpis.map((k, i) => (
             <Card key={i}>
               <BlockStack gap="100">
                 <Text as="p" variant="bodySm" tone="subdued">{k.l}</Text>
                 <InlineStack gap="100" blockAlign="center">
                   <Text as="p" variant="headingMd" fontWeight="bold">{k.v}</Text>
-                  {k.d && <Text as="span" variant="bodySm" tone="success">{k.d}</Text>}
                 </InlineStack>
               </BlockStack>
             </Card>

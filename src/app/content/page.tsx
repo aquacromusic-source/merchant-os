@@ -1,5 +1,5 @@
 'use client'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Page,
   Card,
@@ -11,9 +11,10 @@ import {
   IndexTable,
   useIndexResourceState,
   Box,
+  Spinner,
 } from '@shopify/polaris'
 import { PlusIcon } from '@shopify/polaris-icons'
-import { pages, articles } from '@/lib/data'
+import { useSite } from '@/contexts/SiteContext'
 
 function statusBadge(status: string) {
   const toneMap: Record<string, 'success' | 'warning' | undefined> = {
@@ -23,10 +24,58 @@ function statusBadge(status: string) {
 }
 
 export default function ContentPage() {
+  const { activeSite } = useSite()
+  const [pages, setPages] = useState<any[]>([])
+  const [articles, setArticles] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
   const [view, setView] = useState<'pages' | 'blog'>('pages')
 
-  const pageResources = useIndexResourceState(pages.map((_, i) => ({ id: String(i) })))
-  const articleResources = useIndexResourceState(articles.map((_, i) => ({ id: String(i) })))
+  useEffect(() => {
+    setLoading(true)
+    fetch(`/api/content?site=${activeSite}`)
+      .then(res => res.json())
+      .then(data => {
+        const pgs = (data.pages || []).map((p: any, i: number) => ({
+          ...p,
+          id: p.id != null ? String(p.id) : String(i),
+          url: p.url || p.slug || '',
+          status: p.status || 'Brouillon',
+          updated: p.updated || '',
+        }))
+        const arts = (data.articles || []).map((a: any, i: number) => ({
+          ...a,
+          id: a.id != null ? String(a.id) : String(i),
+          author: a.author || '',
+          status: a.status || 'Brouillon',
+          date: a.date || '',
+          read: a.read || '',
+        }))
+        setPages(pgs)
+        setArticles(arts)
+      })
+      .catch(() => {
+        setPages([])
+        setArticles([])
+      })
+      .finally(() => setLoading(false))
+  }, [activeSite])
+
+  const pageResources = useIndexResourceState(pages.map(p => ({ id: p.id })))
+  const articleResources = useIndexResourceState(articles.map(a => ({ id: a.id })))
+
+  if (loading) {
+    return (
+      <Page title="Contenu">
+        <Card>
+          <Box padding="400" paddingBlockStart="1600" paddingBlockEnd="1600">
+            <BlockStack align="center" inlineAlign="center">
+              <Spinner size="large" />
+            </BlockStack>
+          </Box>
+        </Card>
+      </Page>
+    )
+  }
 
   return (
     <Page
@@ -58,9 +107,9 @@ export default function ContentPage() {
             >
               {pages.map((p, index) => (
                 <IndexTable.Row
-                  id={String(index)}
-                  key={index}
-                  selected={pageResources.selectedResources.includes(String(index))}
+                  id={p.id}
+                  key={p.id}
+                  selected={pageResources.selectedResources.includes(p.id)}
                   position={index}
                 >
                   <IndexTable.Cell>
@@ -96,9 +145,9 @@ export default function ContentPage() {
             >
               {articles.map((a, index) => (
                 <IndexTable.Row
-                  id={String(index)}
-                  key={index}
-                  selected={articleResources.selectedResources.includes(String(index))}
+                  id={a.id}
+                  key={a.id}
+                  selected={articleResources.selectedResources.includes(a.id)}
                   position={index}
                 >
                   <IndexTable.Cell>

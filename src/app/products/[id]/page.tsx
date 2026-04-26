@@ -26,7 +26,6 @@ import {
   ShareIcon,
   ViewIcon,
 } from '@shopify/polaris-icons'
-import { collections as allCollections } from '@/lib/data'
 import { useSite } from '@/contexts/SiteContext'
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -533,6 +532,20 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
   // Variants from Supabase
   const [variants, setVariants] = useState<VariantRow[]>([])
   const [variantsLoading, setVariantsLoading] = useState(false)
+
+  // Collections from Supabase
+  const [allCollections, setAllCollections] = useState<any[]>([])
+
+  useEffect(() => {
+    fetch(`/api/collections?site=${activeSite}`)
+      .then(r => r.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setAllCollections(data)
+        }
+      })
+      .catch(() => {})
+  }, [activeSite])
 
   // Load real product from Supabase
   useEffect(() => {

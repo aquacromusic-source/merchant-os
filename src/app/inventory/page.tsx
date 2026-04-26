@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import {
   Page,
   Card,
@@ -13,29 +13,71 @@ import {
   Tabs,
   TextField,
   Box,
+  Spinner,
 } from '@shopify/polaris'
 import { ExportIcon, PlusIcon, ImageIcon, SearchIcon } from '@shopify/polaris-icons'
-import { products, locations } from '@/lib/data'
-
-const TABS_STOCK = [
-  { id: 'stock', content: `Stock (${products.length})` },
-  { id: 'alerts', content: 'Alertes (4)' },
-]
+import { useSite } from '@/contexts/SiteContext'
 
 export default function InventoryPage() {
+  const { activeSite } = useSite()
+  const [products, setProducts] = useState<any[]>([])
+  const [locations, setLocations] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState(0)
   const [view, setView] = useState('stock')
   const [searchValue, setSearchValue] = useState('')
+
+  useEffect(() => {
+    setLoading(true)
+    fetch(`/api/inventory?site=${activeSite}`)
+      .then(res => res.json())
+      .then(data => {
+        const prods = (data.products || []).map((p: any) => ({
+          ...p,
+          id: String(p.id),
+          sku: p.sku || `SKU-${p.id}`,
+          category: p.category || '',
+          stock: p.stock ?? null,
+          image_url: p.image_url || p.thumb_image || p.cover_url || null,
+        }))
+        setProducts(prods)
+        setLocations(data.locations || [])
+      })
+      .catch(() => {
+        setProducts([])
+        setLocations([])
+      })
+      .finally(() => setLoading(false))
+  }, [activeSite])
+
+  const TABS_STOCK = [
+    { id: 'stock', content: `Stock (${products.length})` },
+    { id: 'alerts', content: 'Alertes (4)' },
+  ]
 
   const filteredProducts = useMemo(() => products.filter(p => {
     if (searchValue && !p.title.toLowerCase().includes(searchValue.toLowerCase()) &&
         !p.sku.toLowerCase().includes(searchValue.toLowerCase())) return false
     return true
-  }), [searchValue])
+  }), [searchValue, products])
 
   const { selectedResources, allResourcesSelected, handleSelectionChange } = useIndexResourceState(
     filteredProducts.map(p => ({ id: p.id }))
   )
+
+  if (loading) {
+    return (
+      <Page title="Stock">
+        <Card>
+          <Box padding="400" paddingBlockStart="1600" paddingBlockEnd="1600">
+            <BlockStack align="center" inlineAlign="center">
+              <Spinner size="large" />
+            </BlockStack>
+          </Box>
+        </Card>
+      </Page>
+    )
+  }
 
   if (view === 'locations') {
     return (
@@ -54,8 +96,8 @@ export default function InventoryPage() {
               { title: 'Commandes' },
             ]}
           >
-            {locations.map((l, index) => (
-              <IndexTable.Row id={l.id} key={l.id} position={index} selected={false}>
+            {locations.map((l: any, index: number) => (
+              <IndexTable.Row id={String(l.id)} key={l.id} position={index} selected={false}>
                 <IndexTable.Cell><Text as="span" fontWeight="semibold">{l.name}</Text></IndexTable.Cell>
                 <IndexTable.Cell><Text as="span" tone="subdued">{l.city}</Text></IndexTable.Cell>
                 <IndexTable.Cell><Badge>{l.role}</Badge></IndexTable.Cell>

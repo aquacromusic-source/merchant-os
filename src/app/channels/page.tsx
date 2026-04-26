@@ -1,12 +1,42 @@
 'use client'
-import React from 'react'
-import { Page, Card, BlockStack, InlineStack, Text, Badge, Button, Divider, Box } from '@shopify/polaris'
+import React, { useState, useEffect } from 'react'
+import { Page, Card, BlockStack, InlineStack, Text, Badge, Button, Divider, Box, Spinner } from '@shopify/polaris'
 import { PlusIcon } from '@shopify/polaris-icons'
-import { channels } from '@/lib/data'
+import { useSite } from '@/contexts/SiteContext'
 
 export default function ChannelsPage() {
-  const connected = (channels as any[]).filter(c => c.status === 'Connectée')
-  const others = (channels as any[]).filter(c => c.status !== 'Connectée')
+  const { activeSite } = useSite()
+  const [channels, setChannels] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    setLoading(true)
+    fetch(`/api/channels?site=${activeSite}`)
+      .then(res => res.json())
+      .then(data => {
+        setChannels(Array.isArray(data) ? data : [])
+      })
+      .catch(() => setChannels([]))
+      .finally(() => setLoading(false))
+  }, [activeSite])
+
+  const connected = channels.filter(c => c.status === 'Connectée')
+  const others = channels.filter(c => c.status !== 'Connectée')
+
+  if (loading) {
+    return (
+      <Page title="Canaux de vente">
+        <Card>
+          <Box padding="400" paddingBlockStart="1600" paddingBlockEnd="1600">
+            <BlockStack align="center" inlineAlign="center">
+              <Spinner size="large" />
+            </BlockStack>
+          </Box>
+        </Card>
+      </Page>
+    )
+  }
+
   return (
     <Page
       title="Canaux de vente"

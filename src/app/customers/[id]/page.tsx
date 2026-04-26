@@ -1,5 +1,5 @@
 'use client'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Page,
@@ -18,6 +18,7 @@ import {
   DataTable,
   TextField,
   Banner,
+  Spinner,
 } from '@shopify/polaris'
 import {
   EmailIcon,
@@ -26,7 +27,7 @@ import {
   PlusIcon,
   ClockIcon,
 } from '@shopify/polaris-icons'
-import { customers, orders as allOrders } from '@/lib/data'
+import { useSite } from '@/contexts/SiteContext'
 import { money } from '@/lib/utils'
 
 function paymentBadge(tone: string, label: string) {
@@ -36,12 +37,71 @@ function paymentBadge(tone: string, label: string) {
   return <Badge tone={toneMap[tone] || undefined}>{label}</Badge>
 }
 
+interface Customer {
+  id: string
+  name: string
+  email: string
+  orders: number
+  spend: number
+  last_order: string
+  city: string
+  country: string
+  tags: string[]
+  subscribed: boolean
+  status: string
+}
+
+interface Order {
+  id: string
+  date: string
+  items: number
+  total: number
+  customerId?: string
+  customer_id?: string
+  payment: { tone: string; label: string }
+  fulfill: { tone: string; label: string }
+}
+
 export default function CustomerDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter()
-  const c = customers.find(x => x.id === params.id) || customers[0]
-  const orders = allOrders.filter(o => o.customerId === c.id).concat(allOrders.slice(0, 3))
+  const { activeSite } = useSite()
+  const [c, setCustomer] = useState<Customer | null>(null)
+  const [orders, setOrders] = useState<Order[]>([])
+  const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+
+  useEffect(() => {
+    setLoading(true)
+    const fetchCustomer = fetch(`/api/customers/${params.id}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data && !data.error) {
+          setCustomer({
+            ...data,
+            tags: Array.isArray(data.tags) ? data.tags : [],
+            orders: data.orders || 0,
+            spend: data.spend || 0,
+          })
+        }
+      })
+      .catch(() => {})
+
+    const fetchOrders = fetch(`/api/orders?site=${activeSite}`)
+      .then(r => r.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          const customerOrders = data.filter(
+            (o: any) => (o.customerId || o.customer_id) === params.id
+          )
+          setOrders(customerOrders)
+        }
+      })
+      .catch(() => {})
+
+    Promise.all([fetchCustomer, fetchOrders]).finally(() => setLoading(false))
+  }, [params.id, activeSite])
+
   const handleSave = async () => {
     setSaving(true)
     await new Promise(r => setTimeout(r, 800))
@@ -50,13 +110,33 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
     setTimeout(() => setSaved(false), 3000)
   }
 
+  if (loading || !c) {
+    return (
+      <Page
+        backAction={{ content: 'Clients', onAction: () => router.push('/customers') }}
+        title="Chargement..."
+      >
+        <Layout>
+          <Layout.Section>
+            <Card>
+              <BlockStack gap="300" inlineAlign="center">
+                <Spinner size="large" />
+                <Text as="p" variant="bodySm" tone="subdued">Chargement du client...</Text>
+              </BlockStack>
+            </Card>
+          </Layout.Section>
+        </Layout>
+      </Page>
+    )
+  }
+
   const orderRows = orders.slice(0, 6).map(o => [
     o.id,
     o.date,
     String(o.items),
     money(o.total),
-    o.payment.label,
-    o.fulfill.label,
+    o.payment?.label || '—',
+    o.fulfill?.label || '—',
   ])
 
   return (
@@ -84,7 +164,7 @@ export default function CustomerDetailPage({ params }: { params: { id: string } 
                 {[
                   { l: 'Total commandes', v: String(c.orders) },
                   { l: 'Total dépensé', v: money(c.spend) },
-                  { l: 'Panier moyen', v: money(c.spend / c.orders) },
+                  { l: 'Panier moyen', v: c.orders > 0 ? money(c.spend / c.orders) : '—' },
                   { l: 'Valeur vie prédite', v: money(c.spend * 1.8) },
                 ].map((s, i) => (
                   <BlockStack key={i} gap="100">

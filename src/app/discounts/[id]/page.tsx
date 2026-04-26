@@ -1,5 +1,5 @@
 'use client'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Page,
@@ -20,7 +20,6 @@ import {
   ChevronDownIcon,
   CheckIcon,
 } from '@shopify/polaris-icons'
-import { discounts } from '@/lib/data'
 import { money } from '@/lib/utils'
 
 function statusBadge(status: string) {
@@ -32,9 +31,20 @@ function statusBadge(status: string) {
 
 export default function DiscountDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter()
-  const d = discounts.find(x => x.code === params.id) || discounts[0]
+  const [d, setD] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+
+  useEffect(() => {
+    fetch(`/api/discounts/${params.id}`)
+      .then(res => res.json())
+      .then(data => {
+        setD(data)
+        setLoading(false)
+      })
+      .catch(() => setLoading(false))
+  }, [params.id])
 
   const handleSave = async () => {
     setSaving(true)
@@ -42,6 +52,23 @@ export default function DiscountDetailPage({ params }: { params: { id: string } 
     setSaving(false)
     setSaved(true)
     setTimeout(() => setSaved(false), 3000)
+  }
+
+  if (loading || !d) {
+    return (
+      <Page
+        backAction={{ content: 'Réductions', onAction: () => router.push('/discounts') }}
+        title="Chargement…"
+      >
+        <Layout>
+          <Layout.Section>
+            <Card>
+              <Text as="p" tone="subdued">Chargement de la réduction…</Text>
+            </Card>
+          </Layout.Section>
+        </Layout>
+      </Page>
+    )
   }
 
   return (

@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Page,
@@ -19,6 +19,7 @@ import {
   Select,
   FormLayout,
   Banner,
+  Spinner,
 } from '@shopify/polaris'
 import {
   ChevronLeftIcon,
@@ -36,8 +37,8 @@ import {
   ImageIcon,
   PlusIcon,
 } from '@shopify/polaris-icons'
-import { orders, customers } from '@/lib/data'
 import { money } from '@/lib/utils'
+import { useSite } from '@/contexts/SiteContext'
 
 function paymentBadge(tone: string, label: string) {
   const toneMap: Record<string, 'success' | 'warning' | 'critical' | 'info' | 'attention'> = {
@@ -55,21 +56,59 @@ interface TimelineEvent {
 
 export default function OrderDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter()
-  const order = orders.find(o => o.id.slice(1) === params.id) || orders[0]
-  const cust = customers.find(c => c.id === order.customerId) || customers[0]
+  const { activeSite } = useSite()
+
+  const [order, setOrder] = useState<any>(null)
+  const [cust, setCust] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    setLoading(true)
+    fetch(`/api/orders?site=${activeSite}`)
+      .then(r => r.json())
+      .then(data => {
+        const allOrders = data.orders || []
+        const found = allOrders.find((o: any) => o.id === params.id || o.id === '#' + params.id || o.id?.slice(1) === params.id) || allOrders[0]
+        setOrder(found || { id: params.id, customer: 'Client inconnu', total: 0, items: 0, payment: { key: 'pending', label: 'En attente', tone: 'warn' }, fulfill: { key: 'unfulfilled', label: 'Non traitée', tone: 'warn' }, tags: [], risk: 'low', date: '', channel: '', location: '', ship: '' })
+        if (found?.customerId) {
+          fetch(`/api/customers/${found.customerId}`)
+            .then(r => r.json())
+            .then(c => setCust(c && !c.error ? c : { id: '', name: found.customer || 'Client inconnu', email: '', orders: 0, city: '', country: '', tags: [] }))
+            .catch(() => setCust({ id: '', name: found?.customer || 'Client inconnu', email: '', orders: 0, city: '', country: '', tags: [] }))
+        } else {
+          setCust({ id: '', name: found?.customer || 'Client inconnu', email: '', orders: 0, city: '', country: '', tags: [] })
+        }
+      })
+      .catch(() => {
+        setOrder({ id: params.id, customer: 'Client inconnu', total: 0, items: 0, payment: { key: 'pending', label: 'En attente', tone: 'warn' }, fulfill: { key: 'unfulfilled', label: 'Non traitée', tone: 'warn' }, tags: [], risk: 'low', date: '', channel: '', location: '', ship: '' })
+        setCust({ id: '', name: 'Client inconnu', email: '', orders: 0, city: '', country: '', tags: [] })
+      })
+      .finally(() => setLoading(false))
+  }, [params.id, activeSite])
 
   // Status state
-  const [fulfillStatus, setFulfillStatus] = useState(order.fulfill)
-  const [paymentStatus] = useState(order.payment)
+  const [fulfillStatus, setFulfillStatus] = useState<any>(null)
+  const [paymentStatus, setPaymentStatus] = useState<any>(null)
+
+  useEffect(() => {
+    if (order) {
+      setFulfillStatus(order.fulfill || { key: 'unfulfilled', label: 'Non traitée', tone: 'warn' })
+      setPaymentStatus(order.payment || { key: 'pending', label: 'En attente', tone: 'warn' })
+      setRefundAmount(String(order.total || 0))
+    }
+  }, [order])
 
   // Timeline
   const [timelineNote, setTimelineNote] = useState('')
-  const [timelineEvents, setTimelineEvents] = useState<TimelineEvent[]>([
-    { t: 'il y a 16 min', b: <span key="t1"><strong>GLS France</strong> a envoyé un e-mail de confirmation d&apos;expédition.</span>, tone: 'success' },
-    { t: 'il y a 41 min', b: <span key="t2">Le traitement de la commande a été débloqué.</span>, tone: 'attention' },
-    { t: '08:28', b: <span key="t3">L&apos;e-mail de confirmation de commande a été envoyé.</span>, tone: undefined },
-    { t: '08:28', b: <span key="t4"><span style={{ fontFamily: 'monospace' }}>Un paiement de {money(order.total)} a été traité avec une carte Visa.</span></span>, tone: 'attention' },
-  ])
+  const [timelineEvents, setTimelineEvents] = useState<TimelineEvent[]>([])
+
+  useEffect(() => {
+    if (order) {
+      setTimelineEvents([
+        { t: order.date || '', b: <span key="t4"><span style={{ fontFamily: 'monospace' }}>Un paiement de {money(order.total || 0)} a été traité.</span></span>, tone: 'attention' },
+      ])
+    }
+  }, [order])
 
   // Modal: Mark as shipped
   const [shipModalOpen, setShipModalOpen] = useState(false)
@@ -84,20 +123,25 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
 
   // Modal: Refund
   const [refundModalOpen, setRefundModalOpen] = useState(false)
-  const [refundAmount, setRefundAmount] = useState(String(order.total))
+  const [refundAmount, setRefundAmount] = useState('0')
   const [refundReason, setRefundReason] = useState('')
   const [refundDone, setRefundDone] = useState(false)
 
   // Modal: Edit address
   const [addressModalOpen, setAddressModalOpen] = useState(false)
-  const [addrName, setAddrName] = useState(cust.name)
+  const [addrName, setAddrName] = useState('')
   const [addrLine1, setAddrLine1] = useState('12 rue des Artisans')
-  const [addrCity, setAddrCity] = useState(cust.city)
+  const [addrCity, setAddrCity] = useState('')
   const [addrZip, setAddrZip] = useState('75011')
-  const [addrCountry, setAddrCountry] = useState(cust.country)
+  const [addrCountry, setAddrCountry] = useState('')
 
-  const riskProgress = order.risk === 'high' ? 80 : order.risk === 'medium' ? 50 : 18
-  const riskTone = order.risk === 'high' ? 'critical' : order.risk === 'medium' ? 'warning' : 'success'
+  useEffect(() => {
+    if (cust) {
+      setAddrName(cust.name || '')
+      setAddrCity(cust.city || '')
+      setAddrCountry(cust.country || '')
+    }
+  }, [cust])
 
   const handlePublishNote = useCallback(() => {
     if (!timelineNote.trim()) return
@@ -154,6 +198,21 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
     setTimelineEvents(prev => [event, ...prev])
     setAddressModalOpen(false)
   }, [addrName, addrLine1, addrCity, addrZip, addrCountry])
+
+  if (loading || !order || !cust || !fulfillStatus || !paymentStatus) {
+    return (
+      <Page title="Chargement…">
+        <Card>
+          <Box padding="800">
+            <InlineStack align="center"><Spinner size="large" /></InlineStack>
+          </Box>
+        </Card>
+      </Page>
+    )
+  }
+
+  const riskProgress = order.risk === 'high' ? 80 : order.risk === 'medium' ? 50 : 18
+  const riskTone = order.risk === 'high' ? 'critical' : order.risk === 'medium' ? 'warning' : 'success'
 
   const fulfillBadgeTone: Record<string, 'success' | 'warning' | 'critical' | 'info' | 'attention' | undefined> = {
     ok: 'success', warn: 'warning', danger: 'critical', info: 'info', accent: 'attention',
@@ -419,7 +478,7 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
                 <Text as="h2" variant="headingSm" fontWeight="semibold">Balises</Text>
                 {order.tags.length > 0 ? (
                   <InlineStack gap="200" wrap>
-                    {order.tags.map(t => <Tag key={t}>{t}</Tag>)}
+                    {order.tags.map((t: string) => <Tag key={t}>{t}</Tag>)}
                   </InlineStack>
                 ) : (
                   <Text as="p" variant="bodySm" tone="subdued">Aucune balise</Text>

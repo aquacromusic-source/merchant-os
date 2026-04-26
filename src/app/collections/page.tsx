@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Page,
@@ -13,7 +13,7 @@ import {
   Box,
 } from '@shopify/polaris'
 import { PlusIcon, SearchIcon } from '@shopify/polaris-icons'
-import { collections } from '@/lib/data'
+import { useSite } from '@/contexts/SiteContext'
 
 function statusBadge(status: string) {
   const toneMap: Record<string, 'success' | 'warning' | undefined> = {
@@ -25,8 +25,18 @@ function statusBadge(status: string) {
 
 export default function CollectionsPage() {
   const router = useRouter()
+  const { activeSite } = useSite()
+  const [collections, setCollections] = useState<any[]>([])
   const [selectedTab, setSelectedTab] = useState(0)
   const [searchValue, setSearchValue] = useState('')
+
+  useEffect(() => {
+    if (!activeSite) return
+    fetch(`/api/collections?site=${activeSite}`)
+      .then(res => res.json())
+      .then(data => setCollections(Array.isArray(data) ? data : []))
+      .catch(() => setCollections([]))
+  }, [activeSite])
 
   const tabs = [
     { id: 'all', content: `Toutes (${collections.length})` },
@@ -41,7 +51,7 @@ export default function CollectionsPage() {
     if (tabId !== 'all' && c.status !== tabId) return false
     if (searchValue && !c.title.toLowerCase().includes(searchValue.toLowerCase())) return false
     return true
-  }), [searchValue, tabId])
+  }), [collections, searchValue, tabId])
 
   const { selectedResources, allResourcesSelected, handleSelectionChange } = useIndexResourceState(
     list.map(c => ({ id: c.id }))

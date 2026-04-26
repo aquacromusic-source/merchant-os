@@ -1,19 +1,20 @@
--- Migration: add vendor, seo_title, seo_desc, slug, images columns
--- Run this in the Supabase SQL Editor (Dashboard > SQL Editor)
+-- Ajouter colonnes vendor, seo, images pour STRAP. et PDF Guide Store
 
--- posters: needs vendor
-ALTER TABLE posters ADD COLUMN IF NOT EXISTS vendor text DEFAULT 'PIXELWALL';
+-- STRAP. (kettel_products)
+ALTER TABLE kettel_products 
+ADD COLUMN IF NOT EXISTS vendor TEXT DEFAULT 'STRAP.',
+ADD COLUMN IF NOT EXISTS seo_title TEXT,
+ADD COLUMN IF NOT EXISTS seo_desc TEXT,
+ADD COLUMN IF NOT EXISTS slug TEXT;
 
--- kettel_products: needs vendor, seo_title, seo_desc, slug
-ALTER TABLE kettel_products ADD COLUMN IF NOT EXISTS vendor text DEFAULT 'STRAP.';
-ALTER TABLE kettel_products ADD COLUMN IF NOT EXISTS seo_title text;
-ALTER TABLE kettel_products ADD COLUMN IF NOT EXISTS seo_desc text;
-ALTER TABLE kettel_products ADD COLUMN IF NOT EXISTS slug text;
-ALTER TABLE kettel_products ADD COLUMN IF NOT EXISTS stock integer DEFAULT 0;
+-- PDF Guide Store (guides)
+ALTER TABLE guides 
+ADD COLUMN IF NOT EXISTS vendor TEXT DEFAULT 'PDF Guide Store',
+ADD COLUMN IF NOT EXISTS seo_title TEXT,
+ADD COLUMN IF NOT EXISTS seo_desc TEXT,
+ADD COLUMN IF NOT EXISTS slug TEXT;
 
--- guides: needs vendor, seo_title, seo_desc, slug, images
-ALTER TABLE guides ADD COLUMN IF NOT EXISTS vendor text DEFAULT 'PDF Guide Store';
-ALTER TABLE guides ADD COLUMN IF NOT EXISTS seo_title text;
-ALTER TABLE guides ADD COLUMN IF NOT EXISTS seo_desc text;
-ALTER TABLE guides ADD COLUMN IF NOT EXISTS slug text;
-ALTER TABLE guides ADD COLUMN IF NOT EXISTS images jsonb DEFAULT '[]'::jsonb;
+-- Note: la colonne images[] existe déjà pour kettel_products
+-- Si besoin pour guides:
+ALTER TABLE guides 
+ADD COLUMN IF NOT EXISTS images JSONB DEFAULT '[]'::jsonb;

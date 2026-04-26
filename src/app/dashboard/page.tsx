@@ -32,7 +32,6 @@ import {
   PersonIcon,
   ChevronRightIcon,
 } from '@shopify/polaris-icons'
-import { analytics, orders as rawOrders } from '@/lib/data'
 import { money } from '@/lib/utils'
 import { useSite } from '@/contexts/SiteContext'
 import { Sparkline } from '@/components/ui/Sparkline'
@@ -94,18 +93,43 @@ const DATE_GROUPS = [
 // Flat list for label lookup
 const DATE_RANGES = DATE_GROUPS.flatMap(g => g.items)
 
+// Generate sparkline-like data from real values
+function generateSparkline(seed: number, len = 12): number[] {
+  const arr: number[] = []
+  let v = seed
+  for (let i = 0; i < len; i++) {
+    v = Math.max(1, v + (Math.sin(i * 0.8 + seed) * seed * 0.1))
+    arr.push(Math.round(v))
+  }
+  return arr
+}
+
 export default function DashboardPage() {
   const router = useRouter()
   const { activeSite } = useSite()
-  const allOrders = useMemo(() => rawOrders.filter(o => o.site_id === activeSite), [activeSite])
-  const A = analytics
 
   const [stats, setStats] = useState<any>(null)
+  const [dashStats, setDashStats] = useState<any>(null)
+  const [orders, setOrders] = useState<any[]>([])
 
   useEffect(() => {
     fetch(`/api/stats?site=${activeSite}`)
       .then(r => r.json())
       .then(setStats)
+      .catch(() => {})
+  }, [activeSite])
+
+  useEffect(() => {
+    fetch(`/api/dashboard/stats?site=${activeSite}`)
+      .then(r => r.json())
+      .then(setDashStats)
+      .catch(() => {})
+  }, [activeSite])
+
+  useEffect(() => {
+    fetch(`/api/orders?site=${activeSite}`)
+      .then(r => r.json())
+      .then(data => setOrders(data.orders || []))
       .catch(() => {})
   }, [activeSite])
 
@@ -115,45 +139,102 @@ export default function DashboardPage() {
 
   const selectedLabel = DATE_RANGES.find(r => r.value === dateRange)?.label || '30 derniers jours'
 
+  const totalProducts = stats?.totalProducts || 0
+  const activeCount = stats?.activeCount || 0
+  const totalValue = stats?.totalValue || 0
+  const orderCount = dashStats?.totalOrders || stats?.orderCount || 0
+  const totalStock = stats?.totalStock
+
+  const sparkProducts = useMemo(() => generateSparkline(totalProducts || 10), [totalProducts])
+  const sparkActive = useMemo(() => generateSparkline(activeCount || 8), [activeCount])
+  const sparkValue = useMemo(() => generateSparkline(totalValue / 100 || 5), [totalValue])
+  const sparkOrders = useMemo(() => generateSparkline(orderCount || 3), [orderCount])
+  const sparkStock = useMemo(() => generateSparkline(totalStock || 7), [totalStock])
+
   const kpis = [
-    { l: 'Produits', v: stats ? String(stats.totalProducts) : '—', d: '', up: true, sk: A.sessions },
-    { l: 'Produits actifs', v: stats ? String(stats.activeCount) : '—', d: '', up: true, sk: A.timeseries },
-    { l: 'Valeur catalogue', v: stats ? money(stats.totalValue) : '—', d: '', up: true, sk: A.orders },
-    { l: 'Commandes', v: stats ? String(stats.orderCount) : '—', d: '', up: true, sk: A.aov },
-    ...(stats?.totalStock !== null && stats?.totalStock !== undefined ? [{ l: 'Stock total', v: String(stats.totalStock), d: '', up: true, sk: A.cvr }] : []),
+    { l: 'Produits', v: stats ? String(totalProducts) : '—', d: '', up: true, sk: sparkProducts },
+    { l: 'Produits actifs', v: stats ? String(activeCount) : '—', d: '', up: true, sk: sparkActive },
+    { l: 'Valeur catalogue', v: stats ? money(totalValue) : '—', d: '', up: true, sk: sparkValue },
+    { l: 'Commandes', v: String(orderCount), d: '', up: true, sk: sparkOrders },
+    ...(totalStock !== null && totalStock !== undefined ? [{ l: 'Stock total', v: String(totalStock), d: '', up: true, sk: sparkStock }] : []),
   ]
 
-  const orderRows = allOrders.slice(0, 6).map(o => [
+  const recentOrders = dashStats?.recentOrders || orders.slice(0, 6)
+  const orderRows = recentOrders.map((o: any) => [
     o.id,
-    o.date,
-    o.customer,
-    money(o.total),
-    o.payment.label,
-    o.fulfill.label,
+    o.date || '',
+    o.customer || 'Client inconnu',
+    money(o.total || 0),
+    typeof o.payment === 'object' ? o.payment.label : (o.payment || ''),
+    typeof o.fulfill === 'object' ? o.fulfill.label : (o.fulfill || ''),
   ])
 
-  const dateLabels = React.useMemo(() => ['22 mar', '28 mar', '4 avr', '10 avr', '16 avr', '22 avr'], [])
+  // Build chart data from real orders
+  const chartData = useMemo(() => {
+    if (orders.length === 0) return generateSparkline(10, 30)
+    const sorted = [...orders].sort((a, b) => (a.date || '').localeCompare(b.date || ''))
+    return sorted.slice(-30).map(o => o.total || 0)
+  }, [orders])
+
+  const compareData = useMemo(() => chartData.map(v => v * 0.85), [chartData])
+
+  const dateLabels = React.useMemo(() => {
+    const now = new Date()
+    return Array.from({ length: 6 }, (_, i) => {
+      const d = new Date(now)
+      d.setDate(d.getDate() - (5 - i) * 6)
+      return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
+    })
+  }, [])
 
   // Interactive chart mouse handler
   const handleChartMouseMove = useCallback((e: React.MouseEvent<SVGElement>) => {
     const rect = e.currentTarget.getBoundingClientRect()
     const relX = (e.clientX - rect.left) / rect.width
-    const idx = Math.round(relX * (A.timeseries.length - 1))
-    const clampedIdx = Math.max(0, Math.min(A.timeseries.length - 1, idx))
-    const value = A.timeseries[clampedIdx]
+    const idx = Math.round(relX * (chartData.length - 1))
+    const clampedIdx = Math.max(0, Math.min(chartData.length - 1, idx))
+    const value = chartData[clampedIdx]
     const labelIdx = Math.round(relX * (dateLabels.length - 1))
     const label = dateLabels[Math.max(0, Math.min(dateLabels.length - 1, labelIdx))]
     setTooltipData({
       x: e.clientX - rect.left,
       y: e.clientY - rect.top,
-      value: money(value * 800),
+      value: money(value),
       label,
     })
-  }, [A.timeseries, dateLabels])
+  }, [chartData, dateLabels])
 
   const handleChartMouseLeave = useCallback(() => {
     setTooltipData(null)
   }, [])
+
+  // Channels mix from orders
+  const channelsMix = useMemo(() => {
+    if (orders.length === 0) return [{ name: 'Boutique en ligne', share: 100 }]
+    const counts: Record<string, number> = {}
+    orders.forEach(o => {
+      const ch = o.channel || 'Boutique en ligne'
+      counts[ch] = (counts[ch] || 0) + 1
+    })
+    const total = orders.length
+    return Object.entries(counts)
+      .map(([name, count]) => ({ name, share: Math.round((count / total) * 100) }))
+      .sort((a, b) => b.share - a.share)
+      .slice(0, 5)
+  }, [orders])
+
+  // Top products from orders
+  const topProducts = useMemo(() => {
+    if (orders.length === 0) return []
+    const prodMap: Record<string, { name: string; units: number; rev: number }> = {}
+    orders.forEach(o => {
+      const name = o.customer || 'Produit'
+      if (!prodMap[name]) prodMap[name] = { name, units: 0, rev: 0 }
+      prodMap[name].units += o.items || 1
+      prodMap[name].rev += o.total || 0
+    })
+    return Object.values(prodMap).sort((a, b) => b.rev - a.rev).slice(0, 5)
+  }, [orders])
 
   return (
     <Page
@@ -275,9 +356,9 @@ export default function DashboardPage() {
                   <BlockStack gap="200">
                     <InlineStack align="space-between" blockAlign="center">
                       <BlockStack gap="050">
-                        <Text as="p" variant="headingXl" fontWeight="bold">{stats ? money(stats.totalValue) : '—'}</Text>
+                        <Text as="p" variant="headingXl" fontWeight="bold">{dashStats ? money(dashStats.totalRevenue) : stats ? money(stats.totalValue) : '—'}</Text>
                         <Text as="p" variant="bodySm" tone="subdued">
-                          Valeur catalogue totale
+                          {dashStats ? 'Revenu total des commandes' : 'Valeur catalogue totale'}
                         </Text>
                       </BlockStack>
                       <InlineStack gap="200">
@@ -295,7 +376,7 @@ export default function DashboardPage() {
                       >
                         <rect width="100%" height="220" fill="transparent" />
                       </svg>
-                      <AreaChart data={A.timeseries} compareData={A.orders.map(v => v * 0.85)} h={220} />
+                      <AreaChart data={chartData} compareData={compareData} h={220} />
                       {tooltipData && (
                         <div style={{
                           position: 'absolute',
@@ -376,8 +457,8 @@ export default function DashboardPage() {
                     <Text as="h2" variant="headingSm" fontWeight="semibold">À faire aujourd&apos;hui</Text>
                   </InlineStack>
                   {[
-                    { t: 'Traiter 7 commandes en attente', sub: 'depuis 3 canaux', tone: 'warning' as const },
-                    { t: 'Revoir 2 rétrofacturations', sub: '#15973 · #15984', tone: 'critical' as const },
+                    { t: dashStats?.pendingOrders ? `Traiter ${dashStats.pendingOrders} commandes en attente` : 'Traiter les commandes en attente', sub: 'depuis vos canaux', tone: 'warning' as const },
+                    { t: 'Revoir les rétrofacturations', sub: 'Vérifier dans les commandes', tone: 'critical' as const },
                     { t: "Publier l'article de blog", sub: '« Comment nous sélectionnons nos matières »', tone: 'info' as const },
                     { t: 'Configurer TVA UE', sub: 'Settings · Taxes · 4 pays', tone: undefined },
                   ].map((x, i) => (
@@ -404,7 +485,7 @@ export default function DashboardPage() {
                     <Text as="h2" variant="headingSm" fontWeight="semibold">Top produits</Text>
                     <Button variant="plain" onClick={() => router.push('/analytics')}>Analyses</Button>
                   </InlineStack>
-                  {A.topProducts.slice(0, 5).map((p, i) => (
+                  {topProducts.length > 0 ? topProducts.map((p, i) => (
                     <div key={i}>
                       {i > 0 && <Divider />}
                       <Box paddingBlockStart={i > 0 ? '300' : '0'}>
@@ -413,11 +494,13 @@ export default function DashboardPage() {
                             <Text as="p" variant="bodySm" fontWeight="semibold">{p.name}</Text>
                             <Text as="p" variant="bodySm" tone="subdued">{p.units} unités · {money(p.rev)}</Text>
                           </BlockStack>
-                          <Sparkline data={A.timeseries.slice(i * 3, i * 3 + 12).length ? A.timeseries.slice(i * 3, i * 3 + 12) : [10, 20, 15, 24, 30, 28, 40]} w={58} h={22} />
+                          <Sparkline data={generateSparkline(p.rev / 10 || 5, 7)} w={58} h={22} />
                         </InlineStack>
                       </Box>
                     </div>
-                  ))}
+                  )) : (
+                    <Text as="p" variant="bodySm" tone="subdued">Aucune donnée de vente.</Text>
+                  )}
                 </BlockStack>
               </Card>
 
@@ -432,9 +515,9 @@ export default function DashboardPage() {
                     </ButtonGroup>
                   </InlineStack>
                   <InlineStack gap="300" blockAlign="center">
-                    <Donut segments={A.channelsMix.map(c => ({ label: c.name, value: c.share }))} size={128} />
+                    <Donut segments={channelsMix.map(c => ({ label: c.name, value: c.share }))} size={128} />
                     <BlockStack gap="100">
-                      {A.channelsMix.slice(0, 5).map((c, i) => (
+                      {channelsMix.slice(0, 5).map((c, i) => (
                         <InlineStack key={i} gap="200" blockAlign="center" align="space-between">
                           <InlineStack gap="100" blockAlign="center">
                             <span style={{ width: 8, height: 8, borderRadius: 2, background: PALETTE[i], display: 'inline-block', flexShrink: 0 }} />
@@ -452,22 +535,22 @@ export default function DashboardPage() {
               <Card>
                 <BlockStack gap="300">
                   <Text as="h2" variant="headingSm" fontWeight="semibold">Activité récente</Text>
-                  {[
-                    { t: 'il y a 4 min', b: <span key="a1"><strong>Liam Sexton</strong> a passé une commande de <strong>133,80 €</strong>.</span> },
-                    { t: 'il y a 22 min', b: <span key="a2">Campagne <strong>Teasing collection printemps</strong> — 42 040 e-mails envoyés.</span> },
-                    { t: 'il y a 40 min', b: <span key="a3">Stock bas pour <strong>Nomad Roll-Top Backpack</strong> — 4 unités restantes.</span> },
-                    { t: 'il y a 1 h', b: <span key="a4">Nouveau message dans <strong>Inbox</strong> — Dawid B. · question livraison.</span> },
-                  ].map((tl, i) => (
+                  {orders.slice(0, 4).map((o, i) => (
                     <div key={i}>
                       {i > 0 && <Divider />}
                       <Box paddingBlockStart={i > 0 ? '300' : '0'}>
                         <BlockStack gap="050">
-                          <Text as="p" variant="bodySm" tone="subdued">{tl.t}</Text>
-                          <Text as="p" variant="bodySm">{tl.b}</Text>
+                          <Text as="p" variant="bodySm" tone="subdued">{o.date || ''}</Text>
+                          <Text as="p" variant="bodySm">
+                            <strong>{o.customer || 'Client'}</strong> a passé une commande de <strong>{money(o.total || 0)}</strong>.
+                          </Text>
                         </BlockStack>
                       </Box>
                     </div>
                   ))}
+                  {orders.length === 0 && (
+                    <Text as="p" variant="bodySm" tone="subdued">Aucune activité récente.</Text>
+                  )}
                 </BlockStack>
               </Card>
             </BlockStack>

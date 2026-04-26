@@ -1,8 +1,8 @@
 'use client'
-import React, { useState } from 'react'
-import { Page, Card, Text, Badge, IndexTable, useIndexResourceState, Tabs } from '@shopify/polaris'
+import React, { useState, useEffect } from 'react'
+import { Page, Card, Text, Badge, IndexTable, useIndexResourceState, Tabs, Box, BlockStack, Spinner } from '@shopify/polaris'
 import { PlusIcon } from '@shopify/polaris-icons'
-import { pages } from '@/lib/data'
+import { useSite } from '@/contexts/SiteContext'
 
 function statusBadge(status: string) {
   const m: Record<string, 'success' | 'warning' | undefined> = { 'Publié': 'success', 'Planifié': 'warning' }
@@ -10,13 +10,43 @@ function statusBadge(status: string) {
 }
 
 export default function StorefrontPagesPage() {
+  const { activeSite } = useSite()
+  const [pages, setPages] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
   const [sel, setSel] = useState(0)
+
+  useEffect(() => {
+    setLoading(true)
+    fetch(`/api/pages?site=${activeSite}`)
+      .then(res => res.json())
+      .then(data => {
+        setPages(Array.isArray(data) ? data : [])
+      })
+      .catch(() => setPages([]))
+      .finally(() => setLoading(false))
+  }, [activeSite])
+
   const tabs = [
-    { id: 'all', content: `Toutes (${(pages as any[]).length})` },
-    { id: 'published', content: `Publiées (${(pages as any[]).filter(p => p.status === 'Publié').length})` },
+    { id: 'all', content: `Toutes (${pages.length})` },
+    { id: 'published', content: `Publiées (${pages.filter(p => p.status === 'Publié').length})` },
   ]
-  const list = (pages as any[]).filter(p => sel === 0 || p.status === 'Publié')
+  const list = pages.filter(p => sel === 0 || p.status === 'Publié')
   const { selectedResources, allResourcesSelected, handleSelectionChange } = useIndexResourceState(list.map((_: any, i: number) => ({ id: String(i) })))
+
+  if (loading) {
+    return (
+      <Page title="Pages">
+        <Card>
+          <Box padding="400" paddingBlockStart="1600" paddingBlockEnd="1600">
+            <BlockStack align="center" inlineAlign="center">
+              <Spinner size="large" />
+            </BlockStack>
+          </Box>
+        </Card>
+      </Page>
+    )
+  }
+
   return (
     <Page title="Pages" primaryAction={{ content: 'Ajouter une page', icon: PlusIcon }}>
       <Card padding="0">

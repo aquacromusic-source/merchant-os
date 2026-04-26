@@ -1,5 +1,5 @@
 'use client'
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Page,
   Layout,
@@ -21,7 +21,7 @@ import {
   ChartVerticalIcon,
   ChevronRightIcon,
 } from '@shopify/polaris-icons'
-import { campaigns } from '@/lib/data'
+import { useSite } from '@/contexts/SiteContext'
 import { money, fmt } from '@/lib/utils'
 
 function campaignBadge(status: string) {
@@ -31,7 +31,33 @@ function campaignBadge(status: string) {
   return <Badge tone={toneMap[status]}>{status}</Badge>
 }
 
+interface Campaign {
+  name: string
+  channel: string
+  status: string
+  sent: number | null
+  rate: string
+  rev: number | null
+}
+
 export default function MarketingPage() {
+  const { activeSite } = useSite()
+  const [campaigns, setCampaigns] = useState<Campaign[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    setLoading(true)
+    fetch(`/api/marketing?site=${activeSite}`)
+      .then(r => r.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setCampaigns(data)
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [activeSite])
+
   const campaignRows = campaigns.map(c => [
     c.name,
     c.channel,
@@ -40,6 +66,8 @@ export default function MarketingPage() {
     c.rate,
     c.rev ? money(c.rev) : '—',
   ])
+
+  const totalRev = campaigns.reduce((sum, c) => sum + (c.rev || 0), 0)
 
   return (
     <Page
@@ -51,7 +79,7 @@ export default function MarketingPage() {
       <BlockStack gap="500">
         <InlineGrid columns={5} gap="300">
           {[
-            { l: 'Chiffre attribué', v: '62 140 €', d: '+18%' },
+            { l: 'Chiffre attribué', v: totalRev > 0 ? money(totalRev) : '0 €', d: '+18%' },
             { l: 'Impressions', v: '1,4 M', d: '+6%' },
             { l: 'Clics', v: '38 412', d: '+9%' },
             { l: 'ROAS moyen', v: '4,8 ×', d: '+0,3' },

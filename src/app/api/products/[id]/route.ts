@@ -12,9 +12,9 @@ const SITE_CONFIG: Record<string, {
   priceCol: string
   extraCols: string[] // columns known to exist beyond the basics
 }> = {
-  'gaming-posters': { table: 'posters', titleCol: 'title', activeCol: 'is_active', imageCol: 'image_url', priceCol: 'price', extraCols: ['slug', 'seo_title', 'seo_desc', 'images', 'tags', 'genres'] },
-  'strap': { table: 'kettel_products', titleCol: 'title', activeCol: null, imageCol: 'thumb_image', priceCol: 'price', extraCols: ['images', 'tags'] },
-  'pdf-guide-store': { table: 'guides', titleCol: 'title', activeCol: 'is_published', imageCol: 'cover_url', priceCol: 'price', extraCols: [] },
+  'gaming-posters': { table: 'posters', titleCol: 'title', activeCol: 'is_active', imageCol: 'image_url', priceCol: 'price', extraCols: ['slug', 'seo_title', 'seo_desc', 'images', 'tags', 'genres', 'collections', 'channels'] },
+  'strap': { table: 'kettel_products', titleCol: 'title', activeCol: null, imageCol: 'thumb_image', priceCol: 'price', extraCols: ['images', 'tags', 'seo_title', 'seo_desc', 'slug', 'collections', 'channels'] },
+  'pdf-guide-store': { table: 'guides', titleCol: 'title', activeCol: 'is_published', imageCol: 'cover_url', priceCol: 'price', extraCols: ['seo_title', 'seo_desc', 'slug', 'images', 'collections', 'channels'] },
 }
 
 function getConfig(site: string) {
@@ -63,7 +63,7 @@ export async function PUT(
     }
     // Only send extra fields if the column exists in the table
     const extra = config.extraCols
-    const optionalFields = ['vendor', 'seo_title', 'seo_desc', 'slug', 'images', 'tags', 'genres']
+    const optionalFields = ['vendor', 'seo_title', 'seo_desc', 'slug', 'images', 'tags', 'genres', 'collections', 'channels']
     for (const field of optionalFields) {
       if (body[field] !== undefined && extra.includes(field)) {
         updateData[field] = body[field]
