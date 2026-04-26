@@ -194,7 +194,7 @@ export default function OrdersPage() {
       key={o.id}
       selected={selectedResources.includes(o.id)}
       position={index}
-      onClick={() => router.push('/orders/' + o.id.slice(1))}
+      onClick={() => router.push('/orders/' + o.id)}
     >
       <IndexTable.Cell>
         <Text as="span" fontWeight="semibold" variant="bodySm">
