@@ -110,7 +110,7 @@ export default function OrdersPage() {
     if (appliedFilters.channel && !o.channel.toLowerCase().includes(appliedFilters.channel.toLowerCase())) return false
     if (appliedFilters.tag && !o.tags.includes(appliedFilters.tag)) return false
     return true
-  }), [searchValue, tabId, appliedFilters])
+  }), [orders, searchValue, tabId, appliedFilters])
 
   const resourceName = { singular: 'commande', plural: 'commandes' }
   const { selectedResources, allResourcesSelected, handleSelectionChange } = useIndexResourceState(filtered.map(o => ({ id: o.id })))
