@@ -40,7 +40,7 @@ type Order = {
   id: string; customer: string; date: string; total: number;
   payment: { key: string; tone: string; label: string };
   fulfill: { key: string; tone: string; label: string };
-  items: number; channel: string; site_id: string; tags: string[]; risk: string;
+  items: any[]; channel: string; site_id: string; tags: string[]; risk: string;
 }
 
 function buildTabs(orders: Order[]) {
@@ -126,7 +126,7 @@ export default function OrdersPage() {
   const handleExportCSV = useCallback(() => {
     const header = 'Commande,Date,Client,Total,Paiement,Traitement,Articles,Canal'
     const rows = filtered.map(o =>
-      `${o.id},${o.date},${o.customer},${o.total},${o.payment.label},${o.fulfill.label},${o.items},${o.channel}`
+      `${o.id},${o.date},${o.customer},${o.total},${o.payment.label},${o.fulfill.label},${o.items?.length || 0},${o.channel}`
     )
     const csv = [header, ...rows].join('\n')
     const blob = new Blob([csv], { type: 'text/csv' })
@@ -186,7 +186,7 @@ export default function OrdersPage() {
       <IndexTable.Cell>{paymentBadge(o.payment.tone, o.payment.label)}</IndexTable.Cell>
       <IndexTable.Cell>{paymentBadge(o.fulfill.tone, o.fulfill.label)}</IndexTable.Cell>
       <IndexTable.Cell>
-        <Text as="span" tone="subdued" variant="bodySm">{o.items} article{o.items > 1 ? 's' : ''}</Text>
+        <Text as="span" tone="subdued" variant="bodySm">{o.items?.length || 0} article{(o.items?.length || 0) > 1 ? 's' : ''}</Text>
       </IndexTable.Cell>
       <IndexTable.Cell><Text as="span" tone="subdued" variant="bodySm">{o.channel}</Text></IndexTable.Cell>
     </IndexTable.Row>
