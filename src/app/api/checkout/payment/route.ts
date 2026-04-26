@@ -15,7 +15,7 @@ export async function OPTIONS() {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { amount, currency = 'eur', site, metadata = {} } = body
+    const { amount, currency = 'eur', site, metadata = {}, shipping } = body
 
     if (!amount || amount <= 0) {
       return NextResponse.json(
@@ -47,6 +47,12 @@ export async function POST(req: NextRequest) {
           Object.entries(metadata).map(([k, v]) => [`metadata[${k}]`, String(v)])
         ),
         'automatic_payment_methods[enabled]': 'true',
+        ...(shipping?.name ? { 'shipping[name]': shipping.name } : {}),
+        ...(shipping?.address?.line1 ? { 'shipping[address][line1]': shipping.address.line1 } : {}),
+        ...(shipping?.address?.line2 ? { 'shipping[address][line2]': shipping.address.line2 } : {}),
+        ...(shipping?.address?.city ? { 'shipping[address][city]': shipping.address.city } : {}),
+        ...(shipping?.address?.postal_code ? { 'shipping[address][postal_code]': shipping.address.postal_code } : {}),
+        ...(shipping?.address?.country ? { 'shipping[address][country]': shipping.address.country } : {}),
       }),
     })
 

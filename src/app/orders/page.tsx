@@ -48,6 +48,7 @@ type Order = {
 function safeOrder(o: any): Order {
   return {
     id: o.id ?? '',
+    order_number: o.order_number,
     customer: o.customer ?? 'Client inconnu',
     date: o.date ?? '',
     total: typeof o.total === 'number' ? o.total : parseFloat(o.total) || 0,
