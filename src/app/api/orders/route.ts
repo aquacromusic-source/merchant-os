@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
     total: parseFloat(o.total) || 0,
     payment: o.payment || { key: 'pending', tone: 'warn', label: 'En attente' },
     fulfill: o.fulfill || { key: 'unfulfilled', tone: 'warn', label: 'Non traitée' },
-    items: o.items || 0,
+    items: Array.isArray(o.items) ? o.items : [],
     channel: o.channel || 'Boutique en ligne',
     site_id: o.site_id,
     tags: o.tags || [],

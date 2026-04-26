@@ -36,6 +36,8 @@ import { money } from '@/lib/utils'
 import { Sparkline } from '@/components/ui/Sparkline'
 import { useSite } from '@/contexts/SiteContext'
 
+const DEFAULT_STATUS = { key: 'unknown', tone: 'info', label: 'Inconnu' }
+
 type Order = {
   id: string; customer: string; date: string; total: number;
   payment: { key: string; tone: string; label: string };
@@ -43,13 +45,29 @@ type Order = {
   items: any[]; channel: string; site_id: string; tags: string[]; risk: string;
 }
 
+function safeOrder(o: any): Order {
+  return {
+    id: o.id ?? '',
+    customer: o.customer ?? 'Client inconnu',
+    date: o.date ?? '',
+    total: typeof o.total === 'number' ? o.total : parseFloat(o.total) || 0,
+    payment: (o.payment && typeof o.payment === 'object') ? o.payment : DEFAULT_STATUS,
+    fulfill: (o.fulfill && typeof o.fulfill === 'object') ? o.fulfill : DEFAULT_STATUS,
+    items: Array.isArray(o.items) ? o.items : [],
+    channel: o.channel ?? '',
+    site_id: o.site_id ?? '',
+    tags: Array.isArray(o.tags) ? o.tags : [],
+    risk: o.risk ?? 'low',
+  }
+}
+
 function buildTabs(orders: Order[]) {
   return [
     { id: 'all', content: `Toutes (${orders.length})` },
-    { id: 'unfulfilled', content: `Non traitées (${orders.filter(o => o.fulfill.key === 'unfulfilled').length})` },
-    { id: 'unpaid', content: `Non payées (${orders.filter(o => ['pending', 'authorized'].includes(o.payment.key)).length})` },
-    { id: 'open', content: `Ouvertes (${orders.filter(o => o.fulfill.key !== 'fulfilled' || ['pending', 'authorized'].includes(o.payment.key)).length})` },
-    { id: 'closed', content: `Fermées (${orders.filter(o => o.fulfill.key === 'fulfilled' && !['pending', 'authorized'].includes(o.payment.key)).length})` },
+    { id: 'unfulfilled', content: `Non traitées (${orders.filter(o => o.fulfill?.key === 'unfulfilled').length})` },
+    { id: 'unpaid', content: `Non payées (${orders.filter(o => ['pending', 'authorized'].includes(o.payment?.key)).length})` },
+    { id: 'open', content: `Ouvertes (${orders.filter(o => o.fulfill?.key !== 'fulfilled' || ['pending', 'authorized'].includes(o.payment?.key)).length})` },
+    { id: 'closed', content: `Fermées (${orders.filter(o => o.fulfill?.key === 'fulfilled' && !['pending', 'authorized'].includes(o.payment?.key)).length})` },
   ]
 }
 
@@ -68,7 +86,10 @@ export default function OrdersPage() {
   useEffect(() => {
     fetch(`/api/orders?site=${activeSite}`)
       .then(r => r.json())
-      .then(data => setAllOrders(data.orders || []))
+      .then(data => {
+        const raw = Array.isArray(data.orders) ? data.orders : []
+        setAllOrders(raw.map(safeOrder))
+      })
       .catch(() => setAllOrders([]))
   }, [activeSite])
 
@@ -100,15 +121,15 @@ export default function OrdersPage() {
   const tabId = TABS[selectedTab]?.id || 'all'
 
   const filtered = useMemo(() => orders.filter(o => {
-    if (tabId === 'unfulfilled' && o.fulfill.key !== 'unfulfilled') return false
-    if (tabId === 'unpaid' && !['pending', 'authorized'].includes(o.payment.key)) return false
+    if (tabId === 'unfulfilled' && o.fulfill?.key !== 'unfulfilled') return false
+    if (tabId === 'unpaid' && !['pending', 'authorized'].includes(o.payment?.key)) return false
     if (searchValue && !(o.id.includes(searchValue) || o.customer.toLowerCase().includes(searchValue.toLowerCase()))) return false
     if (appliedFilters.minAmount && o.total < parseFloat(appliedFilters.minAmount)) return false
     if (appliedFilters.maxAmount && o.total > parseFloat(appliedFilters.maxAmount)) return false
-    if (appliedFilters.payment && o.payment.key !== appliedFilters.payment) return false
-    if (appliedFilters.fulfill && o.fulfill.key !== appliedFilters.fulfill) return false
-    if (appliedFilters.channel && !o.channel.toLowerCase().includes(appliedFilters.channel.toLowerCase())) return false
-    if (appliedFilters.tag && !o.tags.includes(appliedFilters.tag)) return false
+    if (appliedFilters.payment && o.payment?.key !== appliedFilters.payment) return false
+    if (appliedFilters.fulfill && o.fulfill?.key !== appliedFilters.fulfill) return false
+    if (appliedFilters.channel && !o.channel?.toLowerCase().includes(appliedFilters.channel.toLowerCase())) return false
+    if (appliedFilters.tag && !(o.tags || []).includes(appliedFilters.tag)) return false
     return true
   }), [orders, searchValue, tabId, appliedFilters])
 
