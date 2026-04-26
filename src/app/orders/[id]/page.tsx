@@ -124,18 +124,20 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
   // Modal: Edit address
   const [addressModalOpen, setAddressModalOpen] = useState(false)
   const [addrName, setAddrName] = useState('')
-  const [addrLine1, setAddrLine1] = useState('12 rue des Artisans')
+  const [addrLine1, setAddrLine1] = useState('')
   const [addrCity, setAddrCity] = useState('')
-  const [addrZip, setAddrZip] = useState('75011')
+  const [addrZip, setAddrZip] = useState('')
   const [addrCountry, setAddrCountry] = useState('')
 
   useEffect(() => {
-    if (cust) {
+    if (order && cust) {
       setAddrName(cust.name || '')
-      setAddrCity(cust.city || '')
-      setAddrCountry(cust.country || '')
+      setAddrLine1(order.shipping_address?.street || order.shipping_address?.line1 || '')
+      setAddrZip(order.shipping_address?.postal_code || order.shipping_address?.zip || '')
+      setAddrCity(order.shipping_address?.city || cust.city || '')
+      setAddrCountry(order.shipping_address?.country || cust.country || '')
     }
-  }, [cust])
+  }, [order, cust])
 
   const handlePublishNote = useCallback(() => {
     if (!timelineNote.trim()) return
@@ -253,19 +255,25 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
                   <Button variant="plain" icon={ChevronDownIcon} />
                 </InlineStack>
                 <Text as="p" variant="bodySm" tone="subdued">
-                  22 avril 2026 · Suivi GLS · <span style={{ fontFamily: 'monospace' }}>ZWLLMWFI</span>
+                  {order.date}{order.shipping_address?.carrier ? ` · Suivi ${order.shipping_address.carrier}` : ''}{order.shipping_address?.tracking ? <> · <span style={{ fontFamily: 'monospace' }}>{order.shipping_address.tracking}</span></> : ''}
                 </Text>
                 <Divider />
                 {(order.items || []).map((li: any, i: number) => (
                   <InlineStack key={i} gap="300" blockAlign="start">
-                    <div style={{
-                      width: 48, height: 48, borderRadius: 8,
-                      background: 'var(--p-color-bg-surface-secondary)',
-                      border: '1px solid var(--p-color-border)',
-                      display: 'grid', placeItems: 'center', flexShrink: 0
-                    }}>
-                      <ImageIcon width={18} height={18} />
-                    </div>
+                    {li.image_url ? (
+                      <img src={li.image_url} alt={li.title || li.name} style={{
+                        width: 48, height: 48, borderRadius: 8, objectFit: 'cover', flexShrink: 0
+                      }} />
+                    ) : (
+                      <div style={{
+                        width: 48, height: 48, borderRadius: 8,
+                        background: 'var(--p-color-bg-surface-secondary)',
+                        border: '1px solid var(--p-color-border)',
+                        display: 'grid', placeItems: 'center', flexShrink: 0
+                      }}>
+                        <ImageIcon width={18} height={18} />
+                      </div>
+                    )}
                     <BlockStack gap="050">
                       <Text as="p" variant="bodySm" fontWeight="semibold">{li.title || li.name}</Text>
                       <Text as="p" variant="bodySm" tone="subdued">
@@ -288,7 +296,7 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
                 <Divider />
                 <InlineStack align="space-between" blockAlign="center">
                   <Text as="p" variant="bodySm" tone="subdued">
-                    Expédiée le 22 avril · reçue estimée 25 avril
+                    {fulfillStatus.key === 'fulfilled' ? `Expédiée le ${order.date}` : `Commande du ${order.date}`}
                   </Text>
                   <InlineStack gap="200">
                     <Button icon={LabelPrinterIcon} size="slim" onClick={() => setLabelModalOpen(true)}>
@@ -332,7 +340,7 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
                   </Text>
                 </InlineStack>
                 <InlineStack align="space-between">
-                  <Text as="p" variant="bodySm" tone="subdued">Payé via Visa ···· 8937</Text>
+                  <Text as="p" variant="bodySm" tone="subdued">Payé par le client</Text>
                   <Text as="p" variant="bodySm">
                     <span style={{ fontFamily: 'monospace' }}>{money(order.total)}</span>
                   </Text>
