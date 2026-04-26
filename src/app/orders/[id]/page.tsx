@@ -252,7 +252,7 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
                   <InlineStack gap="200" blockAlign="center">
                     <DeliveryIcon width={16} height={16} />
                     <Text as="h2" variant="headingSm" fontWeight="semibold">
-                      Traitée ({order.items})
+                      Traitée ({order.items?.length || 0})
                     </Text>
                     <Badge>{order.location}</Badge>
                   </InlineStack>
@@ -318,7 +318,7 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
                   <Badge tone="success">Payée</Badge>
                 </InlineStack>
                 {[
-                  [`Sous-total · ${order.items} articles`, money(order.total - 8.95)],
+                  [`Sous-total · ${order.items?.length || 0} articles`, money(order.total - 8.95)],
                   [`Expédition · ${order.ship}`, money(8.95)],
                   ['TVA (comprise)', money(order.total * 0.17)],
                 ].map(([k, v], i) => (
