@@ -29,10 +29,11 @@ export async function GET(req: NextRequest) {
 
   const orders = (data || []).map((o: any) => ({
     id: o.id,
-    customer: o.customer || 'Client inconnu',
-    date: o.date || '',
+    order_number: o.order_number || o.id,
+    customer: o.customer_email || o.customer || 'Client inconnu',
+    date: o.created_at ? new Date(o.created_at).toLocaleDateString('fr-FR') : '',
     total: parseFloat(o.total) || 0,
-    payment: o.payment || { key: 'pending', tone: 'warn', label: 'En attente' },
+    payment: o.payment || { key: 'paid', tone: 'success', label: 'Payée' },
     fulfill: o.fulfill || { key: 'unfulfilled', tone: 'warn', label: 'Non traitée' },
     items: Array.isArray(o.items) ? o.items : [],
     channel: o.channel || 'Boutique en ligne',

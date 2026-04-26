@@ -39,7 +39,7 @@ import { useSite } from '@/contexts/SiteContext'
 const DEFAULT_STATUS = { key: 'unknown', tone: 'info', label: 'Inconnu' }
 
 type Order = {
-  id: string; customer: string; date: string; total: number;
+  id: string; order_number?: string; customer: string; date: string; total: number;
   payment: { key: string; tone: string; label: string };
   fulfill: { key: string; tone: string; label: string };
   items: any[]; channel: string; site_id: string; tags: string[]; risk: string;
@@ -198,7 +198,7 @@ export default function OrdersPage() {
     >
       <IndexTable.Cell>
         <Text as="span" fontWeight="semibold" variant="bodySm">
-          <span style={{ fontFamily: 'monospace' }}>{o.id}</span>
+          <span style={{ fontFamily: 'monospace', fontWeight: 600 }}>{o.order_number || o.id}</span>
         </Text>
       </IndexTable.Cell>
       <IndexTable.Cell><Text as="span" tone="subdued" variant="bodySm">{o.date}</Text></IndexTable.Cell>
