@@ -14,6 +14,8 @@ import {
   Box,
   Tag,
   ProgressBar,
+  Icon,
+  Link,
   TextField,
   Modal,
   Select,
@@ -36,6 +38,9 @@ import {
   ShieldCheckMarkIcon,
   ImageIcon,
   PlusIcon,
+  GlobeIcon,
+  TargetIcon,
+  LocationIcon,
 } from '@shopify/polaris-icons'
 import { money } from '@/lib/utils'
 
@@ -222,7 +227,11 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
       titleMetadata={
         <InlineStack gap="200">
           <Badge tone={fulfillBadgeTone[paymentStatus.tone] || undefined}>{paymentStatus.label}</Badge>
-          <Badge tone={fulfillBadgeTone[fulfillStatus.tone] || undefined}>{fulfillStatus.label}</Badge>
+          <Badge tone={fulfillBadgeTone[fulfillStatus.tone] || undefined}>
+            {fulfillStatus.key === 'unfulfilled'
+              ? `Non traité (${order.items?.length || 0})`
+              : fulfillStatus.label}
+          </Badge>
         </InlineStack>
       }
       subtitle={`${order.date} · ${order.channel || 'Boutique en ligne'}`}
@@ -434,10 +443,12 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
                     {cust.name.charAt(0)}
                   </div>
                   <BlockStack gap="050">
-                    <Button variant="plain" onClick={() => router.push('/customers/' + cust.id)}>
-                      {cust.name}
-                    </Button>
-                    <Text as="p" variant="bodySm" tone="subdued">{cust.orders} commande{cust.orders > 1 ? 's' : ''}</Text>
+                    <InlineStack gap="200" blockAlign="center">
+                      <Button variant="plain" onClick={() => router.push('/customers/' + cust.id)}>
+                        {cust.name}
+                      </Button>
+                      <Badge tone="info">{`${cust.orders || 1} commande${(cust.orders || 1) > 1 ? 's' : ''}`}</Badge>
+                    </InlineStack>
                   </BlockStack>
                 </InlineStack>
                 <Divider />
@@ -458,7 +469,37 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
                   <Text as="p" variant="bodySm">{cust.name}</Text>
                   <Text as="p" variant="bodySm">{addrLine1}</Text>
                   <Text as="p" variant="bodySm">{addrZip} {addrCity}, {addrCountry}</Text>
+                  {addrLine1 && addrCity && (
+                    <Link url={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addrLine1 + ' ' + addrZip + ' ' + addrCity + ' ' + addrCountry)}`} target="_blank">
+                      Afficher la carte
+                    </Link>
+                  )}
                 </BlockStack>
+              </BlockStack>
+            </Card>
+
+            {/* Conversion summary */}
+            <Card>
+              <BlockStack gap="300">
+                <Text as="h2" variant="headingSm" fontWeight="semibold">Résumé de la conversion</Text>
+                <InlineStack gap="200" blockAlign="center">
+                  <Icon source={TargetIcon} tone="subdued" />
+                  <Text as="p" variant="bodySm">
+                    {(cust.orders || 1) === 1
+                      ? 'Il s\'agit de sa 1ère commande'
+                      : `Il s'agit de sa ${cust.orders}e commande`}
+                  </Text>
+                </InlineStack>
+                <InlineStack gap="200" blockAlign="center">
+                  <Icon source={GlobeIcon} tone="subdued" />
+                  <Text as="p" variant="bodySm">Source : {order.source || 'Boutique en ligne'}</Text>
+                </InlineStack>
+                <InlineStack gap="200" blockAlign="center">
+                  <Icon source={LocationIcon} tone="subdued" />
+                  <Text as="p" variant="bodySm">
+                    {addrCity ? `${addrCity}, ${addrCountry}` : addrCountry || 'Localisation inconnue'}
+                  </Text>
+                </InlineStack>
               </BlockStack>
             </Card>
 
@@ -470,8 +511,17 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
                   <Text as="h2" variant="headingSm" fontWeight="semibold">Risque de la commande</Text>
                 </InlineStack>
                 <ProgressBar progress={riskProgress} tone={riskTone === 'warning' ? 'critical' : (riskTone as 'success' | 'critical')} />
+                <InlineStack align="space-between">
+                  <Text as="p" variant="bodySm" tone="subdued">Faible</Text>
+                  <Text as="p" variant="bodySm" tone="subdued">Moyen</Text>
+                  <Text as="p" variant="bodySm" tone="subdued">Élevé</Text>
+                </InlineStack>
                 <Text as="p" variant="bodySm" tone="subdued">
-                  Le risque de rétrofacturation est {order.risk === 'high' ? 'élevé' : order.risk === 'medium' ? 'moyen' : 'faible'}.
+                  {order.risk === 'high'
+                    ? 'Le risque de fraude est élevé.'
+                    : order.risk === 'medium'
+                    ? 'Le risque de rétrofacturation est moyen.'
+                    : 'Le risque de rétrofacturation est faible.'}
                 </Text>
               </BlockStack>
             </Card>
@@ -479,7 +529,10 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
             {/* Tags */}
             <Card>
               <BlockStack gap="300">
-                <Text as="h2" variant="headingSm" fontWeight="semibold">Balises</Text>
+                <InlineStack align="space-between" blockAlign="center">
+                  <Text as="h2" variant="headingSm" fontWeight="semibold">Balises</Text>
+                  <Button variant="plain" icon={EditIcon} accessibilityLabel="Modifier les balises" />
+                </InlineStack>
                 {order.tags.length > 0 ? (
                   <InlineStack gap="200" wrap>
                     {order.tags.map((t: string) => <Tag key={t}>{t}</Tag>)}
