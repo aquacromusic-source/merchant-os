@@ -215,6 +215,7 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
   }
 
   return (
+    <div style={{ paddingBottom: 80 }}>
     <Page
       backAction={{ content: 'Commandes', onAction: () => router.push('/orders') }}
       title={order.order_number || order.id}
@@ -654,5 +655,6 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
         </Modal.Section>
       </Modal>
     </Page>
+    </div>
   )
 }
