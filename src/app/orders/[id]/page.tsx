@@ -277,7 +277,7 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
                     <BlockStack gap="050">
                       <Text as="p" variant="bodySm" fontWeight="semibold">{li.title || li.name}</Text>
                       <Text as="p" variant="bodySm" tone="subdued">
-                        {[li.size, li.frame && li.frame !== 'none' ? `Cadre ${li.frame}` : null].filter(Boolean).join(' · ') || li.variant || ''}
+                        {[li.size?.toUpperCase(), li.frame === 'black' ? 'Cadre noir' : li.frame === 'white' ? 'Cadre blanc' : li.frame === 'none' ? 'Sans cadre' : null].filter(Boolean).join(' · ') || li.variant || ''}
                       </Text>
                       {li.sku && (
                         <Text as="p" variant="bodySm" tone="subdued">
@@ -578,7 +578,14 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
             <Text as="p" variant="bodySm" tone="subdued">Articles de la commande :</Text>
             {(order.items || []).map((item: any, i: number) => (
               <InlineStack key={i} align="space-between" blockAlign="center">
-                <Text as="p" variant="bodySm">{item.title || item.name}</Text>
+                <BlockStack gap="050">
+                  <Text as="p" variant="bodySm">{item.title || item.name}</Text>
+                  {(item.size || item.frame) && (
+                    <Text as="p" variant="bodySm" tone="subdued">
+                      {[item.size?.toUpperCase(), item.frame === 'black' ? 'Cadre noir' : item.frame === 'white' ? 'Cadre blanc' : item.frame === 'none' ? 'Sans cadre' : null].filter(Boolean).join(' · ')}
+                    </Text>
+                  )}
+                </BlockStack>
                 <Text as="p" variant="bodySm" fontWeight="semibold">{money(item.price)}</Text>
               </InlineStack>
             ))}
