@@ -56,15 +56,37 @@ export async function GET(req: NextRequest) {
       ? arr.reduce((sum: number, p: any) => sum + (p.stock || 0), 0)
       : null
 
+    // Fetch unfulfilled orders count
+    let orderCount = 0
+    let orderRevenue = 0
+    try {
+      const ordersRes = await fetch(
+        `${SUPABASE_URL}/rest/v1/orders?select=total,fulfill&site_id=eq.${siteId}`,
+        {
+          headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+          },
+        }
+      )
+      if (ordersRes.ok) {
+        const orders = await ordersRes.json()
+        const unfulfilled = (orders || []).filter(
+          (o: any) => !o.fulfill || o.fulfill.key === 'unfulfilled'
+        )
+        orderCount = unfulfilled.length
+        orderRevenue = unfulfilled.reduce((sum: number, o: any) => sum + (parseFloat(o.total) || 0), 0)
+      }
+    } catch {}
+
     return NextResponse.json({
       totalProducts: totalProducts || arr.length,
       activeCount,
       draftCount,
       totalValue,
       totalStock,
-      // No orders table in Supabase — real count is 0
-      orderCount: 0,
-      orderRevenue: 0,
+      orderCount,
+      orderRevenue,
     })
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 })

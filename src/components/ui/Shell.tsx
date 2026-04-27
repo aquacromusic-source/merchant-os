@@ -74,12 +74,17 @@ export function Shell({ children }: { children: React.ReactNode }) {
   // Toujours partir de vide — le useEffect charge depuis localStorage
   const [notifications, setNotifications] = useState<any[]>([])
 
-  // Fetch real order count from stats API
+  // Fetch real unfulfilled order count from stats API (refresh every 30s)
   useEffect(() => {
-    fetch(`/api/stats?site=${activeSite}`)
-      .then(r => r.json())
-      .then(data => setOrderCount(data.orderCount ?? 0))
-      .catch(() => setOrderCount(0))
+    const fetchCount = () => {
+      fetch(`/api/stats?site=${activeSite}`)
+        .then(r => r.json())
+        .then(data => setOrderCount(data.orderCount ?? 0))
+        .catch(() => setOrderCount(0))
+    }
+    fetchCount()
+    const interval = setInterval(fetchCount, 30000)
+    return () => clearInterval(interval)
   }, [activeSite])
 
   // Charger les notifs depuis localStorage au montage
